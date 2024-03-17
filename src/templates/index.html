@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Playlists</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+    <h1>Welcome {{ user_name }}</h1>
+    <h4>Here Are Your Top Artists This Month</h4>
+    <h4>Select Time Range:</h4>
+    <select id="timeRangeSelect" onchange="onTimeRangeSelectChange()">
+        <option value="short_term">Short Term</option>
+        <option value="medium_term">Medium Term</option>
+        <option value="long_term">Long Term</option>
+    </select>
+
+    <div class="top-artist-container">
+        <div class="top-artist-wrapper">
+            {% for artist in top_artists['items'] %} 
+            <div class="top-artist">
+                <img src="{{ artist['images'][0]['url'] }}" alt="{{ artist['name'] }}" width="auto" height="250">
+                <h3>{{ artist['name'] }}</h3>
+            </div>
+        {% endfor %}
+        </div>
+        <!-- <button id="scroll-right-button" onclick="scrollRight()">➡️</button> -->
+    </div>
+
+    <h3>Recently Played Songs</h3>
+    <div class="recently-played-container">
+        <div class="recently-played-songs">
+            <ul>
+                {% for track in recently_played_data['items'] %}
+                <li>
+                    <img src="{{ track['track']['album']['images'][0]['url'] }}" alt="Album Cover" width="50" height="50">
+                    {{ track['track']['name'] }} by {{ track['track']['artists'][0]['name'] }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Cache data to avoid excessive api calls
+        window.onload = function () {
+        var timeRangeSelect = document.getElementById("timeRangeSelect");
+
+        //Retrieves value of "time_range"
+        var selectedTimeRange = "{{ request.args.get('time_range') }}"; 
+
+        if (selectedTimeRange) {
+            // Set the selected option based on the query parameter
+            timeRangeSelect.value = selectedTimeRange;
+        }
+    }
+
+        // Handle dropdown change
+        function onTimeRangeSelectChange() {
+            var selectedTimeRange = document.getElementById("timeRangeSelect").value;
+            // Redirect to the appropriate URL based on the selected time range
+            window.location.href = `/homepage?time_range=${selectedTimeRange}`;
+        }
+
+        function scrollRight() {
+            const container = document.querySelector('.top-artist-wrapper');
+            container.scrollBy({
+                left: 400, // Adjust this value to scroll by the desired amount
+                behavior: 'smooth' // Add smooth scrolling
+            });
+        }
+    </script>
+</body>
+</html>

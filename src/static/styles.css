@@ -1,0 +1,55 @@
+.playlist-container {
+    /* Add some space between playlist items */
+    margin: 20px;
+    /*border: 1px solid #953e3e;*/
+    background-color: rgb(231, 231, 231);
+}
+
+.playlist {
+    display: inline-block; /* Display items side by side */
+    margin: 10px; /* Add margin for spacing */
+    text-align: center; /* Center align playlist name */
+    width: 200px;
+    
+}
+
+.playlist img {
+    max-width: 100%;
+    max-height: 150px; /* Limit the image height */
+}
+
+h2 {
+    white-space: nowrap; /* Prevent playlist names from wrapping */
+    overflow: hidden; /* Hide overflow if playlist names are too long */
+    text-overflow: ellipsis; /* Show ellipsis (...) for long playlist names */
+    font-family: Arial, sans-serif; /* Change the font family */
+    font-size: 12px;
+}
+
+/* CSS for Recently Played Container */
+.recently-played-container {
+    display: flex; /* Use flexbox to create a horizontal layout */
+    align-items: center; /* Vertically center the content */
+}
+
+/* CSS for Recently Played Songs List */
+.recently-played-songs {
+    display: flex; /* Use flexbox for the list */
+    align-items: center; /* Center items vertically */
+    margin-left: 10px; /* Add some margin between the image and text */
+}
+
+/* CSS for Album Cover Images */
+.recently-played-songs img {
+    max-width: 50px; /* Set a maximum width for the album cover images */
+    height: auto; /* Maintain the aspect ratio */
+    margin-right: 10px; /* Add some margin between the image and text */
+}
+
+/* CSS for Song List Items */
+.recently-played-songs li {
+    list-style: none; /* Remove bullet points from list items */
+    margin-top: 10px; /* Add some spacing between each song */
+}
+
+  

@@ -1,0 +1,23 @@
+
+#login-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: "Circular", "Avenir", "Proxima Nova", "Helvetica Neue", Helvetica, sans-serif;
+}
+
+.login-button {
+    display: inline-block;
+    padding: 10px 5vw;
+    background-color: #1dd760;
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 30px; 
+    text-decoration: none;
+    text-align: center;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
