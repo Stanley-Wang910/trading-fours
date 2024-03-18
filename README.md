@@ -1,5 +1,4 @@
-# Project Name
-Spotify Recommendation Engine
+# Spotify Recommendation Engine
 
 ## Description
 
