@@ -165,7 +165,7 @@ class RecEngine:
         
         self.print_loading_message()
         track_release_date = track_vector['release_date'].values[0]
-        track_release_date = datetime.strptime(track_release_date, '%Y-%m-%d')
+        track_release_date = datetime.strptime(track_release_date[:4], '%Y')
         track_vector = track_vector.drop(columns=['release_date'])
         track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
         if track_genre_column:
@@ -199,27 +199,26 @@ class RecEngine:
         genre_songs = recommendations_df[recommendations_df['track_genre'] == track_genre]
 
         top_songs = pd.concat([recommendations_df.nlargest(150, 'similarity')])
-        top_songs.to_csv('top_songs.csv', index=False)
 
         selected_songs = pd.DataFrame(columns=top_songs.columns)
         if (era_choice == 'yes'):
+            count = 0
             # Assuming `top_songs` is a DataFrame with a 'song_id' column 
             for index, row in top_songs.iterrows():
-
+                if count >=15:
+                    break
                 track_id = row['track_id']
-                release_date = self.sp.get_release_date(track_id)
+                release_date = self.sp.get_release_date(track_id) # Slow because it needs to make a request to the Spotify API each track
                 try:
-                    release_date = datetime.strptime(release_date, '%Y-%m-%d')
+                    release_date = datetime.strptime(release_date[:4], '%Y')  # Only take the first 4 characters (the year)
                 except ValueError:
-                    try:
-                        release_date = datetime.strptime(release_date, '%Y')
-                    except ValueError:
-                        continue  # Skip this song
-                # Calculate the start and end dates of the 8-year period
+                    continue
+                # Calculate the start and end dates of the 5-year period
                 start_date = release_date - timedelta(days=5*365)
                 end_date = release_date + timedelta(days=5*365)
                 if start_date <= track_release_date <= end_date:
                         selected_songs.loc[len(selected_songs)] = row
+                        count += 1
         else: 
             selected_songs = top_songs.nlargest(15, 'similarity')
             selected_songs = top_songs.sample(5)

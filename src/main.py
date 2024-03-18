@@ -61,20 +61,19 @@ def generate_recommendations(gc, re, sp):
         
         
         if rec_type == 'playlist':    
-            playlist_name = sp.get_playlist_name(type_id)
+            playlist_name = sp.get_playlist_track_name(type_id)
             top_genres = re.get_top_genres(p_vector)
             print(f"\n{playlist_name} is a {', '.join(top_genres)} playlist.\nHere are some recommendations that you might like, both in and out of your genre.")
 
-        # elif rec_type == 'track':
-        #     track_name = sp.track(type_id)['name']
-            
+        elif rec_type == 'track':
+            track_name = sp.get_playlist_track_name(type_id, 'track')
         while True:
             if rec_type == 'playlist':
                 recommendations = re.recommend(rec_dataset, p_vector, final_rec_df)
                 print()
                 print(recommendations)
             elif rec_type == 'track':
-                era_choice = input(f'Would you like recommendations of songs that were released in the same era as the track you entered? ')
+                era_choice = input(f'Would you like recommendations of songs that were released in the same era as {track_name}? (yes/no): ')
                 
                 recommendations = re.recommend_by_track(rec_dataset, t_vector, final_rec_df, era_choice)
                 print()
@@ -92,32 +91,8 @@ def main():
     sp = initialize_spotify_client(client_id, client_secret, redirect_uri, user_id, scope)
     re = RecEngine(sp)
     gc = initialize_genre_classifier(sp)
-    #gc.load_model()
     generate_recommendations(gc, re, sp)
-    #print(sp.get_id_type('31fUa9FXW0FEoG0F9TIuPU'))
-    # playlist_id = input("\nPlease enter the link: ")
-    # if playlist_id.lower() == "exit":
-    #     return
-    # playlist_id = playlist_id.split('/')[-1].split('?')[0]
-    # print(sp.get_id_type(playlist_id))
-    #print(sp.analyze_playlist('7e0q9fqr1IpUKQlH0AVzzl'))
-    # df = pd.read_csv('top_recommendations.csv')
-    # print(sp.get_track_links(df))
-    # type_id = input("\nPlease enter the link of the playlist you would like recommendations for, or exit: ")
-    # if type_id.lower() == "exit":
-    #     return
-    # type_id = type_id.split('/')[-1].split('?')[0]
-    # if sp.get_id_type(type_id) == 'track':
-    #         #playlist = gc.predict(type_id)  # Assuming 0 is the correct recommend_type
-    #         #playlist.to_csv('playlist.csv', index=False)
-    #         #p_vector, final_rec_df = re.playlist_vector(playlist, rec_dataset)
-    #         #p_vector.to_csv('p_vector.csv', index=False)
-    #     track = pd.read_csv('track.csv')
-    #     track_vector, finalrec = re.track_vector(track, rec_dataset)
-    #     track_vector.to_csv('track_vector.csv', index=False)
-    #     finalrec.to_csv('finalrec.csv', index=False)
-
-        # Recommend
+ 
 
     
 

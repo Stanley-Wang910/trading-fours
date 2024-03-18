@@ -94,7 +94,7 @@ class SpotifyClient:
         # Return the resulting DataFrame
         return playlist_with_features
 
-    def get_playlist_name(self, playlist_id):
+    def get_playlist_track_name(self, id, input='playlist'):
         """
         Retrieves the name of a Spotify playlist given its ID.
 
@@ -104,10 +104,16 @@ class SpotifyClient:
         Returns:
         - str: The name of the playlist.
         """
-        playlist = self.sp.playlist(playlist_id)
-        playlist_name = playlist['name']
-        return playlist_name
-    
+        if input == 'playlist':
+            playlist = self.sp.playlist(id)
+            playlist_name = playlist['name']
+            return playlist_name
+
+        elif input == 'track':
+            track = self.sp.track(id)
+            track_name = track['name']
+            return track_name
+        
     # def get_track_links(self, df):
     #     track_links = []
     #     # Iterate over the rows of the DataFrame
@@ -184,6 +190,7 @@ class SpotifyClient:
 
     def get_release_date(self, track_id):
         return self.sp.track(track_id)['album']['release_date']
+    
 
     def get_id_type(self, id):
         headers = {
