@@ -1,6 +1,8 @@
 import pandas as pd
 import time
 from sklearn.metrics.pairwise import cosine_similarity
+from datetime import datetime, timedelta
+from spotify_client import SpotifyClient
 
 
 class RecEngine:
@@ -25,8 +27,8 @@ class RecEngine:
         final_rec_df = rec_df[~rec_df['track_id'].isin(playlist_df['id'].values)]
 
         # One-hot encode the genre column in both dataframes
-        final_rec_df = self.ohe_genre(rec_df)
-        playlist_df = self.ohe_genre(playlist_df)
+        final_rec_df = self.ohe_features(rec_df)
+        playlist_df = self.ohe_features(playlist_df)
 
         # Drop unnecessary columns from the playlist dataframe
         playlist_df = playlist_df.drop(columns=['artist', 'name', 'id'])
@@ -136,19 +138,102 @@ class RecEngine:
 
         top_recommendations_df.to_csv('top_recommendations.csv', index=False)
 
-        
-        # new_track_links = self.sp.get_track_links(top_recommendations_df)
-
-        # new_track_links = pd.DataFrame(new_track_links, columns=['track_links'])
-
-        # new_track_links.to_csv('new_track_ids.csv', index=False)
         pd.set_option('display.max_colwidth', None)
-        # Replace potentially old track_ids with guarantueed new track links
+        
         top_recommendations_df['Link'] = 'https://open.spotify.com/track/' + top_recommendations_df['track_id']
 
         self.recommended_songs.update(top_recommendations_df['track_id'].values)
 
         # Clean the recommendations DataFrame by formatting the similarity column and selecting specific columns
+        top_recommendations_df = self.clean_recommendations(top_recommendations_df)
+        
+        return top_recommendations_df
+
+    def track_vector(self, track, rec_df):
+       
+        # One-hot encode categorical features
+        rec_df = rec_df[~rec_df['track_id'].isin(track['id'].values)]
+        rec_df = self.ohe_features(rec_df)
+        #rec_df.to_csv('oherectest.csv', index=False)
+        track_vector = self.ohe_features(track)
+        track_vector = track_vector.drop(columns=['artist', 'name', 'id'])
+
+        return track_vector, rec_df
+
+
+    def recommend_by_track(self, rec_dataset, track_vector, final_rec_df, era_choice):
+        
+        self.print_loading_message()
+        track_release_date = track_vector['release_date'].values[0]
+        track_release_date = datetime.strptime(track_release_date, '%Y-%m-%d')
+        track_vector = track_vector.drop(columns=['release_date'])
+        track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
+        if track_genre_column:
+            track_genre = track_genre_column[0].replace('track_genre_', '')
+
+        recommendations_df = rec_dataset.merge(final_rec_df[['track_id']], on='track_id')
+        recommendations_df = recommendations_df[~recommendations_df['track_id'].isin(self.recommended_songs)]
+        final_rec_df = final_rec_df.merge(recommendations_df[['track_id']], on='track_id')
+
+        final_track_vector, final_rec_df = self.sort_columns(track_vector, final_rec_df)
+
+        final_track_vector.fillna(0, inplace=True)
+        final_rec_df.fillna(0, inplace=True)
+
+        weight = {track_genre: 0.9}
+        for genre in final_rec_df.columns:
+            if genre.startswith('track_genre_'):
+                stripped_genre = genre.replace('track_genre_', '')
+                if stripped_genre in weight:
+                    final_rec_df[genre] *= weight[stripped_genre]
+
+        final_track_vector.drop(['duration_ms', 'popularity'], axis=1, inplace=True)
+        final_rec_df.drop(['duration_ms', 'popularity'], axis=1, inplace=True)
+
+        recommendations_df['similarity'] = cosine_similarity(final_rec_df.values, final_track_vector.values.reshape(1, -1))[:,0]
+
+        weight = recommendations_df['track_genre'].map(weight).fillna(0.85)
+        recommendations_df['similarity'] *= weight
+
+        top_songs = pd.DataFrame()
+        genre_songs = recommendations_df[recommendations_df['track_genre'] == track_genre]
+
+        top_songs = pd.concat([recommendations_df.nlargest(150, 'similarity')])
+        top_songs.to_csv('top_songs.csv', index=False)
+
+        selected_songs = pd.DataFrame(columns=top_songs.columns)
+        if (era_choice == 'yes'):
+            # Assuming `top_songs` is a DataFrame with a 'song_id' column 
+            for index, row in top_songs.iterrows():
+
+                track_id = row['track_id']
+                release_date = self.sp.get_release_date(track_id)
+                try:
+                    release_date = datetime.strptime(release_date, '%Y-%m-%d')
+                except ValueError:
+                    try:
+                        release_date = datetime.strptime(release_date, '%Y')
+                    except ValueError:
+                        continue  # Skip this song
+                # Calculate the start and end dates of the 8-year period
+                start_date = release_date - timedelta(days=5*365)
+                end_date = release_date + timedelta(days=5*365)
+                if start_date <= track_release_date <= end_date:
+                        selected_songs.loc[len(selected_songs)] = row
+        else: 
+            selected_songs = top_songs.nlargest(15, 'similarity')
+            selected_songs = top_songs.sample(5)
+        if len(selected_songs) < 5:
+            top_recommendations_df = selected_songs.sort_values(by='similarity', ascending=False)
+        else:
+            selected_songs = selected_songs.sample(5)
+            top_recommendations_df = selected_songs.sort_values(by='similarity', ascending=False)
+
+        pd.set_option('display.max_colwidth', None)
+
+        top_recommendations_df['Link'] = 'https://open.spotify.com/track/' + top_recommendations_df['track_id']
+
+        self.recommended_songs.update(top_recommendations_df['track_id'].values)
         top_recommendations_df = self.clean_recommendations(top_recommendations_df)
         
         return top_recommendations_df
@@ -182,16 +267,29 @@ class RecEngine:
         normal_vector = vector / num_tracks
         return normal_vector
 
-    def ohe_genre(self, df):
+    def ohe_features(self, df):
         all_genres = pd.read_csv('data/genre_counts.csv')
-        df = pd.get_dummies(df, columns=['track_genre'])  # One-hot encode the genre column
-        for column in df.columns:
-            if 'track_genre' in column:
-                df[column] = df[column].astype(int)  # Convert genre columns to integer type
-        for index, row in all_genres.iterrows():
-            genre_column = 'track_genre_' + row['track_genre']
-            if genre_column not in df.columns:
-                df[genre_column] = 0  # Add missing genre columns and set their values to 0   
+        df = pd.get_dummies(df, columns=['track_genre', 'mode', 'key'])  # One-hot encode the genre column
+    
+        ohe_columns = [col for col in df.columns if 'track_genre' in col or 'mode' in col or 'key' in col]
+        df[ohe_columns] = df[ohe_columns].astype(int) 
+
+        expected_genres = {'track_genre_' + genre for genre in all_genres['track_genre']}
+        missing_genres = expected_genres - set(df.columns)
+        for genre in missing_genres:
+            df[genre] = 0
+
+        expected_keys_modes = {f'key_{i}' for i in range(12)} | {f'mode_{i}' for i in range(2)}
+        missing_keys_modes = expected_keys_modes - set(df.columns)
+        for key_mode in missing_keys_modes:
+            df[key_mode] = 0
+        # for column in df.columns:
+        #     if 'track_genre' in column or 'mode' in column or 'key' in column:
+        #         df[column] = df[column].astype(int)  # Convert genre columns to integer type
+        # for index, row in all_genres.iterrows():
+        #     genre_column = 'track_genre_' + row['track_genre']
+        #     if genre_column not in df.columns:
+        #         df[genre_column] = 0  # Add missing genre columns and set their values to 0   
         return df
 
     def print_loading_message(self):

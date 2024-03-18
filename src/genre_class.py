@@ -113,16 +113,20 @@ class GenreClassifier:
         self.X_train = joblib.load(features_filename)  # Load the features
         #print(f"Features loaded from {features_filename}.")
 
-    def predict(self, data_entry, int_choice=0):
+    def predict(self, data_entry):
         # Check if model and label encoder are loaded
         if not hasattr(self, 'model') or not hasattr(self, 'label_encoder'):
             raise Exception("Model and Label Encoder must be loaded before predicting")
         
-        # Get song features or analyze playlist based on int_choice
-        if (int_choice == 1):
+        #Get song features or analyze playlist based on int_choice
+        choice = self.sp.get_id_type(data_entry)
+        if (choice == 'track'):
             data = self.sp.get_song_features(data_entry)
-        elif (int_choice == 0):
+            release_date = data['release_date']
+            data.drop('release_date', axis=1, inplace=True)
+        elif (choice == 'playlist'):
             data = self.sp.analyze_playlist(data_entry)
+            
         
         # Create a DataFrame from the data
         data_df = pd.DataFrame(data)
@@ -148,6 +152,10 @@ class GenreClassifier:
         # Decode the predicted labels using the label encoder
         predictions_decoded = self.label_encoder.inverse_transform(predictions_encoded)
         
+        if (choice == 'track'):
+            data['release_date'] = release_date
+            data.drop('date_added', axis=1, inplace=True)
+            
         # Add the predicted genre labels to the data DataFrame
         data['track_genre'] = predictions_decoded
         

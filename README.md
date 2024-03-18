@@ -53,7 +53,7 @@ To use this Spotify Recommendation Engine, follow these steps:
       ```
 
 4. Run the program!
-    - RecEngine python .\src\main.py
+    - \RecEngine python .\src\main.py
     - Have fun!
 
 ## Data Sources
