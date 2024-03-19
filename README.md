@@ -14,8 +14,8 @@ Link: https://open.spotify.com/playlist/66ehpqp3UGSK8e9tglfYw7?si=63b02de8d6a043
 <img src="https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/14ca562b-2eea-4eb5-8dfd-3014bf0a9847" width="600" /><br>
 Spotify's Official Recommendations<br>
 
-<img src="https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/474dfd07-18a4-47a6-a329-1194eb9c3a90" width="600" /><br>  
-My Engine's first pick recommendations<br>
+<img src="https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/474dfd07-18a4-47a6-a329-1194eb9c3a90" width="600" /><br>
+My Engine's first pick recommendations
 
 Analysis:
 Similarities in Artist recommendations: 
