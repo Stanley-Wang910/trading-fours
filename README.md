@@ -2,7 +2,7 @@
 
 ## Description
 
-This project is a Spotify Recommendation Engine that takes a playlist as input. It uses a random forest model to classify the genres of the songs within the playlist. It then utilizes spotipy and the Spotify Web API to retrieve track attributes, contributing to an overarching playlist vector. This vector is compared against a larger dataset, and cosine similarity is used to determine the best recommendations for songs within the playlist.
+This project is a robust Spotify Recommendation Engine that takes a playlist or a track as input. It uses a random forest classification model to predict overarching track or playlist genre. This model was trained on over 200,000 songs and 20 genres. The recommendation engine then utilizes the spotipy library and the Spotify Web API to retrieve individual track attributes, and creates a vector representative of the playlist/track within a ~45 dimensional space. This vector is compared against an immense dataset of diverse songs in both genre and audio features and is then assigned a cosine similarity, which is finally used to determine the best recommendations for the given playlist/track.
 
 ## Contact
 
@@ -57,7 +57,7 @@ To use this Spotify Recommendation Engine, follow these steps:
 
 ## Data Sources
 
-This project uses data from the following sources:
+This project uses altered and combined data from the following sources:
 
 - [Spotify Tracks Dataset](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset)
 - [Ultimate Spotify Tracks DB](https://www.kaggle.com/datasets/zaheenhamidani/ultimate-spotify-tracks-db)
