@@ -9,7 +9,7 @@ Here is a demonstrated example on one of my own playlists. To stress test my rec
 This way, I would be able to see how versatile its recommendations would be when given an equally diverse playlist:
 
 
-<img src="[https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/797d8981-9d90-4b7f-b3d0-5c522fcc3509]" width="200" />
+<img src="https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/797d8981-9d90-4b7f-b3d0-5c522fcc3509" width="200" />
 
 
 ## Features Coming Soon
