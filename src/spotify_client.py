@@ -102,7 +102,9 @@ class SpotifyClient:
         elif input == 'track':
             track = self.sp.track(id)
             track_name = track['name']
-            return track_name
+            artist_name = track['artists'][0]['name']
+            album_release = track['album']['release_date'].split('-')[0]
+            return track_name, artist_name, album_release
         
     # def get_track_links(self, df):
     #     track_links = []

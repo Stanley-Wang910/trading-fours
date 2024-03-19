@@ -64,14 +64,14 @@ def generate_recommendations(gc, re, sp):
             print(f"\n{playlist_name} is a {', '.join(top_genres)} playlist.\nHere are some recommendations that you might like, both in and out of your genre.")
 
         elif rec_type == 'track':
-            track_name = sp.get_playlist_track_name(type_id, 'track')
+            track_name, artist_name, release_date = sp.get_playlist_track_name(type_id, 'track')
         while True:
             if rec_type == 'playlist':
                 recommendations = re.recommend_by_playlist(rec_dataset, p_vector, final_rec_df)
                 print()
                 print(recommendations)
             elif rec_type == 'track':
-                era_choice = input(f'Would you like recommendations of songs that were released in the same era as {track_name}? (yes/no): ')
+                era_choice = input(f'Would you be interested in discovering songs that were released in the same year ({release_date}) as {track_name} by {artist_name}? (yes/no): ')
                 
                 recommendations = re.recommend_by_track(rec_dataset, t_vector, final_rec_df, era_choice)
                 print()
@@ -90,8 +90,6 @@ def main():
     re = RecEngine(sp)
     gc = initialize_genre_classifier(sp)
     generate_recommendations(gc, re, sp)
- 
-
     
 
 
