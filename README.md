@@ -8,8 +8,8 @@ This project is a robust Spotify Recommendation Engine that takes a playlist or 
 Here is a demonstrated example on one of my own playlists. To stress test my recommendation engine, I fed it a playlist of mine that I had created for the month of December (with no specific genre in mind).
 This way, I would be able to see how versatile its recommendations would be when given an equally diverse playlist:
 
-(https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/797d8981-9d90-4b7f-b3d0-5c522fcc3509)
 
+![Alt text](https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/797d8981-9d90-4b7f-b3d0-5c522fcc3509)
 
 
 
