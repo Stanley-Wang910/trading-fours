@@ -17,7 +17,7 @@ Spotify's Official Recommendations<br>
 <img src="https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/474dfd07-18a4-47a6-a329-1194eb9c3a90" width="1000" /><br>
 My Engine's first pick recommendations
 
-Analysis:
+Analysis:<br>
 Similarities in Artist recommendations: 
 See Blood Orange: '[Charcoal Baby](https://www.youtube.com/watch?v=hIlauccaH88)' from Spotify, '[Augustine](https://www.youtube.com/watch?v=NXtzcViZPGA)' from my engine.<br> 
 
