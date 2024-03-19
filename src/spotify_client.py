@@ -2,20 +2,10 @@ import pandas as pd
 import spotipy
 import requests
 from spotipy.oauth2 import SpotifyClientCredentials
-import base64
-import urllib.parse
-import random
 from spotipy.oauth2 import SpotifyOAuth
-import spotipy.util as util
 import warnings
-import string
-import json
-from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, session, redirect, render_template
-import re
 
 warnings.filterwarnings("ignore")
-
 
 class SpotifyClient:
     def __init__(self, client_id, client_secret, redirect_uri, user_id, scope):

@@ -5,8 +5,6 @@ from dotenv import load_dotenv
 from spotify_client import SpotifyClient
 from genre_class import GenreClassifier
 from rec_engine import RecEngine
-import logging
-
 
 REC_DATASET_PATH = 'data/rec_dataset.csv'
 rec_dataset = pd.read_csv(REC_DATASET_PATH)
@@ -49,7 +47,7 @@ def generate_recommendations(gc, re, sp):
             rec_type = sp.get_id_type(type_id)
             if rec_type == 'playlist':
                 playlist = gc.predict(type_id)  # Assuming 0 is the correct recommend_type
-                playlist.to_csv('playlist.csv', index=False)
+                # playlist.to_csv('playlist.csv', index=False)
                 p_vector, final_rec_df = re.playlist_vector(playlist, rec_dataset)
 
             elif rec_type == 'track':
@@ -69,7 +67,7 @@ def generate_recommendations(gc, re, sp):
             track_name = sp.get_playlist_track_name(type_id, 'track')
         while True:
             if rec_type == 'playlist':
-                recommendations = re.recommend(rec_dataset, p_vector, final_rec_df)
+                recommendations = re.recommend_by_playlist(rec_dataset, p_vector, final_rec_df)
                 print()
                 print(recommendations)
             elif rec_type == 'track':
