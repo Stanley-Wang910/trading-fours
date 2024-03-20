@@ -6,7 +6,7 @@ from spotify_client import SpotifyClient
 from genre_class import GenreClassifier
 from rec_engine import RecEngine
 
-REC_DATASET_PATH = 'data/rec_dataset.csv'
+REC_DATASET_PATH = 'data/datasets/rec_dataset.csv'
 rec_dataset = pd.read_csv(REC_DATASET_PATH)
 #REC_OHE_PATH = 'data/rec_ohe.csv'
 

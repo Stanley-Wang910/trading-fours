@@ -38,11 +38,11 @@ class GenreClassifier:
        
 
     def train_save_model(self):
-        lr_model_filename = 'GenreClassModel/lr_model.joblib'  # Define the filename for the logistic regression model
-        rf_model_filename = 'GenreClassModel/rf_model.joblib'  # Define the filename for the random forest model
-        scaler_filename = 'GenreClassModel/scaler.joblib'  # Define the filename for the scaler
-        encoder_filename = 'GenreClassModel/encoder.joblib'  # Define the filename for the label encoder
-        features_filename = 'GenreClassModel/features.joblib'  # Define the filename for the features
+        lr_model_filename = 'data/models/GenreClassModel/lr_model.joblib'  # Define the filename for the logistic regression model
+        rf_model_filename = 'data/models/GenreClassModel/rf_model.joblib'  # Define the filename for the random forest model
+        scaler_filename = 'data/models/GenreClassModel/scaler.joblib'  # Define the filename for the scaler
+        encoder_filename = 'data/models/GenreClassModel/encoder.joblib'  # Define the filename for the label encoder
+        features_filename = 'data/models/GenreClassModel/features.joblib'  # Define the filename for the features
 
         # Train and save the logistic regression model
         self.lr_model.fit(self.X_train, self.y_train)  # Train the logistic regression model
@@ -89,12 +89,12 @@ class GenreClassifier:
             
     def load_model(self, model_choice=1):
         model_filenames = {
-            0: 'GenreClassModel/lr_model.joblib',  # Filename for logistic regression model
-            1: 'GenreClassModel/rf_model.joblib',  # Filename for random forest model
+            0: 'data/models/GenreClassModel/lr_model.joblib',  # Filename for logistic regression model
+            1: 'data/models/GenreClassModel/rf_model.joblib',  # Filename for random forest model
         }
-        scaler_filename = 'GenreClassModel/scaler.joblib'  # Filename for scaler
-        encoder_filename = 'GenreClassModel/encoder.joblib'  # Filename for label encoder
-        features_filename = 'GenreClassModel/features.joblib'  # Filename for features
+        scaler_filename = 'data/models/GenreClassModel/scaler.joblib'  # Filename for scaler
+        encoder_filename = 'data/models/GenreClassModel/encoder.joblib'  # Filename for label encoder
+        features_filename = 'data/models/GenreClassModel/features.joblib'  # Filename for features
 
         if model_choice not in model_filenames:
             raise Exception(f"Invalid model choice. Available choices are: {list(model_filenames.keys())}")
