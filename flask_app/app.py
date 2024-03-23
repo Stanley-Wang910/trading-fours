@@ -1,82 +1,102 @@
-from flask import Flask, request, jsonify, session, redirect, render_template
-from dotenv import load_dotenv
+from flask import Flask, request, redirect, session, jsonify
 import os
 import requests
-import urllib.parse
-import random
+import base64
+from urllib.parse import urlencode
 import string
-from datetime import datetime
-import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+import random
+from dotenv import load_dotenv
+import spotipy 
+from spotipy import Spotify
+
+# Load environment variables
+load_dotenv()
+
 
 app = Flask(__name__)
-app.secret_key = 'penis'
-#auth = SpotifyClient(app)
-load_dotenv()
-CLIENT_ID = os.getenv('SPOTIFY_CLIENT_ID')
-CLIENT_SECRET = os.getenv('SPOTIFY_CLIENT_SECRET')
-REDIRECT_URI = 'http://localhost:5000/callback'
 
-AUTH_URL = 'https://accounts.spotify.com/authorize'
-TOKEN_URL = 'https://accounts.spotify.com/api/token'
-API_BASE_URL = 'https://api.spotify.com/v1/'
+# Set a secret key for session management
+app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
-RECENTLY_PLAYED_URL = 'https://api.spotify.com/v1/me/player/recently-played'
-@app.route('/')
-def index():
-    return redirect('/login')
+# Generate a random state string
+def generate_random_string(length=16):
+    letters = string.ascii_letters + string.digits
+    return ''.join(random.choice(letters) for i in range(length))
 
-@app.route('/login')
-def login():
-    auth_manager = SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI, scope='user-read-private user-read-email user-read-recently-played user-top-read')
-    url = auth_manager.get_authorize_url()
+@app.route('/auth/login')
+def auth_login():
+    scope = "streaming user-read-email user-read-private"
+    state = generate_random_string()
+    params = {
+        'response_type': 'code',
+        'client_id': os.getenv('SPOTIFY_CLIENT_ID'),
+        'scope': scope,
+        'redirect_uri': 'http://localhost:3000/auth/callback',
+        'state': state
+    }
+    url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
     return redirect(url)
 
-
-
-@app.route('/callback')
-def callback():
+@app.route('/auth/callback')
+def auth_callback():
     code = request.args.get('code')
-    auth_manager = SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI, scope='user-read-private user-read-email user-read-recently-played user-top-read')
-    token_info = auth_manager.get_access_token(code)
-    session['access_token'] = token_info['access_token']
-    session['expires_at'] = datetime.now().timestamp() + token_info['expires_in']
-    return redirect('/homepage')
+    # Exchange code for token
+    client_id = os.getenv('SPOTIFY_CLIENT_ID')
+    client_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
 
-@app.route('/homepage')
-def display_homepage():
+    # Authorization header
+    client_creds = f"{client_id}:{client_secret}"
+    client_creds_b64 = base64.b64encode(client_creds.encode()).decode()
 
-    if 'access_token' not in session:
-        return redirect('/login')
+    auth_header = {
+        'Authorization': f"Basic {client_creds_b64}",
+        'Content-Type': 'application/x-www-form-urlencoded'
+    }
 
-    if datetime.now().timestamp() > session['expires_at']:
-        return redirect('/refresh-token')
+    auth_data = {
+        'grant_type': 'authorization_code',
+        'code': code,
+        'redirect_uri': 'http://localhost:3000/auth/callback',
+    }
+    response = requests.post('https://accounts.spotify.com/api/token', data=auth_data, headers=auth_header)
+    if response.status_code == 200:
+        token_info = response.json()
+        session['access_token'] = token_info.get('access_token')
+        # Redirecting or handling logic here
+        return redirect('/')
+    else:
+        return "Error in token exchange", response.status_code
 
-    auth_manager = SpotifyOAuth(client_id=CLIENT_ID, client_secret=CLIENT_SECRET, redirect_uri=REDIRECT_URI, scope='user-read-private user-read-email user-read-recently-played user-top-read')
-    auth_manager.get_cached_token()  # This will automatically refresh the token if it's expired
-    token_info = auth_manager.get_cached_token()
-    session['access_token'] = token_info['access_token']
-    session['expires_at'] = token_info['expires_in'] + datetime.now().timestamp()
+@app.route('/auth/token')
+def get_token():
+    access_token = session.get('access_token')
+    if access_token:
+        return jsonify({'access_token': access_token})
 
-    sp = spotipy.Spotify(auth_manager=auth_manager)
-    # Get the selected time range from the query parameters
-    time_range = request.args.get('time_range', 'short_term')
+@app.route('/clear_session')
+def clear_session():
+    session.clear()
+    return "Session data cleared"
 
-    # Fetch user profile information
-    user_profile = sp.me()
-    user_name_data = user_profile.get('display_name', 'User')
+@app.route('/user/data')
+def get_user_data():
+    access_token = session.get('access_token')
+    if access_token:
+        # headers = {
+        #     'Authorization': f"Bearer {access_token}"
+        # }
+        # response = requests.get('https://api.spotify.com/v1/me', headers=headers)
+        # if response.status_code == 200:
+        #     user_data = response.json()
+        #     # Process and return user data here
+        sp = Spotify(auth=access_token)
+        user_data = sp.current_user()
+        return jsonify(user_data)
+    else:
+            return jsonify({"error": "Access token not found"}), 401
+
 
     
-    # Fetch top artists
-    top_artists_data = sp.current_user_top_artists(limit=10, time_range=time_range)
 
-    # Fetch recently played tracks
-    recently_played = sp.current_user_recently_played(limit=5)
-
-    return render_template('index.html', user_name=user_name_data, top_artists = top_artists_data, recently_played_data=recently_played)
-
-
-
-    
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    app.run(debug=True)
