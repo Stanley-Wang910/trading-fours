@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Login from './Login'
+import Login from './components/Login'
+import SearchBar from './components/SearchBar';
 import './App.css';
 
 function App() {
@@ -19,9 +20,9 @@ function App() {
   }, []);
 
   return (
-    <>
-        { (token === '') ? <Login/> :"Successful login" }
-    </>
+    <div className="App-content">
+        { (token === '') ? <Login/> : <SearchBar /> }
+    </div>
   );
 }
 

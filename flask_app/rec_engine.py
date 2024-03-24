@@ -6,12 +6,12 @@ from spotify_client import SpotifyClient
 
 
 class RecEngine:
-    def __init__(self, spotify_client):
+    def __init__(self, spotify_client, previously_recommended=None):
         self.sp = spotify_client
-        self.recommended_songs = set()
+        self.recommended_songs = set(previously_recommended) if previously_recommended else set()
         self.weights = {0: 0.9, 1: 0.85, 2: 0.80} # Default weights for the top 3 genres, easy to calibrate
 
-    def playlist_vector(self, playlist_df, rec_df, weight=1.1):
+    def playlist_vector(self, playlist_df, weight=1.1):
         """
         Calculates the playlist vector based on the given playlist and recommendation dataframes.
 
@@ -23,11 +23,6 @@ class RecEngine:
         Returns:
             pandas.Series: The final playlist vector.
         """
-        # Exclude tracks from the recommendation dataframe that are already in the playlist
-        final_rec_df = rec_df[~rec_df['track_id'].isin(playlist_df['id'].values)]
-
-        # One-hot encode the genre column in both dataframes
-        final_rec_df = self.ohe_features(rec_df)
         playlist_df = self.ohe_features(playlist_df)
 
         # Drop unnecessary columns from the playlist dataframe
@@ -61,9 +56,9 @@ class RecEngine:
         # Transposes into a one row vector
         final_playlist_vector = final_playlist_vector.to_frame().T
 
-        return final_playlist_vector, final_rec_df
+        return final_playlist_vector
 
-    def recommend_by_playlist(self, rec_dataset, final_playlist_vector, final_rec_df):
+    def recommend_by_playlist(self, rec_dataset, final_playlist_vector, playlist_ids):
         """
         Recommends songs based off the given playlist.
 
@@ -75,12 +70,14 @@ class RecEngine:
         Returns:
             DataFrame: DataFrame containing the top recommended songs.
         """
-        self.print_loading_message()
+        # self.print_loading_message()
+
+        
 
         top_genres = self.get_top_genres(final_playlist_vector)
 
         # Prepare data for recommendation
-        final_playlist_vector, final_rec_df, recommendations_df = self.prepare_data(rec_dataset, final_playlist_vector, final_rec_df)
+        final_playlist_vector, final_rec_df, recommendations_df = self.prepare_data(rec_dataset, final_playlist_vector, playlist_ids)
 
         # Apply weights to the top genres
         self.weights = {top_genres[0]: 0.9, top_genres[1]: 0.85, top_genres[2]: 0.80}
@@ -107,21 +104,19 @@ class RecEngine:
         selected_songs = pd.concat([selected_songs, remaining_songs.sample(3)])
 
         # Finalize and update the recommended songs
-        top_recommendations_df = self.finalize_update_recommendations(selected_songs, self.recommended_songs, 'playlist')
+        top_recommendations_df, recommended_ids = self.finalize_update_recommendations(selected_songs, self.recommended_songs, 'playlist')
 
-        return top_recommendations_df
+        return top_recommendations_df, recommended_ids
 
-    def track_vector(self, track, rec_df):
+    def track_vector(self, track):
        
         # One-hot encode categorical features
-        rec_df = rec_df[~rec_df['track_id'].isin(track['id'].values)]
-        rec_df = self.ohe_features(rec_df)
         track_vector = self.ohe_features(track)
         track_vector = track_vector.drop(columns=['artist', 'name', 'id'])
 
-        return track_vector, rec_df
+        return track_vector
 
-    def recommend_by_track(self, rec_dataset, track_vector, final_rec_df, era_choice):
+    def recommend_by_track(self, rec_dataset, track_vector, track_id, era_choice):
         """
         Recommends songs based on a given track.
 
@@ -134,8 +129,7 @@ class RecEngine:
         Returns:
             DataFrame: The top recommended songs based on the given track.
         """
-        # Print loading message
-        self.print_loading_message()
+
         
         # Get track release date
         track_release_date = track_vector['release_date'].values[0]
@@ -150,7 +144,7 @@ class RecEngine:
             track_genre = track_genre_column[0].replace('track_genre_', '')
         
         # Prepare data for recommendation
-        final_track_vector, final_rec_df, recommendations_df = self.prepare_data(rec_dataset, track_vector, final_rec_df)
+        final_track_vector, final_rec_df, recommendations_df = self.prepare_data(rec_dataset, track_vector, track_id)
         
         # Apply weight to track genre
         weight = {track_genre: 0.9}
@@ -229,16 +223,19 @@ class RecEngine:
         top_genres = final_playlist_vector[genre_columns].iloc[0].nlargest(3).index.str.replace('track_genre_', '')
         return top_genres
 
-    def prepare_data(self, rec_dataset, vector, final_rec_df):
+    def prepare_data(self, rec_dataset, vector, ids):
+        # One-hot encode the genre column in both dataframes
+        final_rec_df = self.ohe_features(rec_dataset) ###
+        
+        # Exclude tracks from the recommendation dataframe that are already in the playlist
+        final_rec_df = final_rec_df[~final_rec_df['track_id'].isin(ids)] ###
 
         # Filter the recommendations dataframe based on the track ids in the final recommendation dataframe
-        recommendations_df = rec_dataset.merge(final_rec_df[['track_id']], on='track_id')
+        rec_dataset = rec_dataset.merge(final_rec_df[['track_id']], on='track_id')
         
         # Exclude songs that have already been recommended
-        recommendations_df = recommendations_df[~recommendations_df['track_id'].isin(self.recommended_songs)]
-        
-        # Filter the final recommendation dataframe based on the track ids in the recommendations dataframe
-        final_rec_df = final_rec_df.merge(recommendations_df[['track_id']], on='track_id')
+        rec_dataset = rec_dataset[~rec_dataset['track_id'].isin(self.recommended_songs)]
+        final_rec_df = final_rec_df.merge(rec_dataset[['track_id']], on='track_id')
         
         # Sort the columns of the final vector and final recommendation dataframe to have the same order
         final_vector, final_rec_df = self.sort_columns(vector, final_rec_df)
@@ -251,7 +248,7 @@ class RecEngine:
         final_vector.fillna(0, inplace=True)
         final_rec_df.fillna(0, inplace=True)
 
-        return final_vector, final_rec_df, recommendations_df
+        return final_vector, final_rec_df, rec_dataset
 
     def apply_weights(self, final_rec_df, weights):
         for genre in final_rec_df.columns:
@@ -291,11 +288,14 @@ class RecEngine:
         top_recommendations_df['Link'] = 'https://open.spotify.com/track/' + top_recommendations_df['track_id']
         
         # Update the recommended_songs set with the track_ids of the top recommendations
-        self.recommended_songs.update(top_recommendations_df['track_id'].values)
+        # self.recommended_songs.update(top_recommendations_df['track_id'].values)
         
+        recommended_ids = top_recommendations_df['track_id'].tolist()
+
+
         # Clean the recommendations DataFrame by formatting the similarity column and selecting specific columns
         top_recommendations_df = self.clean_recommendations(top_recommendations_df)
-        return top_recommendations_df
+        return top_recommendations_df, recommended_ids
 
     def sort_columns(self, plt_vector, final_df):
         common_cols = plt_vector.columns.intersection(final_df.columns)

@@ -22,8 +22,8 @@ def load_environment_variables():
 def initialize_spotify_client(client_id, client_secret, redirect_uri, user_id, scope):
     return SpotifyClient(client_id, client_secret, redirect_uri, user_id, scope)
 
-def initialize_genre_classifier(sp):
-    return GenreClassifier(REC_DATASET_PATH, sp)
+def initialize_genre_classifier():
+    return GenreClassifier(REC_DATASET_PATH)
 
 def train_genre_classifier(gc):
     gc.preprocess_data()
@@ -36,7 +36,7 @@ def generate_recommendations(gc, re, sp):
     for _ in range(3):
         print(".", end="", flush=True)
         time.sleep(0.25)
-    gc.load_model()
+    model, scaler, label_encoder, X_train = gc.load_model()
     while True:
         try:
             type_id = input("\nPlease enter the link of the playlist or track you would like recommendations for, or exit: ")
@@ -46,12 +46,12 @@ def generate_recommendations(gc, re, sp):
 
             rec_type = sp.get_id_type(type_id)
             if rec_type == 'playlist':
-                playlist = gc.predict(type_id)  # Assuming 0 is the correct recommend_type
+                playlist = sp.predict(type_id, model, scaler, label_encoder, X_train) 
                 # playlist.to_csv('playlist.csv', index=False)
                 p_vector, final_rec_df = re.playlist_vector(playlist, rec_dataset)
 
             elif rec_type == 'track':
-                track = gc.predict(type_id)
+                track = sp.predict(type_id, model, scaler, label_encoder, X_train)
                 t_vector, final_rec_df = re.track_vector(track, rec_dataset)
         except Exception as e:
             print(f"Error retrieving {rec_type}. Please try entering the {rec_type} link again.")
@@ -88,8 +88,12 @@ def main():
     client_id, client_secret, redirect_uri, user_id, scope = load_environment_variables()
     sp = initialize_spotify_client(client_id, client_secret, redirect_uri, user_id, scope)
     re = RecEngine(sp)
-    gc = initialize_genre_classifier(sp)
-    generate_recommendations(gc, re, sp)
+    gc = initialize_genre_classifier()
+    # generate_recommendations(gc, re, sp)
+
+    try_this = sp.get_id_type('37i9dQZF1DX5Ejj0EkURtP')
+    print(try_this)
+    #print(sp.predict('37i9dQZF1DX5Ejj0EkURtP', model, scaler, label_encoder, X_train))
     
 
 

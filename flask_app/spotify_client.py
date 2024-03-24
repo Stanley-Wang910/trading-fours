@@ -1,27 +1,43 @@
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 import spotipy
 import requests
 from spotipy.oauth2 import SpotifyClientCredentials
 from spotipy.oauth2 import SpotifyOAuth
+from spotipy.client import SpotifyException
 import warnings
 
 warnings.filterwarnings("ignore")
 
 class SpotifyClient:
-    def __init__(self, client_id, client_secret, redirect_uri, user_id, scope):
-        self.client_id = client_id
-        self.client_secret = client_secret
-        self.redirect_uri = redirect_uri
-        self.user_id = user_id
-        self.scope = scope
+    def __init__(self, sp):
+        # self.client_id = client_id
+        # self.client_secret = client_secret
+        # self.redirect_uri = redirect_uri
+        # self.user_id = user_id
+        # self.scope = scope
         
-        auth_manager = SpotifyOAuth(client_id=self.client_id,
-                                    client_secret=self.client_secret,
-                                    redirect_uri=self.redirect_uri,
-                                    scope=self.scope,
-                                    username=self.user_id)
+        # auth_manager = SpotifyOAuth(client_id=self.client_id,
+        #                             client_secret=self.client_secret,
+        #                             redirect_uri=self.redirect_uri,
+        #                             scope=self.scope,
+        #                             username=self.user_id)
         # Initialize the Spotipy client with the auth manager
-        self.sp = spotipy.Spotify(auth_manager=auth_manager)
+        self.sp = sp
+
+    # def __init__(self, client_id, client_secret, redirect_uri, user_id, scope):
+    #     self.client_id = client_id
+    #     self.client_secret = client_secret
+    #     self.redirect_uri = redirect_uri
+    #     self.user_id = user_id
+    #     self.scope = scope
+
+    #     #Initialize the Spotipy client with the client credentials manager
+    #     self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=self.client_id,
+    #                                                         client_secret=self.client_secret,
+    #                                                         redirect_uri=self.redirect_uri,
+    #                                                         scope=self.scope,
+    #                                                         username=self.user_id))
 
     def get_id_name(self):
         """
@@ -185,21 +201,20 @@ class SpotifyClient:
     
 
     def get_id_type(self, id):
-        headers = {
-            'Authorization': f'Bearer {self.sp.auth_manager.get_access_token(as_dict=False)}',
-        }
+        try:
+            track = self.sp.track(id)
+            if track:
+                return 'track'
+        except:
+            pass  # Track not found or an error occurred
+        
+        try:
+            playlist = self.sp.playlist(id)
+            if playlist:
+                return 'playlist'
+        except:
+            pass  # Playlist not found or an error occurred
 
-        # Try to get a track with the given ID
-        response = requests.get(f'https://api.spotify.com/v1/tracks/{id}', headers=headers)
-        if response.status_code != 404:
-            return 'track'
-
-        # If that fails, try to get a playlist with the given ID
-        response = requests.get(f'https://api.spotify.com/v1/playlists/{id}', headers=headers)
-        if response.status_code != 404:
-            return 'playlist'
-
-        # If both fail, the ID is neither a track ID nor a playlist ID
         return 'unknown'
 
     def rearrange_columns(self, df):
@@ -227,4 +242,48 @@ class SpotifyClient:
 
         return df
 
+    def predict(self, data_entry, choice, model, scaler, label_encoder, X_train):
+        # Check if model and label encoder are loaded
+        #Get song features or analyze playlist based on int_choice
+        if (choice == 'track'):
+            data = self.get_song_features(data_entry)
+            release_date = data['release_date']
+            data.drop('release_date', axis=1, inplace=True)
+        elif (choice == 'playlist'):
+            data = self.analyze_playlist(data_entry)
+            
+        
+        # Create a DataFrame from the data
+        data_df = pd.DataFrame(data)
+        
+        # One-hot encode categorical features
+        categorical_features = ['key', 'mode', 'time_signature']
+        data_df = pd.get_dummies(data, columns=categorical_features)
+        
+        # Add missing columns to the data DataFrame
+        for col in X_train.columns:
+            if col not in data.columns:
+                data_df[col] = 0
+        
+        # Reorder the columns to match the training data
+        data_df = data_df[X_train.columns]
+        
+        # Scale the data using the scaler
+        data_scaled = scaler.transform(data_df)
+        
+        # Predict the genre labels using the model
+        predictions_encoded = model.predict(data_scaled)
+        
+        # Decode the predicted labels using the label encoder
+        predictions_decoded = label_encoder.inverse_transform(predictions_encoded)
+        
+        if (choice == 'track'):
+            data['release_date'] = release_date
+            data.drop('date_added', axis=1, inplace=True)
+            
+        # Add the predicted genre labels to the data DataFrame
+        data['track_genre'] = predictions_decoded
+        
+        # Return the data DataFrame with predicted genre labels
+        return data
      

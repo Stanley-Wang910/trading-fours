@@ -6,16 +6,14 @@ from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 
-from spotify_client import SpotifyClient
 
 class GenreClassifier:
-    def __init__(self, data_path, spotify_client):
+    def __init__(self, data_path):
         self.data = pd.read_csv(data_path)
         self.lr_model = LogisticRegression(max_iter=500, class_weight='balanced', random_state=420, verbose=0) # Make random state 69
         self.rf_model = RandomForestClassifier(n_estimators=150, class_weight='balanced', random_state=69, verbose=0) # Make random state 69
         self.scaler = MinMaxScaler()
         self.label_encoder = LabelEncoder()
-        self.sp = spotify_client
 
     def preprocess_data(self):
         categorical_features = ['key', 'mode', 'time_signature']
@@ -113,54 +111,9 @@ class GenreClassifier:
         self.X_train = joblib.load(features_filename)  # Load the features
         #print(f"Features loaded from {features_filename}.")
 
-    def predict(self, data_entry):
-        # Check if model and label encoder are loaded
-        if not hasattr(self, 'model') or not hasattr(self, 'label_encoder'):
-            raise Exception("Model and Label Encoder must be loaded before predicting")
-        
-        #Get song features or analyze playlist based on int_choice
-        choice = self.sp.get_id_type(data_entry)
-        if (choice == 'track'):
-            data = self.sp.get_song_features(data_entry)
-            release_date = data['release_date']
-            data.drop('release_date', axis=1, inplace=True)
-        elif (choice == 'playlist'):
-            data = self.sp.analyze_playlist(data_entry)
-            
-        
-        # Create a DataFrame from the data
-        data_df = pd.DataFrame(data)
-        
-        # One-hot encode categorical features
-        categorical_features = ['key', 'mode', 'time_signature']
-        data_df = pd.get_dummies(data, columns=categorical_features)
-        
-        # Add missing columns to the data DataFrame
-        for col in self.X_train.columns:
-            if col not in data.columns:
-                data_df[col] = 0
-        
-        # Reorder the columns to match the training data
-        data_df = data_df[self.X_train.columns]
-        
-        # Scale the data using the scaler
-        data_scaled = self.scaler.transform(data_df)
-        
-        # Predict the genre labels using the model
-        predictions_encoded = self.model.predict(data_scaled)
-        
-        # Decode the predicted labels using the label encoder
-        predictions_decoded = self.label_encoder.inverse_transform(predictions_encoded)
-        
-        if (choice == 'track'):
-            data['release_date'] = release_date
-            data.drop('date_added', axis=1, inplace=True)
-            
-        # Add the predicted genre labels to the data DataFrame
-        data['track_genre'] = predictions_decoded
-        
-        # Return the data DataFrame with predicted genre labels
-        return data
+        return self.model, self.scaler, self.label_encoder, self.X_train
+
+    
 
 
    
