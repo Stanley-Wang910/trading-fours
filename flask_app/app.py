@@ -209,15 +209,12 @@ def recommend():
             
         recommendations, recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_id, era_choice='no')
 
-    print("Previously recommended:", previously_recommended)
-    print("New recommended IDs:", recommended_ids)
     
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))    
 
-    print("Updated recommendations:", updated_recommendations)
 
     session['recommended_songs'] = list(updated_recommendations)
-    print("Session after update:", session['recommended_songs'])
+
 
     if type_id == 'playlist':
         return jsonify({
