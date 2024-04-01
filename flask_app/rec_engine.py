@@ -32,20 +32,24 @@ class RecEngine:
         most_recent_date = playlist_df.iloc[0, 0]
         most_recent_date = pd.to_datetime(most_recent_date, unit='ms').tz_localize(None)
 
-        # Calculate the number of months behind for each track in the playlist
-        playlist_df['date_added'] = pd.to_datetime(playlist_df['date_added'], unit='ms').dt.tz_localize(None)
-        playlist_df['months_behind'] = ((most_recent_date - playlist_df['date_added']).dt.days / 30).astype(int)
+        if most_recent_date != pd.Timestamp('1970-01-01 00:00:00'):
+            # Calculate the number of months behind for each track in the playlist
+            playlist_df['date_added'] = pd.to_datetime(playlist_df['date_added'], unit='ms').dt.tz_localize(None)
+            playlist_df['months_behind'] = ((most_recent_date - playlist_df['date_added']).dt.days / 30).astype(int)
 
-        # Calculate the weight for each track based on the months behind
-        playlist_df['weight'] = weight ** (-playlist_df['months_behind'])
-        playlist_df_weighted = playlist_df.copy()
+            # Calculate the weight for each track based on the months behind
+            playlist_df['weight'] = weight ** (-playlist_df['months_behind'])
+            playlist_df_weighted = playlist_df.copy()
 
-        # Update the values in the playlist dataframe with the weighted values
-        cols_to_update = playlist_df_weighted.columns.difference(['date_added', 'weight', 'months_behind'])
-        playlist_df_weighted.update(playlist_df_weighted[cols_to_update].mul(playlist_df_weighted.weight, axis=0))
+            # Update the values in the playlist dataframe with the weighted values
+            cols_to_update = playlist_df_weighted.columns.difference(['date_added', 'weight', 'months_behind'])
+            playlist_df_weighted.update(playlist_df_weighted[cols_to_update].mul(playlist_df_weighted.weight, axis=0))
 
-        # Get the final playlist vector by excluding unnecessary columns
-        final_playlist_vector = playlist_df_weighted[playlist_df_weighted.columns.difference(['date_added', 'weight', 'months_behind'])]
+            # Get the final playlist vector by excluding unnecessary columns
+            final_playlist_vector = playlist_df_weighted[playlist_df_weighted.columns.difference(['date_added', 'weight', 'months_behind'])]
+        else:
+            # If the most recent date is the default value, exclude only the 'date_added' column
+            final_playlist_vector = playlist_df_weighted[playlist_df_weighted.columns.difference(['date_added'])]
 
         # Sum the values along the rows to get a single vector
         final_playlist_vector = final_playlist_vector.sum(axis=0)

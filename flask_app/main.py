@@ -85,14 +85,16 @@ def generate_recommendations(gc, re, sp):
                     return
 
 def main():
-    client_id, client_secret, redirect_uri, user_id, scope = load_environment_variables()
-    sp = initialize_spotify_client(client_id, client_secret, redirect_uri, user_id, scope)
-    re = RecEngine(sp)
+    # client_id, client_secret, redirect_uri, user_id, scope = load_environment_variables()
+    # sp = initialize_spotify_client(client_id, client_secret, redirect_uri, user_id, scope)
+    # re = RecEngine(sp)
     gc = initialize_genre_classifier()
+    train_genre_classifier(gc)
+    gc.evaluate_all_models()
     # generate_recommendations(gc, re, sp)
 
-    try_this = sp.get_id_type('37i9dQZF1DX5Ejj0EkURtP')
-    print(try_this)
+    # try_this = sp.get_id_type('37i9dQZF1DX5Ejj0EkURtP')
+    # print(try_this)
     #print(sp.predict('37i9dQZF1DX5Ejj0EkURtP', model, scaler, label_encoder, X_train))
     
 

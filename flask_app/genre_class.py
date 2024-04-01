@@ -37,10 +37,10 @@ class GenreClassifier:
 
     def train_save_model(self):
         lr_model_filename = 'data/models/GenreClassModel/lr_model.joblib'  # Define the filename for the logistic regression model
-        rf_model_filename = 'data/models/GenreClassModel/rf_model.joblib'  # Define the filename for the random forest model
-        scaler_filename = 'data/models/GenreClassModel/scaler.joblib'  # Define the filename for the scaler
-        encoder_filename = 'data/models/GenreClassModel/encoder.joblib'  # Define the filename for the label encoder
-        features_filename = 'data/models/GenreClassModel/features.joblib'  # Define the filename for the features
+        rf_model_filename = 'data/models/GenreClassModel/rf_model1.joblib'  # Define the filename for the random forest model
+        scaler_filename = 'data/models/GenreClassModel/scaler1.joblib'  # Define the filename for the scaler
+        encoder_filename = 'data/models/GenreClassModel/encoder1.joblib'  # Define the filename for the label encoder
+        features_filename = 'data/models/GenreClassModel/features1.joblib'  # Define the filename for the features
 
         # Train and save the logistic regression model
         self.lr_model.fit(self.X_train, self.y_train)  # Train the logistic regression model

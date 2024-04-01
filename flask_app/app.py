@@ -170,6 +170,7 @@ def recommend():
             playlist = sp.predict(link, type_id, model, scaler, label_encoder, X_train)
             playlist.to_csv('playlist.csv', index=False)
             p_vector = re.playlist_vector(playlist)
+            p_vector.to_csv('p_vector.csv', index=False)
             playlist_name = sp.get_playlist_track_name(link)
             top_genres = re.get_top_genres(p_vector)
             playlist_ids = playlist['id'].tolist()
