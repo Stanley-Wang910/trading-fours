@@ -1,3 +1,8 @@
+* {
+  box-sizing: border-box;
+}
+
+
 .App {
   text-align: center;
 }
@@ -9,42 +14,116 @@
   height: 100vh;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.main-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding-right: 20px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.search-container {
   display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  margin-top: 20px;
+  margin-right: 20px;
+  padding: 20px;
+}
+
+.logout-position {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+}
+
+.recommendations-container {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 20px;
 }
 
 .SearchBar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   max-width: 600px;
-  margin: 0 auto;
+  width: 100%;
 }
 
-.App-link {
-  color: #61dafb;
+.SearchBar input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.SearchBar button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+  margin-top: 10px;
+}
+
+.recommendations-container {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+}
+
+.recommendations-list h2 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.recommendations-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recommendations-list li {
+  margin-bottom: 20px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+}
+
+.recommendations-list li div {
+  margin-bottom: 5px;
+}
+
+.recommendations-list li a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.recommendations-list li a:hover {
+  text-decoration: underline;
+}
+
+
+
+@media screen and (max-width: 600px) {
+  .search-container {
+    flex-direction: column;
+    align-items: center;
   }
-  to {
-    transform: rotate(360deg);
+
+  .SearchBar button {
+    margin-left: 0;
+    margin-top: 10px;
   }
 }

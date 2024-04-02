@@ -97,7 +97,7 @@ def get_token():
                         'refresh_token': refresh_token,
                         'token_expires': token_expires})
 
-@app.route('/clear_session')
+@app.route('/auth/logout')
 def clear_session():
     session.clear()
     return "Session data cleared"
@@ -140,7 +140,6 @@ def recommend():
         if not refresh_token():
             return redirect('/auth/login')
 
-
     sp = SpotifyClient(Spotify(auth=session.get('access_token')))
     # re = RecEngine(sp)
     
@@ -150,11 +149,12 @@ def recommend():
     if not link:
         return jsonify({'error': 'No link provided'}), 400 # Cannot process request
 
-      
+    # Extract the type and ID from the link
     type_id = link.split('/')[3]
     link = link.split('/')[-1].split('?')[0]
 
     if type_id == 'playlist':
+        # Check if the same playlist has been searched before and if the necessary session data exists
         if session.get('last_search') == link and 'playlist_name' in session:
             p_vector = session.get('p_vector')
             p_vector = pd.read_json(p_vector, orient='records')
@@ -163,7 +163,6 @@ def recommend():
             playlist_ids = session.get('playlist_ids')
             previously_recommended = session.get('recommended_songs', [])
             re = RecEngine(sp, previously_recommended=previously_recommended)  
-
         else:
             previously_recommended = session['recommended_songs'] = []
             re = RecEngine(sp, previously_recommended=previously_recommended)  

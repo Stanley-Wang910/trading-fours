@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Login from './components/Login'
 import SearchBar from './components/SearchBar';
+import RecommendationsList from './components/RecommendationList';
+import Logout from './components/Logout';
 import './App.css';
 
 function App() {
 
   const [token, setToken] = useState('');
+  const [recommendations, setRecommendations] = useState([]);
 
   useEffect(() => {
 
@@ -19,10 +22,28 @@ function App() {
 
   }, []);
 
+  const handleRecommendations = (data) => {
+    setRecommendations(data);
+  }
+
   return (
-    <div className="App-content">
-        { (token === '') ? <Login/> : <SearchBar /> }
-    </div>
+  <div className="App">
+      <div className="App-content">
+          { (token === '') ? (
+          <Login/> 
+          ) : (
+          <div className="main-container">
+            <Logout setToken={setToken} setRecommendations={setRecommendations} />
+            <div className="search_container">
+              <SearchBar onRecommendations={handleRecommendations}/> 
+            </div>
+            <div className="recommendations-container">
+              <RecommendationsList recommendations={recommendations}/>
+            </div>
+          </div>
+          )}
+      </div>
+  </div>
   );
 }
 
