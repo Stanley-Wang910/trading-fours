@@ -132,7 +132,16 @@ def refresh_token():
     else:
         return False
 
+@app.route('/user/profile')
+def get_user_profile():
+    profile_url = 'https://api.spotify.com/v1/me'
+    headers = {
+        'Authorization' : f"Bearer {session.get('access_token')}"
+    }
 
+    response = requests.get(profile_url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
 
 @app.route('/RecEngine/recommend', methods=['GET'])
 def recommend():
@@ -141,9 +150,6 @@ def recommend():
             return redirect('/auth/login')
 
     sp = SpotifyClient(Spotify(auth=session.get('access_token')))
-    # re = RecEngine(sp)
-    
-    #model, scaler, label_encoder, X_train = gc.load_model()
 
     link = request.args.get('link')
     if not link:
