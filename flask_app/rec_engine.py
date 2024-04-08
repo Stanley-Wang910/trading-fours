@@ -74,7 +74,6 @@ class RecEngine:
         Returns:
             DataFrame: DataFrame containing the top recommended songs.
         """
-
         top_genres = self.get_top_genres(final_playlist_vector)
 
         # Prepare data for recommendation

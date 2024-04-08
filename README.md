@@ -2,9 +2,13 @@
 
 ## Description
 
-This project is a robust Spotify Recommendation Engine that takes a playlist or a track as input. It uses a random forest classification model to predict overarching track or playlist genre. This model was trained on over 200,000 songs and 20 genres. The recommendation engine then utilizes the spotipy library and the Spotify Web API to retrieve individual track attributes, and creates a vector representative of the playlist/track within a ~45 dimensional space. This vector is compared against an immense dataset of diverse songs in both genre and audio features and is then assigned a cosine similarity, which is finally used to determine the best recommendations for the given playlist/track.
+This project is a robust Spotify Recommendation Engine that takes a playlist or a track as input. It uses a random forest classification model to predict overarching track or playlist genre. This model was trained on over 200,000 songs and 20 genres. The recommendation engine then utilizes the spotipy library and the Spotify Web API to retrieve individual track attributes, and creates a vector representative of the playlist/track within a ~45 dimensional space. This vector is compared against an immense & continually updated dataset of diverse songs in both genre and audio features and is then assigned a cosine similarity, which is finally used to determine the best recommendations for the given playlist/track.
 
 ## Example Usage & Analysis
+
+Current State:
+![Example](image.png)
+
 Here is a demonstrated example on one of my own playlists. To stress test my recommendation engine, I fed it a playlist of mine that I had created for the month of December (with no specific genre in mind).
 This way, I would be able to see how versatile its recommendations would be when given an equally diverse playlist:
 
@@ -26,9 +30,8 @@ However, beyond just being accurate to Spotify's own recommendations, we can see
 
 ## Features Coming Soon
 
-1. Stylized Front End Integration (Flask, React)
-2. User authorization flow directly handled through Web Spotify API so that anybody with a Spotify Account can try getting recommendations
-3. Diverse handling of new custom datasets to recommend songs, pulled from the unique playlists that Spotify's curates for the user, enabling even more accurate recommendations
+1. Improved Front End UI
+2. MySQL Database interactions for tailored user recommendations and profile customizations 
 
 ## Contact
 
@@ -86,12 +89,12 @@ To use this Spotify Recommendation Engine, follow these steps:
 
 ## Data Sources
 
-This project uses altered and combined data from the following sources:
+The initial dataframe of ~200,000 songs was collected and altered from the following:
 
 - [Spotify Tracks Dataset](https://www.kaggle.com/datasets/maharshipandya/-spotify-tracks-dataset)
 - [Ultimate Spotify Tracks DB](https://www.kaggle.com/datasets/zaheenhamidani/ultimate-spotify-tracks-db)
 
-
+However, the dataframe is continually updated by playlists and tracks that users enter!
 
 
 

@@ -176,6 +176,7 @@ def get_playlist_data_session(link):
         top_genres = session.get('top_genres')
         playlist_ids = session.get('playlist_ids')
         previously_recommended = session.get('recommended_songs', [])
+        print(previously_recommended) #
         return p_vector, playlist_name, top_genres, playlist_ids, previously_recommended
     return None
 
@@ -282,10 +283,10 @@ def recommend():
         
         # Get recommendations
         recommendations, recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_id, era_choice='no')
+    # Update recommended songs in session
+    updated_recommendations = set(previously_recommended).union(set(recommended_ids))
+    session['recommended_songs'] = list(updated_recommendations)
 
-        # Update recommended songs in session
-        updated_recommendations = set(previously_recommended).union(set(recommended_ids))
-        session['recommended_songs'] = list(updated_recommendations)
 
     if type_id == 'playlist':
         return jsonify({
