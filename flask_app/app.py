@@ -31,6 +31,8 @@ gc = GenreClassifier('data/datasets/rec_dataset.csv')
 model, scaler, label_encoder, X_train = gc.load_model()
 REC_DATASET_PATH = 'data/datasets/rec_dataset.csv'
 rec_dataset = pd.read_csv(REC_DATASET_PATH)
+append_data = pd.read_csv('data/datasets/append_data.csv')
+
 
 # Generate a random state string
 def generate_random_string(length=16):
@@ -133,7 +135,7 @@ def refresh_token():
         return False
 
 @app.route('/user/profile')
-def get_user_profile():
+def get_user_profile(self):
     profile_url = 'https://api.spotify.com/v1/me'
     headers = {
         'Authorization' : f"Bearer {session.get('access_token')}"
@@ -143,13 +145,90 @@ def get_user_profile():
     if response.status_code == 200:
         return response.json()
 
+def append_to_dataset(data, choice):
+    global rec_dataset
+    global append_data
+    new_data = data.copy()
+    if choice == 'track':
+        new_data.drop('release_date', axis=1, inplace=True)  # Remove 'release_date' column if choice is 'track'
+    elif choice == 'playlist':
+        new_data.drop('date_added', axis=1, inplace=True)  # Remove 'date_added' column if choice is 'playlist'
+    new_data.rename(columns={'artist': 'artists', 'name': 'track_name', 'id': 'track_id'}, inplace=True)  # Rename columns
+    append_data = pd.concat([append_data, new_data], ignore_index=True)  # Concatenate new data with existing append_data
+    append_data.to_csv('data/datasets/append_data.csv', index=False)  # Save append_data to CSV file
+    if session['append_counter'] >= 10 or len(append_data) >= 250:  # Check if conditions for appending to rec_dataset are met
+        print('inside if condition')
+        rec_dataset = pd.concat([rec_dataset, append_data], ignore_index=True)  # Concatenate append_data with rec_dataset
+        rec_dataset.drop_duplicates(subset=['track_id'], keep='first', inplace=True)  # Remove duplicate track_ids
+        rec_dataset.to_csv('data/datasets/rec_dataset.csv', index=False)  # Save rec_dataset to CSV file
+        session['append_counter'] = 0  # Reset append_counter
+        print(session['append_counter'])
+        append_data.drop(append_data.index, inplace=True)  # Clear append_data
+
+
+
+def get_playlist_data_session(link):
+    if session.get('last_search') == link and 'playlist_name' in session:
+        print('Playlist session data exists')
+        p_vector = session.get('p_vector')
+        p_vector = pd.read_json(p_vector, orient='records')
+        playlist_name = session.get('playlist_name')
+        top_genres = session.get('top_genres')
+        playlist_ids = session.get('playlist_ids')
+        previously_recommended = session.get('recommended_songs', [])
+        return p_vector, playlist_name, top_genres, playlist_ids, previously_recommended
+    return None
+
+def get_track_data_session(link):
+    if session.get('last_search') == link and 'track_name' in session:
+        print('Track session data exists')
+        t_vector = session.get('t_vector')
+        t_vector = pd.read_json(t_vector, orient='records')
+        track_name = session.get('track_name')
+        artist_name = session.get('artist_name')
+        release_date = session.get('release_date')
+        track_id = session.get('track_id')
+        previously_recommended = session.get('recommended_songs', [])
+        return t_vector, track_name, artist_name, release_date, track_id, previously_recommended
+    return None
+
+def save_playlist_data_session(playlist, link, re, sp):
+    p_vector = re.playlist_vector(playlist) # Get playlist vector
+    playlist_name = sp.get_playlist_track_name(link) # Get playlist name
+    top_genres = re.get_top_genres(p_vector) # Get top genres
+    playlist_ids = playlist['id'].tolist() # Get playlist track IDs
+    p_vector_json = p_vector.to_json(orient='records') # Convert playlist vector to JSON
+    top_genres = top_genres.tolist() 
+    # Save playlist data to session
+    session['p_vector'] = p_vector_json 
+    session['playlist_name'] = playlist_name 
+    session['top_genres'] = top_genres  
+    session['playlist_ids'] = playlist_ids 
+    session['last_search'] = link 
+    return p_vector, playlist_name, top_genres, playlist_ids 
+
+def save_track_data_session(track, link, re, sp):
+    track_id = track['id'].tolist() # Get track ID
+    track_name, artist_name, release_date = sp.get_playlist_track_name(link, 'track') # Get track name, artist name, and release date
+    t_vector = re.track_vector(track) # Get track vector
+    t_vector_json = t_vector.to_json(orient='records') # Convert track vector to JSON
+    # Save track data to session
+    session['t_vector'] = t_vector_json
+    session['track_name'] = track_name
+    session['artist_name'] = artist_name
+    session['release_date'] = release_date
+    session['track_id'] = track_id
+    session['last_search'] = link
+    return t_vector, track_name, artist_name, release_date, track_id
+
 @app.route('/RecEngine/recommend', methods=['GET'])
 def recommend():
+    # Check if the access token is expired and refresh if necessary
     if is_token_expired():
         if not refresh_token():
             return redirect('/auth/login')
 
-    sp = SpotifyClient(Spotify(auth=session.get('access_token')))
+    sp = SpotifyClient(Spotify(auth=session.get('access_token'))) # Initialize SpotifyClient
 
     link = request.args.get('link')
     if not link:
@@ -160,67 +239,53 @@ def recommend():
     link = link.split('/')[-1].split('?')[0]
 
     if type_id == 'playlist':
-        # Check if the same playlist has been searched before and if the necessary session data exists
-        if session.get('last_search') == link and 'playlist_name' in session:
-            p_vector = session.get('p_vector')
-            p_vector = pd.read_json(p_vector, orient='records')
-            playlist_name = session.get('playlist_name')
-            top_genres = session.get('top_genres')
-            playlist_ids = session.get('playlist_ids')
-            previously_recommended = session.get('recommended_songs', [])
-            re = RecEngine(sp, previously_recommended=previously_recommended)  
+        # Check if playlist data exists in session
+        playlist_data = get_playlist_data_session(link)
+        if playlist_data:
+            print('Playlist data exists')
+            p_vector, playlist_name, top_genres, playlist_ids, previously_recommended = playlist_data
+            re = RecEngine(sp, previously_recommended=previously_recommended)
         else:
+            print('Playlist data does not exist')
             previously_recommended = session['recommended_songs'] = []
             re = RecEngine(sp, previously_recommended=previously_recommended)  
             playlist = sp.predict(link, type_id, model, scaler, label_encoder, X_train)
-            playlist.to_csv('playlist.csv', index=False)
-            p_vector = re.playlist_vector(playlist)
-            p_vector.to_csv('p_vector.csv', index=False)
-            playlist_name = sp.get_playlist_track_name(link)
-            top_genres = re.get_top_genres(p_vector)
-            playlist_ids = playlist['id'].tolist()
-            p_vector_json = p_vector.to_json(orient='records')
-            top_genres = top_genres.tolist()
-            session['p_vector'] = p_vector_json
-            session['playlist_name'] = playlist_name
-            session['top_genres'] = top_genres
-            session['playlist_ids'] = playlist_ids
-            session['last_search'] = link
+
+            session['append_counter'] = session.get('append_counter', 0) + 1
+            print("Append counter:", session['append_counter'])
+
             
+            append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
+            p_vector, playlist_name, top_genres, playlist_ids = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
+        
+        # Get recommendations
         recommendations, recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, playlist_ids)
+
     elif type_id == 'track':
-        if session.get('last_search') == link and 'track_name' in session:
-            t_vector = session.get('t_vector')
-            t_vector = pd.read_json(t_vector, orient='records')
-            track_name = session.get('track_name')
-            artist_name = session.get('artist_name')
-            release_date = session.get('release_date')
-            track_id = session.get('track_id')
-            previously_recommended = session.get('recommended_songs', [])
-            re = RecEngine(sp, previously_recommended=previously_recommended)  
+        # Check if track data exists in session
+        track_data = get_track_data_session(link)
+        if track_data:
+            t_vector, track_name, artist_name, release_date, track_id, previously_recommended = track_data
+            re = RecEngine(sp, previously_recommended=previously_recommended)
         else:
             previously_recommended = session['recommended_songs'] = []
             re = RecEngine(sp, previously_recommended=previously_recommended) 
             track = sp.predict(link, type_id, model, scaler, label_encoder, X_train)
-            track_id = track['id'].tolist()
-            track_name, artist_name, release_date = sp.get_playlist_track_name(link, 'track') 
-            t_vector = re.track_vector(track)
-            t_vector_json = t_vector.to_json(orient='records')
-            session['t_vector'] = t_vector_json
-            session['track_name'] = track_name
-            session['artist_name'] = artist_name
-            session['release_date'] = release_date
-            session['track_id'] = track_id
-            session['last_search'] = link
             
+            session['append_counter'] = session.get('append_counter', 0) + 1
+            print("Append counter:", session['append_counter'])
+
+            # Append Track to dataset
+            append_to_dataset(track, type_id)
+            
+            t_vector, track_name, artist_name, release_date, track_id = save_track_data_session(track, link, re, sp) # Save Track data to session
+        
+        # Get recommendations
         recommendations, recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_id, era_choice='no')
 
-    
-    updated_recommendations = set(previously_recommended).union(set(recommended_ids))    
-
-
-    session['recommended_songs'] = list(updated_recommendations)
-
+        # Update recommended songs in session
+        updated_recommendations = set(previously_recommended).union(set(recommended_ids))
+        session['recommended_songs'] = list(updated_recommendations)
 
     if type_id == 'playlist':
         return jsonify({
@@ -237,7 +302,9 @@ def recommend():
             'recommendations': recommendations.to_dict(orient='records'),
             'recommended_ids': recommended_ids
         })
-        
+
+
+    
 
 
     

@@ -9,8 +9,7 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-REC_DATASET_PATH = 'data/datasets/rec_dataset.csv'
-rec_dataset = pd.read_csv(REC_DATASET_PATH)
+
 
 class SpotifyClient:
     def __init__(self, sp):
@@ -28,19 +27,7 @@ class SpotifyClient:
         # Initialize the Spotipy client with the auth manager
         self.sp = sp
 
-    # def __init__(self, client_id, client_secret, redirect_uri, user_id, scope):
-    #     self.client_id = client_id
-    #     self.client_secret = client_secret
-    #     self.redirect_uri = redirect_uri
-    #     self.user_id = user_id
-    #     self.scope = scope
-
-    #     #Initialize the Spotipy client with the client credentials manager
-    #     self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=self.client_id,
-    #                                                         client_secret=self.client_secret,
-    #                                                         redirect_uri=self.redirect_uri,
-    #                                                         scope=self.scope,
-    #                                                         username=self.user_id))
+    
 
     def get_id_name(self):
         """
@@ -289,22 +276,19 @@ class SpotifyClient:
             data['release_date'] = release_date
             data.drop('date_added', axis=1, inplace=True)
 
-        self.append_to_dataset(data, choice)
         # Return the data DataFrame with predicted genre labels
         return data
-     
+  
+        # def __init__(self, client_id, client_secret, redirect_uri, user_id, scope):
+    #     self.client_id = client_id
+    #     self.client_secret = client_secret
+    #     self.redirect_uri = redirect_uri
+    #     self.user_id = user_id
+    #     self.scope = scope
 
-    def append_to_dataset(self, data, choice):
-        new_data = data.copy()
-        if choice == 'track':
-            new_data.drop('release_date', axis=1, inplace=True)
-        elif choice == 'playlist':
-            new_data.drop('date_added', axis=1, inplace=True)
-        new_data.rename(columns={'artist': 'artists', 'name': 'track_name', 'id': 'track_id'}, inplace=True)
-        combined_data = pd.concat([rec_dataset, new_data], ignore_index=True)
-
-        # Drop duplicates
-        combined_data.drop_duplicates(subset='track_id', keep='first', inplace=True)
-
-        # Write back to csv
-        combined_data.to_csv('data/datasets/rec_dataset.csv', index=False)
+    #     #Initialize the Spotipy client with the client credentials manager
+    #     self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=self.client_id,
+    #                                                         client_secret=self.client_secret,
+    #                                                         redirect_uri=self.redirect_uri,
+    #                                                         scope=self.scope,
+    #                                                         username=self.user_id))

@@ -1,0 +1,50 @@
+artists,track_name,track_id,popularity,duration_ms,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,time_signature,track_genre
+Car Seat Headrest,Drunk Drivers/Killer Whales,75hwtYcghca6YKW4i6C6fP,58,374653,0.537,0.414,2,-7.952,1,0.0404,0.218,2.1e-06,0.103,0.459,117.101,4,Alternative
+Radiohead,2 + 2 = 5,4xkcGfpM9RwB4IiQ7yx2dB,61,199360,0.442,0.717,5,-5.498,0,0.0504,0.178,5.1e-05,0.344,0.386,149.582,4,Alternative
+Quadeca,"Summit, Pt. 1",0gjdaIK0u34lFxHhgRpsad,0,274907,0.346,0.525,1,-11.461,0,0.0964,0.363,2.84e-06,0.227,0.0797,150.619,4,Soundtrack
+The Floating Mind,Brown Noise (200 Hz),0cGQpeLYa5Q0nbAlJah5UJ,58,212000,0.147,0.19,1,-35.357,1,0.207,0.837,0.986,0.112,0.0614,73.035,4,Soundtrack
+Baby Keem,STATS,0w6webWdhjRKdqJ3DeGgM1,66,169828,0.567,0.462,1,-7.794,1,0.36,0.00192,3.57e-06,0.106,0.172,152.236,4,Hip-Hop
+Car Seat Headrest,Strangers,4PKWT0G4pPsTV6DiFOMaFy,33,339053,0.451,0.567,2,-4.313,1,0.0342,0.0362,0.477,0.205,0.299,115.036,4,Electronic
+Car Seat Headrest,High to Death,4puSnA2hoYbFW5fim9XWwz,52,459348,0.505,0.423,0,-11.324,1,0.0383,0.131,0.0215,0.103,0.171,106.251,4,Rock
+Current Joys,A Different Age,35NJ2WgkdiKvDFNFGjHzyU,0,412418,0.627,0.371,2,-10.621,1,0.0269,0.637,0.0643,0.0759,0.361,143.935,4,Soundtrack
+Taylor Swift,Forever Winter (Taylor's Version) (From The Vault),3oGVx9RBmiYGv5ZCecWLkx,66,263533,0.611,0.552,7,-5.828,1,0.031,0.256,0.0,0.134,0.41,116.012,4,Pop
+Pusha T,Pain,5oXO6utw8aNtgWgIX1iyS4,38,250213,0.565,0.817,11,-5.512,1,0.0634,0.109,3.09e-06,0.195,0.732,92.406,4,Reggaeton
+Radiohead,The Bends,7oDFvnqXkXuiZa1sACXobj,62,246200,0.23,0.755,7,-8.065,1,0.0658,0.0115,0.141,0.363,0.312,91.608,4,Alternative
+Conan Gray,Memories,7AYP21Q4qnxw2WxETEvSRb,63,248819,0.34,0.684,11,-6.306,1,0.044,0.00979,0.0,0.348,0.556,112.969,4,Dance
+The Hellp,Ssx,1eCImHqurFCsE6du2nF6jh,0,216198,0.524,0.942,5,-7.162,1,0.0714,0.00736,4.86e-06,0.174,0.485,121.066,4,Rock
+Jeff Buckley,"Lover, You Should've Come Over",6Jv7kjGkhY2fT4yuBF3aTz,72,404213,0.387,0.595,2,-5.67,1,0.0389,0.361,1.1e-05,0.174,0.151,119.38,3,Rock
+Paris Texas,HEAVY METAL,1j6zEnDOTIRJhBhknrd86m,49,159652,0.738,0.499,1,-9.915,1,0.309,0.722,0.0,0.227,0.477,115.407,4,Hip-Hop
+Car Seat Headrest,Cute Thing,7AppWYIm98qFOGVMbNHJSB,53,339322,0.308,0.744,10,-5.162,1,0.0524,0.00627,0.291,0.116,0.273,114.258,4,Alternative
+Car Seat Headrest,Twin Fantasy (Those Boys),650fmCxQjHBlMy33GehFLc,45,414162,0.335,0.352,7,-8.921,1,0.034,0.328,0.276,0.956,0.135,113.353,4,Folk
+Current Joys,Rebecca,4anOZzM5RO95XwywIAKQav,33,249200,0.591,0.422,6,-8.483,0,0.0282,0.328,0.579,0.11,0.355,94.997,4,Jazz
+The Backseat Lovers,Pool House,74f0dpqHhTeTJzs4pmZ1yq,70,269412,0.594,0.355,7,-11.184,1,0.0305,0.0478,0.000109,0.0559,0.327,134.097,4,Pop
+Radiohead,Fake Plastic Trees,73CKjW3vsUXRpy3NnX4H7F,73,290707,0.463,0.229,2,-12.592,1,0.0297,0.167,0.0997,0.202,0.135,73.543,4,Rock
+Car Seat Headrest,Unforgiving Girl (She's Not An),1bNFcAne3QoFy6Yf5wddf9,44,326428,0.392,0.593,0,-7.193,1,0.0507,0.0627,8.88e-05,0.76,0.678,164.899,4,Folk
+death's dynamic shroud,Messe de E-102,3MId8Ug2WnJLrjBo78M37l,0,332000,0.543,0.747,7,-7.084,1,0.039,0.0176,0.477,0.153,0.147,119.96,4,Electronic
+Madi Diaz,Hangover,6AvjNF9nwImqgq2PHe5hqz,7,215493,0.571,0.541,4,-6.792,1,0.0331,0.664,0.0,0.114,0.336,124.954,4,Soundtrack
+XXXTENTACION,One Minute (feat. Kanye West & Travis Barker),0T6RSXxFhW8dRTWHI604ld,58,197759,0.568,0.636,11,-4.265,1,0.204,0.00671,0.0,0.105,0.879,113.497,5,Indie
+The Neighbourhood,Sweater Weather,2QjOHCTQ1Jl3zawyYOpxh6,89,240400,0.612,0.807,10,-2.81,1,0.0336,0.0495,0.0177,0.101,0.398,124.053,4,Alternative
+Car Seat Headrest,Beach Life-In-Death,27aQH9DIJ3ozx3dC91Hhjg,53,798693,0.247,0.792,0,-7.101,1,0.093,0.00393,0.0895,0.393,0.26,114.49,4,Folk
+Baby Keem,trademark usa,15hJmqqEtASVXl6sM7i4UF,70,270671,0.615,0.6,10,-5.62,1,0.27,0.107,1.61e-06,0.283,0.0661,130.027,4,Hip-Hop
+Car Seat Headrest,Bodys,1Pbs2eCcX9p2onaAvMYvhk,57,406935,0.518,0.843,2,-7.361,1,0.0544,0.00136,0.0119,0.132,0.249,143.903,4,Rock
+Radiohead,Jigsaw Falling Into Place,0YJ9FWWHn9EfnN0lHwbzvV,76,248893,0.462,0.832,11,-6.085,0,0.0479,0.108,0.00416,0.0741,0.807,165.653,4,Alternative
+Car Seat Headrest,Sober to Death,6kOHjAOLz9IvUiRGf72Kec,65,304427,0.512,0.543,7,-6.857,1,0.0343,0.189,0.000649,0.323,0.236,114.963,4,Folk
+21 Savage,Glock In My Lap,6pcywuOeGGWeOQzdUyti6k,83,193591,0.847,0.733,10,-6.439,0,0.16,0.00574,1.04e-05,0.151,0.202,130.029,4,Hip-Hop
+Car Seat Headrest,Fill In The Blank,0SVvyfRMFMRJzc0L2odX20,56,244507,0.339,0.829,9,-7.239,1,0.058,0.00737,1.26e-05,0.0596,0.5,162.794,4,Alternative
+Pusha T,Hard Piano,3HgA5R5alihocnOYE9ihpS,48,195733,0.582,0.778,4,-3.776,0,0.178,0.0347,0.0,0.21,0.205,82.193,4,Hip-Hop
+Car Seat Headrest,My Boy - Twin Fantasy,4zQXB3sZrpT2gA3rgYl3sY,53,172920,0.568,0.308,9,-9.865,1,0.033,0.0871,0.0418,0.128,0.379,115.078,4,Alternative
+Car Seat Headrest,Something Soon,1L2U62lhBK991jQJ1uecD5,44,260427,0.547,0.469,11,-6.605,0,0.0307,0.0353,0.381,0.114,0.171,129.943,4,Folk
+Sir Chloe,Too Close,4zV3Og5KgrNyZEhzrZzwuk,0,170576,0.42,0.558,9,-5.728,1,0.0509,0.167,0.0,0.19,0.538,165.987,4,Soundtrack
+Car Seat Headrest,(Joe Gets Kicked Out of School for Using) Drugs With Friends (But Says This Isn't a Problem),4TlE6betO4tqzEn0bREQfq,46,337107,0.436,0.452,2,-7.702,1,0.0257,0.333,0.00084,0.0867,0.401,106.072,4,Alternative
+Car Seat Headrest,Cosmic Hero,4betb65mmasNTzNOhWHc4z,43,511533,0.593,0.48,0,-7.455,1,0.0342,0.0765,0.588,0.0786,0.155,117.074,4,Electronic
+Car Seat Headrest,The Ballad of the Costa Concordia,0eHWA191nPyDFwQPrsnC4r,43,690973,0.321,0.556,9,-8.136,0,0.0377,0.011,0.00941,0.0921,0.12,102.113,4,World
+Steve Lacy,Give You the World,0J119Oas2ox6JTTHUGZxHN,65,273787,0.574,0.369,0,-9.251,0,0.0262,0.83,0.234,0.0976,0.41,73.013,4,Folk
+Car Seat Headrest,Famous Prophets (Stars),5LnFURDZ1n3psF1IhjKkfe,48,970465,0.476,0.326,9,-9.597,1,0.0296,0.0982,0.228,0.33,0.173,137.963,4,Folk
+The Cure,Just Like Heaven,4NnWuGQujzWUEg0uZokO5M,73,212013,0.437,0.94,9,-6.946,1,0.0426,0.0524,0.000573,0.222,0.48,151.417,4,Rock
+Joey Bada$$,Survival Tactics,4pNT8XTKWb2vhcsqwzdXCT,65,202785,0.53,0.843,1,-2.271,1,0.39,0.428,0.0,0.164,0.919,199.946,4,Hip-Hop
+Car Seat Headrest,Vincent,7fhimI5b7TpkyZ99X7R51o,43,465027,0.395,0.61,9,-7.836,1,0.0436,0.35,0.0269,0.11,0.0549,147.836,4,Folk
+Radiohead,Weird Fishes/ Arpeggi,4wajJ1o7jWIg62YqpkHC7S,73,318187,0.531,0.61,11,-8.025,0,0.0387,0.772,0.756,0.0908,0.199,152.958,4,Alternative
+The Greeting Committee,More,0WVOBPRjZ4AAYjZDAw36mE,49,220733,0.542,0.654,5,-5.455,1,0.0311,0.444,0.0,0.117,0.339,78.012,4,Country
+Vacations,Panache,2CoKcftpisMc9qklSiIBaw,35,349727,0.348,0.704,2,-6.597,0,0.0349,0.000284,0.00719,0.0577,0.144,112.974,4,Blues
+Baby Keem,pink panties,4Af4H9x1RwADB9XizalvUM,50,163509,0.918,0.529,8,-6.325,1,0.0847,0.00839,0.0,0.115,0.262,94.976,4,Hip-Hop
+Fiona Apple,I Want You To Love Me,73SBAGI4fPFm4VkB3NjXq8,58,237713,0.528,0.504,9,-8.821,0,0.09,0.559,0.0414,0.0936,0.712,141.369,3,Classical

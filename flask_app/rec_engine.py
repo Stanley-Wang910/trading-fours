@@ -49,7 +49,7 @@ class RecEngine:
             final_playlist_vector = playlist_df_weighted[playlist_df_weighted.columns.difference(['date_added', 'weight', 'months_behind'])]
         else:
             # If the most recent date is the default value, exclude only the 'date_added' column
-            final_playlist_vector = playlist_df_weighted[playlist_df_weighted.columns.difference(['date_added'])]
+            final_playlist_vector = playlist_df[playlist_df.columns.difference(['date_added'])]
 
         # Sum the values along the rows to get a single vector
         final_playlist_vector = final_playlist_vector.sum(axis=0)
@@ -74,9 +74,6 @@ class RecEngine:
         Returns:
             DataFrame: DataFrame containing the top recommended songs.
         """
-        # self.print_loading_message()
-
-        
 
         top_genres = self.get_top_genres(final_playlist_vector)
 
@@ -133,15 +130,12 @@ class RecEngine:
         Returns:
             DataFrame: The top recommended songs based on the given track.
         """
-
-        
         # Get track release date
         track_release_date = track_vector['release_date'].values[0]
         track_release_date = datetime.strptime(track_release_date[:4], '%Y')
         
         # Drop release_date column from track_vector
         track_vector = track_vector.drop(columns=['release_date'])
-        
         # Get track genre
         track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
         if track_genre_column:
@@ -151,6 +145,7 @@ class RecEngine:
         final_track_vector, final_rec_df, recommendations_df = self.prepare_data(rec_dataset, track_vector, track_id)
         
         # Apply weight to track genre
+        print(track_genre)
         weight = {track_genre: 0.9}
         final_rec_df = self.apply_weights(final_rec_df, weight)
         
