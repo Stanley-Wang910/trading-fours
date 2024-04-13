@@ -13,18 +13,7 @@ warnings.filterwarnings("ignore")
 
 class SpotifyClient:
     def __init__(self, sp):
-        # self.client_id = client_id
-        # self.client_secret = client_secret
-        # self.redirect_uri = redirect_uri
-        # self.user_id = user_id
-        # self.scope = scope
-        
-        # auth_manager = SpotifyOAuth(client_id=self.client_id,
-        #                             client_secret=self.client_secret,
-        #                             redirect_uri=self.redirect_uri,
-        #                             scope=self.scope,
-        #                             username=self.user_id)
-        # Initialize the Spotipy client with the auth manager
+
         self.sp = sp
 
     
@@ -45,7 +34,7 @@ class SpotifyClient:
         playlist_id = id_dic[playlist_name]
         self.analyze_playlist(playlist_id)
 
-    def analyze_playlist(self, playlist_id):
+    def analyze_playlist(self, playlist_id, type_analyze='classify'):
         """
         Analyzes a Spotify playlist by retrieving the tracks, their audio features, and merging them into a DataFrame.
 
@@ -76,6 +65,8 @@ class SpotifyClient:
         
         # Retrieve the audio features for the tracks
         track_ids = playlist['id'].tolist()
+        if type_analyze == 'rec':
+            return track_ids
         audio_features_list = self.sp.audio_features(track_ids)
         audio_features_df = pd.DataFrame(audio_features_list)
 
@@ -278,17 +269,3 @@ class SpotifyClient:
 
         # Return the data DataFrame with predicted genre labels
         return data
-  
-        # def __init__(self, client_id, client_secret, redirect_uri, user_id, scope):
-    #     self.client_id = client_id
-    #     self.client_secret = client_secret
-    #     self.redirect_uri = redirect_uri
-    #     self.user_id = user_id
-    #     self.scope = scope
-
-    #     #Initialize the Spotipy client with the client credentials manager
-    #     self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id=self.client_id,
-    #                                                         client_secret=self.client_secret,
-    #                                                         redirect_uri=self.redirect_uri,
-    #                                                         scope=self.scope,
-    #                                                         username=self.user_id))

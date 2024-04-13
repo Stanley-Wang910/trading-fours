@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   box-sizing: border-box;
 }
@@ -24,13 +28,13 @@
   padding-right: 20px;
 }
 
-.search-container {
+/* .search-container {
   display: flex;
   justify-content: center;
   margin-top: 20px;
   margin-right: 20px;
   padding: 20px;
-}
+} */
 
 .logout-position {
   position: fixed;
@@ -38,29 +42,23 @@
   right: 20px;
 }
 
-.recommendations-container {
-  max-height: 400px;
-  overflow-y: auto;
-  margin-top: 20px;
-}
-
-.SearchBar {
+/* .SearchBar {
   display: flex;
   justify-content: center;
   align-items: center;
   max-width: 600px;
   width: 100%;
-}
+} */
 
-.SearchBar input {
+/* .SearchBar input {
   width: 100%;
   padding: 10px;
   font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
-}
+} */
 
-.SearchBar button {
+/* .SearchBar button {
   padding: 10px 20px;
   font-size: 16px;
   background-color: #007bff;
@@ -70,20 +68,23 @@
   cursor: pointer;
   margin-left: 10px;
   margin-top: 10px;
-}
+} */
 
 .recommendations-container {
-  max-height: 400px;
+  max-height: 600px;
   overflow-y: auto;
   margin-top: 20px;
   background-color: #fff;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 20px;
+  padding: 0px;
+}
+
+.recommendations-list {
+  margin-top: 20px;
 }
 
 .recommendations-list h2 {
-  margin-top: 0;
   margin-bottom: 10px;
 }
 
@@ -93,37 +94,55 @@
   margin: 0;
 }
 
-.recommendations-list li {
-  margin-bottom: 20px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background-color: #f9f9f9;
-}
-
-.recommendations-list li div {
+.embed-item {
   margin-bottom: 5px;
 }
 
-.recommendations-list li a {
-  color: #007bff;
-  text-decoration: none;
+.embed-item iframe {
+  border: none;
+  border-radius: 12px;
+  width: 100%;
+  height: 80px;
 }
 
-.recommendations-list li a:hover {
-  text-decoration: underline;
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 2s linear infinite;
+  margin: 0 auto;
 }
 
-
-
-@media screen and (max-width: 600px) {
-  .search-container {
-    flex-direction: column;
-    align-items: center;
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
   }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 
-  .SearchBar button {
-    margin-left: 0;
-    margin-top: 10px;
+.loading-state {
+  opacity: 0;
+  transition: opacity 0.5s ease-in-out;
+}
+
+.loading-state.loaded {
+  opacity: 1;
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
   }
 }

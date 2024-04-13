@@ -19,7 +19,6 @@ from datetime import datetime
 # Load environment variables
 load_dotenv()
 
-
 app = Flask(__name__)
 CORS(app)
 
@@ -104,7 +103,6 @@ def clear_session():
     session.clear()
     return "Session data cleared"
 
-
 def refresh_token():
     if 'refresh_token' not in session:
         return False
@@ -165,8 +163,6 @@ def append_to_dataset(data, choice):
         print(session['append_counter'])
         append_data.drop(append_data.index, inplace=True)  # Clear append_data
 
-
-
 def get_playlist_data_session(link):
     if session.get('last_search') == link and 'playlist_name' in session:
         print('Playlist session data exists')
@@ -174,10 +170,9 @@ def get_playlist_data_session(link):
         p_vector = pd.read_json(p_vector, orient='records')
         playlist_name = session.get('playlist_name')
         top_genres = session.get('top_genres')
-        playlist_ids = session.get('playlist_ids')
         previously_recommended = session.get('recommended_songs', [])
         print(previously_recommended) #
-        return p_vector, playlist_name, top_genres, playlist_ids, previously_recommended
+        return p_vector, playlist_name, top_genres, previously_recommended
     return None
 
 def get_track_data_session(link):
@@ -204,9 +199,9 @@ def save_playlist_data_session(playlist, link, re, sp):
     session['p_vector'] = p_vector_json 
     session['playlist_name'] = playlist_name 
     session['top_genres'] = top_genres  
-    session['playlist_ids'] = playlist_ids 
     session['last_search'] = link 
-    return p_vector, playlist_name, top_genres, playlist_ids 
+    print('Playlist data saved to session')
+    return p_vector, playlist_name, top_genres
 
 def save_track_data_session(track, link, re, sp):
     track_id = track['id'].tolist() # Get track ID
@@ -244,7 +239,7 @@ def recommend():
         playlist_data = get_playlist_data_session(link)
         if playlist_data:
             print('Playlist data exists')
-            p_vector, playlist_name, top_genres, playlist_ids, previously_recommended = playlist_data
+            p_vector, playlist_name, top_genres, previously_recommended = playlist_data
             re = RecEngine(sp, previously_recommended=previously_recommended)
         else:
             print('Playlist data does not exist')
@@ -257,10 +252,10 @@ def recommend():
 
             
             append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
-            p_vector, playlist_name, top_genres, playlist_ids = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
+            p_vector, playlist_name, top_genres = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
         
         # Get recommendations
-        recommendations, recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, playlist_ids)
+        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, link)
 
     elif type_id == 'track':
         # Check if track data exists in session
@@ -282,7 +277,8 @@ def recommend():
             t_vector, track_name, artist_name, release_date, track_id = save_track_data_session(track, link, re, sp) # Save Track data to session
         
         # Get recommendations
-        recommendations, recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_id, era_choice='no')
+        recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_id)
+
     # Update recommended songs in session
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
     session['recommended_songs'] = list(updated_recommendations)
@@ -292,7 +288,6 @@ def recommend():
         return jsonify({
             'playlist': playlist_name,
             'top_genres': top_genres,
-            'recommendations': recommendations.to_dict(orient='records'),
             'recommended_ids': recommended_ids
         })
     elif type_id == 'track':
@@ -300,7 +295,6 @@ def recommend():
             'track': track_name,
             'artist': artist_name,
             'release_date': release_date,
-            'recommendations': recommendations.to_dict(orient='records'),
             'recommended_ids': recommended_ids
         })
 

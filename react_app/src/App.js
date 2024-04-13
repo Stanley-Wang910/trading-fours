@@ -28,13 +28,15 @@ function App() {
 
   return (
   <div className="App">
-      <div className="App-content">
+      <div className="App-content flex-col justify-center items-center min-h-screen">
           { (token === '') ? (
           <Login/> 
           ) : (
-          <div className="main-container">
-            <Logout setToken={setToken} setRecommendations={setRecommendations} />
-            <div className="search_container">
+          <div className="main-container max-w-2xl w-full mx-auto p-4">
+            <div className="flex justify-end mb-4">
+              <Logout setToken={setToken} setRecommendations={setRecommendations} />
+            </div>
+            <div className="search-container mb-8">
               <SearchBar onRecommendations={handleRecommendations}/> 
             </div>
             <div className="recommendations-container">
