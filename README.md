@@ -6,31 +6,13 @@ This project is a robust Spotify Recommendation Engine that takes a playlist or 
 
 ## Example Usage & Analysis
 
-Current State:
-![Example](image.png)
+Current State (Youtube Demo):
+[![YouTube Video Demo](https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/a191224c-74cd-4b98-8c10-4aeb97cc2c6b)](https://www.youtube.com/watch?v=6QKZkT4vFRQ)
 
-Here is a demonstrated example on one of my own playlists. To stress test my recommendation engine, I fed it a playlist of mine that I had created for the month of December (with no specific genre in mind).
-This way, I would be able to see how versatile its recommendations would be when given an equally diverse playlist:
 
-<img src="https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/797d8981-9d90-4b7f-b3d0-5c522fcc3509" width="600" /><br>
-[If you wanna check out my dope taste in music](https://open.spotify.com/playlist/66ehpqp3UGSK8e9tglfYw7?si=63b02de8d6a0430f)<br>
-
-<img src="https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/14ca562b-2eea-4eb5-8dfd-3014bf0a9847" width="600" /><br>
-Spotify's Official Recommendations<br>
-
-<img src="https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/474dfd07-18a4-47a6-a329-1194eb9c3a90" width="1000" /><br>
-My Engine's first pick recommendations
-
-Analysis:<br>
-Similarities in Artist recommendations: 
-See Blood Orange: '[Charcoal Baby](https://www.youtube.com/watch?v=hIlauccaH88)' from Spotify, '[Augustine](https://www.youtube.com/watch?v=NXtzcViZPGA)' from my engine.<br> 
-
-Understanding of Playlist Sound & Vibe:
-However, beyond just being accurate to Spotify's own recommendations, we can see that my engine also has an understanding of the sound & vibe of the entire playlist: The top recommendation by my engine is '[Father And Son](https://www.youtube.com/watch?v=KicjYWFdCNY)' by Yusuf / Cat Stevens, a beautiful track backed by stripped acoustic guitars, a raw lead vocal performance, and pockets between verses where the instrumental sings. The very first song on my playlist is '[If](https://www.youtube.com/watch?v=e7t7aQLcik0)' by Pink Floyd, which shares a similarly stripped back guitar, a very intimate delivery on behalf of Roger Waters, and musical solo sections within the track. Furthermore, my engine recommends '[MICHIGAN](https://www.youtube.com/watch?v=R8894AYaRcU)' by Brockhampton. One of their frontmen is Kevin Abstract, whose song '[The Greys](https://www.youtube.com/watch?v=i7OGxY_EV7M)' is the most recent addition to the playlist.
 
 ## Features Coming Soon
 
-1. Improved Front End UI
 2. MySQL Database interactions for tailored user recommendations and profile customizations 
 
 ## Contact
