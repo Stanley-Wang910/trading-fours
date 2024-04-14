@@ -4,7 +4,6 @@ from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime, timedelta
 from spotify_client import SpotifyClient
 
-
 class RecEngine:
     def __init__(self, spotify_client, previously_recommended=None):
         self.sp = spotify_client
@@ -191,7 +190,8 @@ class RecEngine:
         if type == 'playlist':
             ids = self.sp.analyze_playlist(id, 'rec')
         else:
-            ids = [id] # Handle for track recommendation
+            ids = id # Handle for track recommendation
+            print(ids)
         # One-hot encode the genre column in both dataframes
         final_rec_df = self.ohe_features(rec_dataset) ###
         
@@ -246,7 +246,6 @@ class RecEngine:
         recommended_ids = top_recommendations_df['track_id'].tolist()
 
         return recommended_ids
-
 
     def sort_columns(self, plt_vector, final_df):
         common_cols = plt_vector.columns.intersection(final_df.columns)
