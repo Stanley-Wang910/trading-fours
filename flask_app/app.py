@@ -154,7 +154,7 @@ def append_to_dataset(data, choice):
     new_data.rename(columns={'artist': 'artists', 'name': 'track_name', 'id': 'track_id'}, inplace=True)  # Rename columns
     append_data = pd.concat([append_data, new_data], ignore_index=True)  # Concatenate new data with existing append_data
     append_data.to_csv('data/datasets/append_data.csv', index=False)  # Save append_data to CSV file
-    if session['append_counter'] >= 10 or len(append_data) >= 250:  # Check if conditions for appending to rec_dataset are met
+    if session['append_counter'] >= 20 or len(append_data) >= 500:  # Check if conditions for appending to rec_dataset are met
         print('inside if condition')
         rec_dataset = pd.concat([rec_dataset, append_data], ignore_index=True)  # Concatenate append_data with rec_dataset
         rec_dataset.drop_duplicates(subset=['track_id'], keep='first', inplace=True)  # Remove duplicate track_ids

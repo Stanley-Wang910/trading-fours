@@ -35,10 +35,14 @@ function App() {
                 setToken={setToken}
                 setRecommendations={setRecommendations}
             />
-            <div className="search-container mb-2">
-              <SearchBar onRecommendations={handleRecommendations}setIsLoading={setIsLoading} />
-            </div>
-              <div className="recommendations-container">
+            {/* <div className="image-container w-full h-1/2 flex justify-center items-center mb-8">
+              <img src="/049285ff-1e57-4ef7-b30e-6e53cc1edafb.jpg" alt="Descriptive Alt Text" className="w-full h-full object-cover" />
+            </div> */}
+            <div className="flex flex-col items-center">
+              <div className="search-container mb-2 w-full max-w-lg">
+                <SearchBar onRecommendations={handleRecommendations}setIsLoading={setIsLoading} />
+              </div>
+              <div className="recommendations-container w-full flex items-center justify-start mt-4">
                 {isLoading ? (
                   <div className="loader">
                     <div className="bar1"></div>
@@ -52,6 +56,7 @@ function App() {
                   <RecommendationsList recommendations={recommendations} />
                 )}
               </div>
+            </div>
           </div>
         )}
       </div>

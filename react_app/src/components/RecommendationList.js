@@ -3,8 +3,7 @@ import React, { useState, useEffect } from "react";
 function RecommendationsList({ recommendations }) {
   const [visibleEmbeds, setVisibleEmbeds] = useState(5); // State to track the number of visible embeds
   const [loaded, setLoaded] = useState({}); // State to track load status of each iframe
-  const isPlaylist =
-    recommendations && recommendations.hasOwnProperty("playlist"); // Check if recommendations is a playlist
+  const isPlaylist = recommendations && recommendations.hasOwnProperty("playlist"); // Check if recommendations is a playlist
   useEffect(() => {
     if (recommendations) {
       const initialVisibleEmbeds = isPlaylist ? 5 : 5; // Set initial number of visible embeds based on whether it's a playlist or not
@@ -45,10 +44,10 @@ function RecommendationsList({ recommendations }) {
               key={index}
               className="w-full bg-gray-600 shadow-xl rounded-xl overflow-hidden"
             >
-              <div className="w-full h-20 bg-gray-600">
+              <div className="w-full h-20 bg-gray-600 ">
                 <iframe
                   onLoad={() => handleLoad(id)}
-                  className={`w-full h-20 rounded-lg ${loaded[id] ? "opacity-100" : "opacity-0"} transition-opacity duration-500 delay-${index * 100}`}
+                  className={`w-full h-20 rounded-lg ${loaded[id] ? "opacity-100" : "opacity-0"} transition-opacity duration-500 delay-200`}
                   src={`https://open.spotify.com/embed/track/${id}?utm_source=generator`}
                   style={{border: "none"}}
                   width="100%"
@@ -62,10 +61,10 @@ function RecommendationsList({ recommendations }) {
         </ul>
         {visibleEmbeds < recommendationsArray.length && (
           <button
-            className="mt-4 px-4 py-2 bg-blue-700 text-gray-200 rounded-full hover:bg-blue-600 transition-colors duration-300 mx-auto block hover:scale-105 transition-transform duration-300"
+            className="mt-4 px-4 py-2 bg-blue-700 text-gray-200 font-bold rounded-full hover:bg-blue-600 duration-300 mx-auto block hover:scale-105 transition-transform"
             onClick={() => setVisibleEmbeds((prev) => prev + 5)}
           >
-            Load More
+            +
           </button>
         )}
       </div>

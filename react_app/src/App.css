@@ -1,22 +1,16 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
 
-/* .main-container {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding-right: 20px;
-} */
 
-body, html {
+
+body,
+html {
   background-color: #1c2020;
   height: 100%;
   position: relative;
-  
+  overflow-y: scroll;
+
 }
 
 .logout-position {
@@ -29,26 +23,32 @@ body, html {
 
 /* Custom scrollbar styles */
 ::-webkit-scrollbar {
-  width: 12px; /* Vertical scrollbar width */
+  width: 12px;
+  /* Vertical scrollbar width */
   position: fixed;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #1C2128; /* Track color */
+  background-color: #1C2128;
+  /* Track color */
   margin: 4px 0;
 
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #555; /* Thumb color */
-  border-radius: 4px; /* Rounded corners for the thumb */
-  border: 3px solid #1C2128; /* Optional: border for the thumb */
+  background-color: #555;
+  /* Thumb color */
+  border-radius: 4px;
+  /* Rounded corners for the thumb */
+  border: 3px solid #1C2128;
+  /* Optional: border for the thumb */
   background-clip: content-box;
 }
 
 /* Ensures that the scrollbar is only visible when necessary */
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #666; /* Darker color on hover */
+  background-color: #666;
+  /* Darker color on hover */
 }
 
 
@@ -65,38 +65,60 @@ body, html {
   transform: translateY(-50%) translateX(-50%);
 }
 
-.loader > div {
+.loader>div {
   height: 100%;
   width: 8px;
   display: inline-block;
-  float: left;
   margin-left: 2px;
   animation: delay 0.8s infinite ease-in-out;
 }
 
-.loader .bar1 { background-color: #1ED760; }
-.loader .bar2 { 
-  background-color: #ffffff; 
-  animation-delay: -0.7s; 
+.loader .bar1 {
+  background-color: #1ED760;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
-.loader .bar3 { 
-  background-color: #1ED760; 
-  animation-delay: -0.6s; 
+
+.loader .bar2 {
+  background-color: #6B7280;
+  animation-delay: -0.7s;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
-.loader .bar4 { 
-  background-color: #ffffff; 
-  animation-delay: -0.5s; 
+
+.loader .bar3 {
+  background-color: #1ED760;
+  animation-delay: -0.6s;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
-.loader .bar5 { 
-  background-color: #1ED760; 
-  animation-delay: -0.4s; 
+
+.loader .bar4 {
+  background-color: #6B7280;
+  animation-delay: -0.5s;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
-.loader .bar6 { 
-  background-color: #ffffff; 
-  animation-delay: -0.3s; 
+
+.loader .bar5 {
+  background-color: #1ED760;
+  animation-delay: -0.4s;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+}
+
+.loader .bar6 {
+  background-color: #6B7280;
+  animation-delay: -0.3s;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 @keyframes delay {
-  0%, 40%, 100% { transform: scaleY(0.05); }
-  20% { transform: scaleY(1.0); }
+
+  0%,
+  40%,
+  100% {
+    transform: scaleY(0.05);
+  }
+
+  20% {
+    transform: scaleY(1.0);
+  }
 }
+
+
