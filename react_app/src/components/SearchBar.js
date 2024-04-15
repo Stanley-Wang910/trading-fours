@@ -67,9 +67,8 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
           />
           <button
             type="submit"
-            className="absolute right-1 top-1/2 transform -translate-y-1/2 text-black p-1 rounded-full inline-flex items-center justify-center w-8 h-8 transition duration-300 ease-in-out"
+            className="absolute right-1 top-1/2 transform -translate-y-1/2 text-black p-1 rounded-full inline-flex items-center justify-center w-8 h-8 transition duration-300 ease-in-out bg-custom-brown hover:bg-yellow-700"
             aria-label="Search"
-            style={{ backgroundColor: '#cc8e15' }}
           >
           {isLoading ? (
             <img src="/icons8-pause-button-30.png" alt="Pause" width="17" height="17"  />

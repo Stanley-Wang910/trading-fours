@@ -7,7 +7,8 @@
 html { background-color: #1c2020;
   height: 100%;
   position: relative;
-  overflow-y: auto; }
+  overflow-y: auto;
+  overflow-x: hidden; }
 
 body { height: 100%; }
 
@@ -155,3 +156,8 @@ body { height: 100%; }
     transform: translateY(calc(50vh - 14px)); /* Adjust the value based on button height */
   }
 }
+.container-transition {
+  transition: height 0.5s ease-in-out;
+  height: var(--container-height);
+}
+
