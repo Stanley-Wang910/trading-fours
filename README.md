@@ -1,4 +1,4 @@
-# trading _f_ours (Spotify Recommendation Engine)
+# trading fours (Spotify Recommendation Engine)
 
 ## Description
 
