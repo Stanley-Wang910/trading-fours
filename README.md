@@ -7,9 +7,7 @@ This project is a robust Spotify Recommendation Engine that takes a playlist or 
 ## Example Usage & Analysis
 
 Current State (Youtube Demo):
-[![YouTube Video Demo](https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/a191224c-74cd-4b98-8c10-4aeb97cc2c6b)](https://www.youtube.com/watch?v=6QKZkT4vFRQ)
-
-
+[![YouTube Video Demo](https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/78ccde6e-b337-481d-92a2-ca0e2c796504)](https://www.youtube.com/watch?v=tzjeOJVYI7o)
 
 ## Features Coming Soon
 
