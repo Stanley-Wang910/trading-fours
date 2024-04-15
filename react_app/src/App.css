@@ -4,14 +4,12 @@
 
 
 
-body,
-html {
-  background-color: #1c2020;
+html { background-color: #1c2020;
   height: 100%;
   position: relative;
-  overflow-y: scroll;
+  overflow-y: auto; }
 
-}
+body { height: 100%; }
 
 .logout-position {
   position: fixed;
@@ -25,7 +23,6 @@ html {
 ::-webkit-scrollbar {
   width: 12px;
   /* Vertical scrollbar width */
-  position: fixed;
 }
 
 ::-webkit-scrollbar-track {
@@ -74,36 +71,36 @@ html {
 }
 
 .loader .bar1 {
-  background-color: #1ED760;
+  background-color: #ffffff;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .loader .bar2 {
-  background-color: #6B7280;
+  background-color: #cc8e15;
   animation-delay: -0.7s;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .loader .bar3 {
-  background-color: #1ED760;
+  background-color: #ffffff;
   animation-delay: -0.6s;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .loader .bar4 {
-  background-color: #6B7280;
+  background-color: #cc8e15;
   animation-delay: -0.5s;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .loader .bar5 {
-  background-color: #1ED760;
+  background-color: #ffffff;
   animation-delay: -0.4s;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
 .loader .bar6 {
-  background-color: #6B7280;
+  background-color: #cc8e15;
   animation-delay: -0.3s;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
@@ -122,3 +119,39 @@ html {
 }
 
 
+.transition-transform {
+  transition-property: transform;
+  transition-duration: 0.5s;
+  transition-timing-function: ease-in-out;
+}
+
+.-translate-x-full {
+  transform: translateX(-65%);
+}
+
+.buttonDiv:hover + .tooltip {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.opacity-100 {
+  opacity: 1;
+}
+
+.opacity-0 {
+  opacity: 0;
+}
+
+.recommendations-list {
+  overflow: hidden;
+  transition: height 0.5s ease-in-out; /* Add transition for height */
+  height: 0; /* Initially set height to 0 to hide the list */
+}
+@keyframes followPath {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(50vh - 14px)); /* Adjust the value based on button height */
+  }
+}

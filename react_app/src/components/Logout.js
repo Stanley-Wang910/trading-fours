@@ -13,7 +13,7 @@ function Logout({ setToken, setRecommendations }) {
 
   return (
     <button
-      className="absolute top-4 right-0 px-4 py-2 bg-blue-700 text-gray-200 rounded-full hover:bg-blue-600 transition-colors duration-300"
+      className="absolute top-4 right-2 px-4 py-2 font-semibold text-xs bg-custom-brown shadow-xl rounded-full hover:bg-yellow-700 duration-300"
       onClick={handleLogout}>
       Logout
     </button>

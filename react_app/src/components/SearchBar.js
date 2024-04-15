@@ -3,7 +3,7 @@ import axios from "axios";
 import { useMotionTemplate, useMotionValue, motion } from "framer-motion";
 
 
-function SearchBar({ onRecommendations, setIsLoading}) {
+function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
   const [query, setQuery] = useState("");
   //const [responseMessage, setResponseMessage] = useState({ recommendations: [] });
   const [isLoading, setIsLocalLoading] = useState(false);
@@ -24,6 +24,7 @@ function SearchBar({ onRecommendations, setIsLoading}) {
     e.preventDefault();
     setIsLoading(true);
     setIsLocalLoading(true);
+    onQueryChange(query);
     try {
       const response = await axios.get(`/RecEngine/recommend?link=${query}`);
       // Assuming the backend response structure is { message: "Your input was: query" }
@@ -45,7 +46,7 @@ function SearchBar({ onRecommendations, setIsLoading}) {
           background: useMotionTemplate`
             radial-gradient(
               ${visible ? radius + "px" : "0px"} circle at ${mouseX}px ${mouseY}px,
-              var(--green-500),
+              #cc8e15,
               transparent 80%
             )
           `,
@@ -68,7 +69,7 @@ function SearchBar({ onRecommendations, setIsLoading}) {
             type="submit"
             className="absolute right-1 top-1/2 transform -translate-y-1/2 text-black p-1 rounded-full inline-flex items-center justify-center w-8 h-8 transition duration-300 ease-in-out"
             aria-label="Search"
-            style={{ backgroundColor: '#1ED760' }}
+            style={{ backgroundColor: '#cc8e15' }}
           >
           {isLoading ? (
             <img src="/icons8-pause-button-30.png" alt="Pause" width="17" height="17"  />
