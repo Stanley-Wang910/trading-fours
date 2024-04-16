@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import axios from "axios";
 import { useMotionTemplate, useMotionValue, motion } from "framer-motion";
 
 
 function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
   const [query, setQuery] = useState("");
-  //const [responseMessage, setResponseMessage] = useState({ recommendations: [] });
   const [isLoading, setIsLocalLoading] = useState(false);
 
   const radius = 100;
@@ -13,31 +12,31 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
   let mouseX = useMotionValue(0);
   let mouseY = useMotionValue(0);
 
-  function handleMouseMove({ currentTarget, clientX, clientY }) {
-    let { left, top } = currentTarget.getBoundingClientRect();
+  // Memoized callback for handling mouse move
+  const handleMouseMove = useCallback(({ currentTarget, clientX, clientY }) => {
+    const { left, top } = currentTarget.getBoundingClientRect();
     mouseX.set(clientX - left);
     mouseY.set(clientY - top);
-  }
+  }, [mouseX, mouseY]);
 
-
-  const handleSubmit = async (e) => {
+  // Memoized callback for handling form submission
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setIsLocalLoading(true);
     onQueryChange(query);
+
     try {
       const response = await axios.get(`/RecEngine/recommend?link=${query}`);
-      // Assuming the backend response structure is { message: "Your input was: query" }
-      //setResponseMessage(response.data); // Access the message property
-      onRecommendations(response.data || []); // Access the recommendations property or default to an empty array
+      onRecommendations(response.data || []);
     } catch (error) {
       console.error("Error fetching search results", error);
-      //setResponseMessage({ recommendations: [] });
       onRecommendations([]);
     }
+
     setIsLoading(false);
     setIsLocalLoading(false);
-  };
+  }, [query, onQueryChange, onRecommendations, setIsLoading]);
 
   return (
     <div className="SearchBar w-full flex justify-center items-center px-4">

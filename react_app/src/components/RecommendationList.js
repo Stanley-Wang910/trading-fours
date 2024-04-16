@@ -1,18 +1,40 @@
-import React, { useState, useEffect, useRef} from "react";
+import React, { useState, useEffect, useRef, useCallback} from "react";
 import axios from "axios";
 import { Meteors } from './ui/meteors.tsx'; // Adjust the path as necessary based on your project structure
 import clsx from "clsx";
 
 
 function RecommendationsList({ recommendations, onRecommendations, setIsLoading, query, position, onTogglePosition }) {
+  //State variables
   const [visibleEmbeds, setVisibleEmbeds] = useState(5); // State to track the number of visible embeds
   const [loaded, setLoaded] = useState([]);
   const [showMeteors, setShowMeteors] = useState(false);
-  const [containerHeight, setContainerHeight] = useState(575); // Set the starting height
-  const containerRef = useRef(null);
-  const maxHeight = 3000; // Set the maximum height
+  const [containerHeight, setContainerHeight] = useState(570); // Set the starting height
   const [clickedLikes, setClickedLikes] = useState([]);
 
+  // Ref variables
+  const containerRef = useRef(null);
+
+  // Constants
+  const maxHeight = 3000; // Set the maximum height for recommendations container
+
+  // Memoized callbakc to handle loading more embeds
+  const handleLoadMore = useCallback(() => {
+    setVisibleEmbeds((prev) => prev + 5);
+    setContainerHeight((prev) => prev + 500, maxHeight);
+  
+    const scrollDelay = 500;
+    setTimeout(() => {
+      if (containerRef.current) {
+        window.scrollTo({
+          top: containerRef.current.offsetHeight,
+          behavior: "smooth"
+        });
+      }
+    }, scrollDelay);
+  }, [containerRef, maxHeight]);
+
+  // Handler for clicking like
   const handleClickLike = (index) => {
     setClickedLikes((prevClickedLikes) => {
       if (prevClickedLikes.includes(index)) {
@@ -23,8 +45,10 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     });
   };
 
+  // Check if recommendations is a playlist
   const isPlaylist = recommendations && recommendations.hasOwnProperty("playlist"); // Check if recommendations is a playlist
   
+  // Set the initial number of visible embeds
   useEffect(() => {
     if (recommendations) {
       const initialVisibleEmbeds = isPlaylist ? 5 : 5; // Set initial number of visible embeds based on whether it's a playlist or not
@@ -32,11 +56,11 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     }
   }, [recommendations]);
 
-  
+  // Get the array of recommended ids
   const recommendationsArray = recommendations.recommended_ids || []; // Get the array of recommended ids
-  console.log(recommendationsArray);
+  //console.log(recommendationsArray);
 
-  // To load meteors
+  // Load meteors when recommendations are received
   useEffect(() => {
     if (recommendationsArray.length > 0 && Object.keys(loaded).length >= 5) {
       setShowMeteors(true);
@@ -49,11 +73,20 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     return null; // If no recommendations or empty array, return null
   }
 
-
+  // Handler for loading embeds
   const handleLoad = (index) => {
-    setLoaded((prev) => [...prev, index]);
+    const embedElements = document.querySelectorAll(".embed");
+    if (embedElements[index]) {
+      embedElements[index].classList.add("active");
+    }
+  
+    // Set a timeout to mark the embed as loaded after 1 second
+    setTimeout(() => {
+      setLoaded((prev) => [...prev, index]);
+    }, 1000); // For animation timing
   };
 
+  // Handler for shuffling recommendations
   const handleShuffle = async () => {
     setIsLoading(true);
     
@@ -69,10 +102,8 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     setIsLoading(false);
   };
 
-
   return (
     <div className="relative">
-      <Meteors number={10} className="absolute inset-0 z-[-1]" />
       <div className={`mx-auto p-4 transition-transform duration-500 ${position === "left" ? "-translate-x-full" : ""}`}>
         {isPlaylist && recommendations.top_genres && recommendations.playlist ? (
           <h2 className="text-xl font-semibold text-gray-300 mb-4 text-center">
@@ -99,15 +130,15 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
             {recommendationsArray.slice(0, visibleEmbeds).map((id, index) => (
               <li
                 key={index}
-                className="w-full bg-gray-600 shadow-xl rounded-xl overflow-visible relative flex group"
+                className="w-full bg-transparent overflow-visible relative flex group"
               >
                 {loaded.includes(index) && (
                   <button
                     className={clsx(
-                      "absolute left-0 pr-3 top-1/2 transform -translate-x-[8px] -translate-y-1/2 text-gray-200 hover:text-yellow-400 hover:scale-110 transition-transform-opacity duration-300 group-hover:translate-x-[-16px]",
+                      "absolute left-0 pr-1 top-1/2 transform -translate-x-[8px] -translate-y-1/2 text-gray-200 hover:text-yellow-400 hover:scale-110 transition-transform-opacity duration-300 group-hover:translate-x-[-16px] ",    
                       {
                         "group-hover:opacity-100 opacity-0": !clickedLikes.includes(index),
-                        "absolute left-0 pr-3 top-1/2 transform translate-x-[-16px] opacity-100 text-yellow-400": clickedLikes.includes(index),
+                        "absolute left-0 pr-1 top-1/2 transform translate-x-[-16px] opacity-100 text-yellow-400": clickedLikes.includes(index),
                       }
                     )}
                     onClick={() => handleClickLike(index)}
@@ -116,45 +147,33 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
                     fill="currentColor"></path></svg>
                   </button>
                 )}
-                <div className="w-full h-20 bg-gray-600 rounded-full">
-                  <iframe
-                    onLoad={() => handleLoad(index)}
-                    className={`w-full h-20 rounded-lg ${loaded.includes(index) ? "opacity-100" : "opacity-0"} transition-opacity duration-300`}
-                    src={`https://open.spotify.com/embed/track/${id}?utm_source=generator`}
-                    style={{border: "none"}}
-                    width="100%"
-                    height="132"
-                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                    loading="eager"
-                  ></iframe>
+                <div className="embed-container w-full h-20 ">
+                  <div className={`embed ${loaded.includes(index) ? "active" : ""}`}>
+                    <iframe
+                      onLoad={() => handleLoad(index)}
+                      src={`https://open.spotify.com/embed/track/${id}?utm_source=generator`}
+                      style={{border: "none"}}
+                      width="100%"
+                      height="132"
+                      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                      loading="eager"
+                    ></iframe>
+                  </div>
                 </div>
               </li>
             ))}
           </ul>
-          <div className="flex justify-between mt-4 px-1 py-1">
+          <div className="flex justify-between mt-4 px-1">
             {visibleEmbeds < recommendationsArray.length && containerHeight < maxHeight && (
               <button
-                className="px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
-                onClick={() => {
-                  setVisibleEmbeds((prev) => prev + 5);
-                  setContainerHeight((prev) => prev + 500, maxHeight);
-
-                  const scrollDelay = 500; // Adjust the delay (in milliseconds) as needed
-                  setTimeout(() => {
-                    if (containerRef.current) {
-                      window.scrollTo({
-                        top: containerRef.current.offsetHeight,
-                        behavior: "smooth"
-                      });
-                    }
-                  }, scrollDelay);
-                }}
+                className="z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
+                onClick={handleLoadMore}
               >
                 <img src="/plus.png" alt="Arrow" width={20} height={20}/>
               </button>
             )}
               <button
-              className="px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
+              className="z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
               onClick={handleShuffle}
             >
               <img src="/arrow.png" alt="Arrow" style={{ transform: 'scaleX(0.9)' }} width={20} height={20}/>
@@ -178,8 +197,6 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
         </div>
       </div>
       </div>
-
-      
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Login from "./components/Login";
 import SearchBar from "./components/SearchBar";
 import RecommendationsList from "./components/RecommendationList";
@@ -9,6 +9,7 @@ import "./App.css";
 
 
 function App() {
+  // State variables
   const [token, setToken] = useState("");
   const [recommendations, setRecommendations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -16,8 +17,10 @@ function App() {
   const [recommendationPosition, setRecommendationPosition] = useState("center");
   const [showInfoContainer, setShowInfoContainer] = useState(false);
 
+  // Ref variables
   const prevPositionRef = useRef(recommendationPosition);
 
+  // Fetch the token
   useEffect(() => {
     async function getToken() {
       const response = await fetch("/auth/token");
@@ -28,18 +31,22 @@ function App() {
     getToken();
   }, []);
 
+  // Update Query State for Search and Shuffle
   const handleQueryChange = (newQuery) => {
     setQuery(newQuery);
   };
   
+  // Update Recommendations State
   const handleRecommendations = (data) => {
     setRecommendations(data);
   };
   
-  const handleTogglePosition = () => {
+  // Toggle recommendation position and show/hide info container 
+  const handleTogglePosition = useCallback(() => {
     setRecommendationPosition((prevPosition) => (prevPosition === "center" ? "left" : "center"));
-  };
+  }, []);
 
+  // Check if recommendation position has changed
   useEffect(() => {
     if (prevPositionRef.current !== recommendationPosition) {
       console.log(`Recommendation position changed from ${prevPositionRef.current} to ${recommendationPosition}`);
@@ -49,7 +56,7 @@ function App() {
     }
   }, [recommendationPosition]); // Dependency on recommendationPosition
   
-
+  // Scroll to top when loading
   useEffect(() => {
     if (isLoading) {
       window.scrollTo({
@@ -114,9 +121,8 @@ function App() {
           </div>
         </>
         )}
-        
+
       </div>
-    
       <footer className="bg-gray-800 text-stone-400 font-semibold p-4 pb-6 text-center">
         <p>&copy; {new Date().getFullYear()} trading fours, by stanley wang</p>
       </footer>
