@@ -3,6 +3,7 @@ import axios from "axios";
 import { Meteors } from './ui/meteors.tsx'; // Adjust the path as necessary based on your project structure
 import clsx from "clsx";
 
+
 function RecommendationsList({ recommendations, onRecommendations, setIsLoading, query, position, onTogglePosition }) {
   const [visibleEmbeds, setVisibleEmbeds] = useState(5); // State to track the number of visible embeds
   const [loaded, setLoaded] = useState([]);

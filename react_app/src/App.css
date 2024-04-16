@@ -12,15 +12,9 @@ html { background-color: #1c2020;
 
 body { height: 100%; }
 
-.logout-position {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-}
 
 
 
-/* Custom scrollbar styles */
 ::-webkit-scrollbar {
   width: 12px;
   /* Vertical scrollbar width */
@@ -72,7 +66,7 @@ body { height: 100%; }
 }
 
 .loader .bar1 {
-  background-color: #ffffff;
+  background-color: #374151;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 
@@ -83,7 +77,7 @@ body { height: 100%; }
 }
 
 .loader .bar3 {
-  background-color: #ffffff;
+  background-color: #374151;
   animation-delay: -0.6s;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
@@ -95,7 +89,7 @@ body { height: 100%; }
 }
 
 .loader .bar5 {
-  background-color: #ffffff;
+  background-color: #374151;
   animation-delay: -0.4s;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
@@ -107,7 +101,6 @@ body { height: 100%; }
 }
 
 @keyframes delay {
-
   0%,
   40%,
   100% {

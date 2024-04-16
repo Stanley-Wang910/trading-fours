@@ -9,10 +9,17 @@ export const Meteors = ({
   number?: number;
   className?: string;
 }) => {
-  const meteors = new Array(number || 20).fill(true);
+  const meteors = React.useMemo(() => {
+    return new Array(number || 20).fill(true).map(() => ({
+      left: Math.floor(Math.random() * (400 - -400) + -400) + "px",
+      animationDelay: Math.random() * (0.8 - 0.2) + 0.2 + "s",
+      animationDuration: Math.floor(Math.random() * (10 - 2) + 2) + "s",
+    }));
+  }, [number]);
+
   return (
     <>
-      {meteors.map((el, idx) => (
+      {meteors.map((meteorStyle, idx) => (
         <span
           key={"meteor" + idx}
           className={cn(
@@ -22,9 +29,7 @@ export const Meteors = ({
           )}
           style={{
             top: 0,
-            left: Math.floor(Math.random() * (400 - -400) + -400) + "px",
-            animationDelay: Math.random() * (0.8 - 0.2) + 0.2 + "s",
-            animationDuration: Math.floor(Math.random() * (10 - 2) + 2) + "s",
+            ...meteorStyle,
           }}
         ></span>
       ))}
