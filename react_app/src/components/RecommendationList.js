@@ -9,7 +9,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
   const [visibleEmbeds, setVisibleEmbeds] = useState(5); // State to track the number of visible embeds
   const [loaded, setLoaded] = useState([]);
   const [showMeteors, setShowMeteors] = useState(false);
-  const [containerHeight, setContainerHeight] = useState(570); // Set the starting height
+  const [containerHeight, setContainerHeight] = useState(575); // Set the starting height
   const [clickedLikes, setClickedLikes] = useState([]);
 
   // Ref variables
@@ -58,7 +58,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
 
   // Get the array of recommended ids
   const recommendationsArray = recommendations.recommended_ids || []; // Get the array of recommended ids
-  //console.log(recommendationsArray);
+  console.log(recommendationsArray);
 
   // Load meteors when recommendations are received
   useEffect(() => {
@@ -93,6 +93,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     try {
       const response = await axios.get(`/RecEngine/recommend?link=${query}`);
       onRecommendations(response.data || []);
+    
       
     } catch (error) {
       console.error("Error fetching search results", error);
@@ -106,14 +107,14 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     <div className="relative">
       <div className={`mx-auto p-4 transition-transform duration-500 ${position === "left" ? "-translate-x-full" : ""}`}>
         {isPlaylist && recommendations.top_genres && recommendations.playlist ? (
-          <h2 className="text-xl font-semibold text-gray-300 mb-4 text-center">
+          <h2 className="text-xl font-semibold text-gray-400 mb-4 text-center">
             <span className="text-gray-400 font-bold ">{recommendations.top_genres.join(", ")}</span> recommendations for{" "}
             <span className="text-yellow-600 font-bold italic">{recommendations.playlist}</span>
           </h2>
         ) : (
-          <h2 className="text-xl font-semibold text-gray-300 mb-4 text-center">
+          <h2 className="text-xl font-semibold text-gray-400 mb-4 text-center">
             Here are some recommendations for <span className="text-yellow-600 font-bold italic">{recommendations.track}</span> by{" "}
-            <span className="text-gray-300 font-bold italic">{recommendations.artist}</span>, released in {""}
+            <span className="text-gray-400 font-bold italic">{recommendations.artist}</span>, released in {""}
             <span className="text-gray-400 font-semibold">{recommendations.release_date}</span>
           </h2>
         )}
@@ -148,6 +149,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
                   </button>
                 )}
                 <div className="embed-container w-full h-20 ">
+                  
                   <div className={`embed ${loaded.includes(index) ? "active" : ""}`}>
                     <iframe
                       onLoad={() => handleLoad(index)}
@@ -163,8 +165,8 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
               </li>
             ))}
           </ul>
-          <div className="flex justify-between mt-4 px-1">
-            {visibleEmbeds < recommendationsArray.length && containerHeight < maxHeight && (
+          <div className="flex justify-between mt-4 px-1 py-1 ">
+            {visibleEmbeds < recommendationsArray.length && (
               <button
                 className="z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
                 onClick={handleLoadMore}
