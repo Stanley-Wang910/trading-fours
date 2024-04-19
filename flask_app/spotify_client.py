@@ -16,6 +16,20 @@ class SpotifyClient:
 
         self.sp = sp
 
+    # def __init__(self, client_id, client_secret, redirect_uri, user_id, scope):
+    #     self.client_id = client_id
+    #     self.client_secret = client_secret
+    #     self.redirect_uri = redirect_uri
+    #     self.user_id = user_id
+    #     self.scope = scope
+
+    #     auth_manager = SpotifyOAuth(client_id=self.client_id,
+    #                                 client_secret=self.client_secret,
+    #                                 redirect_uri=self.redirect_uri,
+    #                                 scope=self.scope,
+    #                                 username=self.user_id)
+    #     self.sp = spotipy.Spotify(auth_manager=auth_manager)
+
     
 
     def get_id_name(self):

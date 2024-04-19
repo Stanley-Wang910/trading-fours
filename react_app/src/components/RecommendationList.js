@@ -55,7 +55,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     if (recommendationsArray.length > 0 && Object.keys(loaded).length >= 5) {
       setTimeout(() => {
         setShowMeteors(true);
-      }, 500);
+      }, 2000);
     }
   }, [loaded, recommendationsArray]);
 
@@ -75,7 +75,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     // Set a timeout to mark the embed as loaded after 1 second
     setTimeout(() => {
       setLoaded((prev) => [...prev, index]);
-    }, 1000); // For animation timing
+    }, 100); // For animation timing
   };
 
   // Handler for shuffling recommendations

@@ -131,6 +131,7 @@ class RecEngine:
         
         # Apply weight to track genre
         print(track_genre)
+        print(track_vector)
         weight = {track_genre: 0.9}
         final_rec_df = self.apply_weights(final_rec_df, weight)
         

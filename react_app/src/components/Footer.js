@@ -11,7 +11,7 @@ const Footer = () => {
   return (
     <>
       <footer id="footer" 
-        className="mt-[40vh] z-[50] w-full h-[280px] flex flex-row justify-between items-center px-[2vw] py-20 relative text-gray-400 ">
+        className="mt-[10vh] z-[50] w-full h-[280px] flex flex-row justify-between items-center px-[2vw] py-20 relative text-gray-400 ">
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black z-[-7]"></div>
         <div className="col col1 flex flex-col items-start justify-start p-4 w-[28%]">
         <div className="relative flex items-center before:content-[''] before:absolute before:top-[-100px] before:left-[-5px] before:w-[40px] before:h-[2px] before:bg-gray-400">

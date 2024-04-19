@@ -7,6 +7,8 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
   const [query, setQuery] = useState("");
   const [isLoading, setIsLocalLoading] = useState(false);
 
+
+
   const radius = 100;
   const [visible, setVisible] = React.useState(false);
   let mouseX = useMotionValue(0);
@@ -64,17 +66,23 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
             placeholder="Recommend"
             className="px-3 py-2 pr-10 border-none rounded-full w-full focus:outline-none bg-gray-700 text-gray-200 placeholder-gray-400"
           />
-          <button
+         <motion.button
             type="submit"
-            className="absolute right-1 top-1/2 transform -translate-y-1/2 text-black p-1 rounded-full inline-flex items-center justify-center w-8 h-8 transition duration-300 ease-in-out bg-custom-brown hover:bg-yellow-700"
+            whileHover={{ scale: 1}}
+            whileTap={{ scale: 0.9 }}
+            animate={{ scale: isLoading ? 0.9 : 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="absolute right-1 top-1 transform -translate-y-1/2 text-black p-1 rounded-full inline-flex items-center justify-center w-8 h-8 bg-custom-brown hover:bg-yellow-700"
             aria-label="Search"
           >
-          {isLoading ? (
-            <img src="/icons8-pause-button-30.png" alt="Pause" width="17" height="17"  />
-          ) : (
-            <img src="/icons8-play-button-30.png" alt="Play" width="15" height="15" />
-          )}
-          </button>
+            {isLoading ? (
+              <img src="/icons8-pause-button-30.png" alt="Pause" width="17" height="17" />
+            ) : (
+              <img src="/icons8-play-button-30.png" alt="Play" width="15" height="15" />
+            )}
+          </motion.button>
+
+          
         </form>
       </motion.div>
     </div>

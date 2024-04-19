@@ -14,24 +14,46 @@ from spotify_client import SpotifyClient
 from rec_engine import RecEngine
 from genre_class import GenreClassifier
 from datetime import datetime
+import pandas as pd
+import mysql.connector
+from dotenv import load_dotenv
+import os
+
+
+
+
 
 
 # Load environment variables
 load_dotenv()
 
+
 app = Flask(__name__)
 CORS(app)
+
+MYSQL_HOST = os.getenv("MYSQL_HOST")
+MYSQL_USER = os.getenv("MYSQL_USER")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
+MYSQL_DB = os.getenv("MYSQL_DB")
+cnx = mysql.connector.connect(
+    host=MYSQL_HOST,
+    user=MYSQL_USER,
+    passwd=MYSQL_PASSWORD,
+    database=MYSQL_DB
+)
+rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", cnx)
+rec_dataset = rec_dataset.drop('id', axis=1)
+
 
 # Set a secret key for session management
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 # Initialize Genre Class Model
-gc = GenreClassifier('data/datasets/rec_dataset.csv')
+gc = GenreClassifier() #// Pass in DF
 model, scaler, label_encoder, X_train = gc.load_model()
-REC_DATASET_PATH = 'data/datasets/rec_dataset.csv'
-rec_dataset = pd.read_csv(REC_DATASET_PATH)
-append_data = pd.read_csv('data/datasets/append_data.csv')
-
+# REC_DATASET_PATH = 'data/datasets/rec_dataset.csv'
+# rec_dataset = pd.read_csv(REC_DATASET_PATH)
+# append_data = pd.read_csv('data/datasets/append_data.csv')
 
 # Generate a random state string
 def generate_random_string(length=16):
@@ -103,6 +125,10 @@ def clear_session():
     session.clear()
     return "Session data cleared"
 
+
+
+
+
 def refresh_token():
     if 'refresh_token' not in session:
         return False
@@ -145,23 +171,38 @@ def get_user_profile(self):
 
 def append_to_dataset(data, choice):
     global rec_dataset
-    global append_data
     new_data = data.copy()
     if choice == 'track':
         new_data.drop('release_date', axis=1, inplace=True)  # Remove 'release_date' column if choice is 'track'
     elif choice == 'playlist':
         new_data.drop('date_added', axis=1, inplace=True)  # Remove 'date_added' column if choice is 'playlist'
     new_data.rename(columns={'artist': 'artists', 'name': 'track_name', 'id': 'track_id'}, inplace=True)  # Rename columns
-    append_data = pd.concat([append_data, new_data], ignore_index=True)  # Concatenate new data with existing append_data
-    append_data.to_csv('data/datasets/append_data.csv', index=False)  # Save append_data to CSV file
-    if session['append_counter'] >= 20 or len(append_data) >= 500:  # Check if conditions for appending to rec_dataset are met
+    
+    
+    cursor = cnx.cursor()
+    for _, row in new_data.iterrows():
+        query = "INSERT INTO append_data (track_id, track_name, artists) VALUES (%s, %s, %s)"
+        values = (row['track_id'], row['track_name'], row['artists'])
+        cursor.execute(query, values)
+    cnx.commit()
+
+    
+    if session['append_counter'] >= 20 or cursor.rowcount >= 500:  # Check if conditions for appending to rec_dataset are met
         print('inside if condition')
-        rec_dataset = pd.concat([rec_dataset, append_data], ignore_index=True)  # Concatenate append_data with rec_dataset
-        rec_dataset.drop_duplicates(subset=['track_id'], keep='first', inplace=True)  # Remove duplicate track_ids
-        rec_dataset.to_csv('data/datasets/rec_dataset.csv', index=False)  # Save rec_dataset to CSV file
-        session['append_counter'] = 0  # Reset append_counter
-        print(session['append_counter'])
-        append_data.drop(append_data.index, inplace=True)  # Clear append_data
+        query = """
+            INSERT INTO rec_dataset (track_id, track_name, artists)
+            SELECT DISTINCT track_id, track_name, artists
+            FROM append_data
+            WHERE track_id NOT IN (SELECT track_id FROM rec_dataset)
+        """
+        cursor.execute(query)
+        query = "TRUNCATE TABLE append_data"
+        cursor.execute(query)
+
+        cnx.commit()
+        session['append_counter'] = 0
+    cursor.close()
+
 
 def get_playlist_data_session(link):
     if session.get('last_search') == link and 'playlist_name' in session:
@@ -297,6 +338,7 @@ def recommend():
             'release_date': release_date,
             'recommended_ids': recommended_ids
         })
+    
 
 
     

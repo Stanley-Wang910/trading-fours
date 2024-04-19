@@ -8,8 +8,8 @@ from sklearn.ensemble import RandomForestClassifier
 
 
 class GenreClassifier:
-    def __init__(self, data_path):
-        self.data = pd.read_csv(data_path)
+    def __init__(self):
+        # self.data = pd.read_csv(data_path)
         self.lr_model = LogisticRegression(max_iter=500, class_weight='balanced', random_state=420, verbose=0) # Make random state 69
         self.rf_model = RandomForestClassifier(n_estimators=150, class_weight='balanced', random_state=69, verbose=0) # Make random state 69
         self.scaler = MinMaxScaler()
