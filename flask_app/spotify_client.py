@@ -30,8 +30,28 @@ class SpotifyClient:
     #                                 username=self.user_id)
     #     self.sp = spotipy.Spotify(auth_manager=auth_manager)
 
+    def get_user_saved_info(self):
+        user_profile = self.sp.current_user()
+        user_playlists = self.sp.current_user_playlists()
+        recently_played = self.sp.current_user_recently_played()
+        top_artists_short = self.sp.current_user_top_artists(20,0, 'short_term')
+        top_artists_med = self.sp.current_user_top_artists(20,0, 'medium_term')
+        top_artists_long = self.sp.current_user_top_artists(20,0, 'long_term')
+        top_artists = {
+            'short_term': top_artists_short,
+            'medium_term': top_artists_med,
+            'long_term': top_artists_long
+        }
+        top_tracks_short = self.sp.current_user_top_tracks(20,0, 'short_term')
+        top_tracks_med = self.sp.current_user_top_tracks(20,0, 'medium_term')
+        top_tracks_long = self.sp.current_user_top_tracks(20,0, 'long_term')
+        top_tracks = {
+            'short_term': top_tracks_short,
+            'medium_term': top_tracks_med,
+            'long_term': top_tracks_long
+        }
+        return user_profile, user_playlists, recently_played, top_artists, top_tracks
     
-
     def get_id_name(self):
         """
         Retrieves a dictionary mapping playlist names to their corresponding IDs.

@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect, session, jsonify
 from flask_cors import CORS
+import json
 import os
 import pandas as pd
 import requests
@@ -27,23 +28,8 @@ import os
 # Load environment variables
 load_dotenv()
 
-
 app = Flask(__name__)
 CORS(app)
-
-MYSQL_HOST = os.getenv("MYSQL_HOST")
-MYSQL_USER = os.getenv("MYSQL_USER")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
-MYSQL_DB = os.getenv("MYSQL_DB")
-cnx = mysql.connector.connect(
-    host=MYSQL_HOST,
-    user=MYSQL_USER,
-    passwd=MYSQL_PASSWORD,
-    database=MYSQL_DB
-)
-rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", cnx)
-rec_dataset = rec_dataset.drop('id', axis=1)
-
 
 # Set a secret key for session management
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
@@ -55,14 +41,34 @@ model, scaler, label_encoder, X_train = gc.load_model()
 # rec_dataset = pd.read_csv(REC_DATASET_PATH)
 # append_data = pd.read_csv('data/datasets/append_data.csv')
 
+
+# Connect to MySQL database
+def connect_sql():
+    MYSQL_HOST = os.getenv("MYSQL_HOST")
+    MYSQL_USER = os.getenv("MYSQL_USER")
+    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
+    MYSQL_DB = os.getenv("MYSQL_DB")
+    global cnx 
+    cnx = mysql.connector.connect(
+        host=MYSQL_HOST,
+        user=MYSQL_USER,
+        passwd=MYSQL_PASSWORD,
+        database=MYSQL_DB
+    )
+    global rec_dataset 
+    rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", cnx)
+    rec_dataset = rec_dataset.drop('id', axis=1)
+
+
 # Generate a random state string
 def generate_random_string(length=16):
     letters = string.ascii_letters + string.digits
     return ''.join(random.choice(letters) for i in range(length))
 
+
 @app.route('/auth/login')
 def auth_login():
-    scope = "streaming user-read-email user-read-private"
+    scope = "streaming user-read-email user-read-private user-follow-read playlist-read-private playlist-read-collaborative user-read-recently-played user-library-read user-top-read"
     state = generate_random_string()
     params = {
         'response_type': 'code',
@@ -101,6 +107,11 @@ def auth_callback():
         session['access_token'] = token_info.get('access_token')
         session['refresh_token'] = token_info.get('refresh_token')
         session['token_expires'] = datetime.now().timestamp() + token_info.get('expires_in')
+        
+        connect_sql()
+        get_user_data()
+        
+        
         # Redirecting or handling logic here
         return redirect('/')
     else:
@@ -122,6 +133,9 @@ def get_token():
 
 @app.route('/auth/logout')
 def clear_session():
+    global cnx
+    if cnx.is_connected():
+        cnx.close()
     session.clear()
     return "Session data cleared"
 
@@ -158,19 +172,174 @@ def refresh_token():
     else:
         return False
 
-@app.route('/user/profile')
-def get_user_profile(self):
-    profile_url = 'https://api.spotify.com/v1/me'
-    headers = {
-        'Authorization' : f"Bearer {session.get('access_token')}"
-    }
+# Add / Check User Data in MySQL Database
+def get_user_data():
+    global cnx 
+    sp = SpotifyClient(Spotify(auth=session.get('access_token')))
+    user_profile, user_playlists, recently_played, top_artists, top_tracks = sp.get_user_saved_info()
+    
+    unique_id = user_profile['id']
+    session['unique_id'] = unique_id
+    display_name = user_profile['display_name']
+    session['display_name'] = display_name
+    email = user_profile['email']
+    
+    cursor = cnx.cursor()
 
-    response = requests.get(profile_url, headers=headers)
-    if response.status_code == 200:
-        return response.json()
+    user_profile_db(cursor, cnx, unique_id, display_name, email)
 
+    user_recently_played_db(cursor, cnx, unique_id, recently_played)
+
+    user_playlists_db(cursor, cnx, unique_id, user_playlists)
+    
+    user_top_artists_db(cursor, cnx, unique_id, top_artists)
+
+    user_top_tracks_db(cursor, cnx, unique_id, top_tracks)
+
+    cursor.close()
+
+# Helpers        
+def user_profile_db(cursor, cnx, unique_id, display_name, email):
+    try:
+        query = "SELECT * FROM users WHERE unique_id = %s"
+        cursor.execute(query, (unique_id,))
+        result = cursor.fetchone()
+        print("User exists")
+        if not result:
+            print('User does not exist')
+            insert_query = "INSERT INTO users (unique_id, display_name, email) VALUES (%s, %s, %s)"
+            cursor.execute(insert_query, (unique_id, display_name, email))
+            print('User database authenticated')
+            cnx.commit()
+    except mysql.connector.Error as e:
+        print(f"Error adding/checking user in database: {e}")
+
+def user_playlists_db(cursor, cnx, unique_id, user_playlists):
+    try:
+        for playlist in user_playlists['items']:
+            playlist_id = playlist['id']
+            name = playlist['name']
+            image_url = playlist['images'][0]['url'] if playlist['images'] else None
+            
+            query = f"INSERT INTO playlists (playlist_id, unique_id, name, image_url) " \
+                    f"SELECT %s, %s, %s, %s " \
+                    f"WHERE NOT EXISTS (SELECT 1 FROM playlists WHERE playlist_id = %s AND unique_id = %s);"
+            
+            cursor.execute(query, (playlist_id, unique_id, name, image_url, playlist_id, unique_id))
+        print('Playlists added to database')    
+        cnx.commit()
+    except mysql.connector.Error as e:
+        print(f"Error adding playlists to database: {e}")
+
+def user_recently_played_db(cursor, cnx, unique_id, recently_played):
+    try:
+        # Recently Played
+        query = "DELETE FROM recently_played WHERE unique_id = %s"
+        cursor.execute(query, (unique_id,))
+
+        for item in recently_played["items"]:
+            track = item["track"]
+            artist = track["artists"][0]
+            track_id = track["id"]
+            track_name = track["name"]
+            artist_name = artist["name"]
+
+            insert_query = """
+            INSERT INTO recently_played (unique_id, track_id, track_name, artist_name)
+            VALUES (%s, %s, %s, %s)
+            """
+            track_json = json.dumps({'track_id': track_id, 'track_name': track_name, 'artist_name': artist_name})
+            cursor.execute(insert_query, (unique_id, track_id, track_name, artist_name))
+
+        print('Recently played added to database')
+        cnx.commit()
+
+    except mysql.connector.Error as e:
+        print(f"Error adding recently played to database: {e}")
+
+def user_top_artists_db(cursor, cnx, unique_id, top_artists):
+    try:
+        # Top Artists
+        for time_range, artists in top_artists.items():
+            for rank, artist in enumerate(artists['items'], start=1):
+                artist_id = artist['id']
+                artist_name = artist['name']
+
+                # Check if the artist exists for the user
+                check_query = """
+                SELECT COUNT(*) FROM user_top_artists
+                WHERE unique_id = %s AND artist_id = %s
+                """
+                cursor.execute(check_query, (unique_id, artist_id))
+                artist_exists = cursor.fetchone()[0]
+
+                if artist_exists:
+                    # Update the existing row with the new rank
+                    update_query = f"""
+                    UPDATE user_top_artists
+                    SET {time_range}_rank = %s
+                    WHERE unique_id = %s AND artist_id = %s
+                    """
+                    cursor.execute(update_query, (rank, unique_id, artist_id))
+                else:
+                    # Insert a new row for the artist
+                    insert_query = f"""
+                    INSERT INTO user_top_artists (unique_id, artist_id, artist_name, {time_range}_rank)
+                    VALUES (%s, %s, %s, %s)
+                    """
+                    cursor.execute(insert_query, (unique_id, artist_id, artist_name, rank))    
+        
+        print('Top artists added to database')
+        cnx.commit()
+
+    except mysql.connector.Error as e:
+        print(f"Error adding top artists to database: {e}")
+
+def user_top_tracks_db(cursor, cnx, unique_id, top_tracks):
+    try:
+         # Top Tracks
+        for time_range, tracks in top_tracks.items():
+            for rank, track in enumerate(tracks['items'], start=1):
+                track_id = track['id']
+                track_name = track['name']
+                artist = track['artists'][0]
+                artist_name = artist['name']
+                # Check if the track exists for the user
+                check_query = """
+                SELECT COUNT(*) FROM user_top_tracks
+                WHERE unique_id = %s AND track_id = %s
+                """
+                cursor.execute(check_query, (unique_id, track_id))
+                track_exists = cursor.fetchone()[0]
+
+                if track_exists:
+                    # Update the existing row with the new rank
+                    update_query = f"""
+                    UPDATE user_top_tracks
+                    SET {time_range}_rank = %s
+                    WHERE unique_id = %s AND track_id = %s
+                    """
+                    cursor.execute(update_query, (rank, unique_id, track_id))
+                else:
+                    # Insert a new row for the track
+                    insert_query = f"""
+                    INSERT INTO user_top_tracks (unique_id, track_id, track_name, artist_name, {time_range}_rank)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """
+                    cursor.execute(insert_query, (unique_id, track_id, track_name, artist_name, rank))
+
+        print('Top tracks added to database')
+        cnx.commit()
+
+    except mysql.connector.Error as e:
+        print(f"Error adding top tracks to database: {e}")
+
+
+
+# Append Data to rec_dataset
 def append_to_dataset(data, choice):
     global rec_dataset
+    global cnx
     new_data = data.copy()
     if choice == 'track':
         new_data.drop('release_date', axis=1, inplace=True)  # Remove 'release_date' column if choice is 'track'
@@ -178,20 +347,41 @@ def append_to_dataset(data, choice):
         new_data.drop('date_added', axis=1, inplace=True)  # Remove 'date_added' column if choice is 'playlist'
     new_data.rename(columns={'artist': 'artists', 'name': 'track_name', 'id': 'track_id'}, inplace=True)  # Rename columns
     
-    
     cursor = cnx.cursor()
     for _, row in new_data.iterrows():
-        query = "INSERT INTO append_data (track_id, track_name, artists) VALUES (%s, %s, %s)"
-        values = (row['track_id'], row['track_name'], row['artists'])
+        query = """
+            INSERT INTO append_data (
+                artists, track_name, track_id, popularity, duration_ms,
+                danceability, energy, `key`, loudness, `mode`, speechiness,
+                acousticness, instrumentalness, liveness, valence, tempo,
+                time_signature, track_genre
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        values = (
+            row['artists'], row['track_name'], row['track_id'], row['popularity'],
+            row['duration_ms'], row['danceability'], row['energy'], row['key'],
+            row['loudness'], row['mode'], row['speechiness'], row['acousticness'],
+            row['instrumentalness'], row['liveness'], row['valence'], row['tempo'],
+            row['time_signature'], row['track_genre']
+        )
         cursor.execute(query, values)
     cnx.commit()
 
-    
     if session['append_counter'] >= 20 or cursor.rowcount >= 500:  # Check if conditions for appending to rec_dataset are met
         print('inside if condition')
         query = """
-            INSERT INTO rec_dataset (track_id, track_name, artists)
-            SELECT DISTINCT track_id, track_name, artists
+            INSERT INTO rec_dataset (
+                artists, track_name, track_id, popularity, duration_ms,
+                danceability, energy, `ke`y`, loudness, `mode`, speechiness,
+                acousticness, instrumentalness, liveness, valence, tempo,
+                time_signature, track_genre
+            )
+            SELECT DISTINCT
+                artists, track_name, track_id, popularity, duration_ms,
+                danceability, energy, `key`, loudness, `mode`, speechiness,
+                acousticness, instrumentalness, liveness, valence, tempo,
+                time_signature, track_genre
             FROM append_data
             WHERE track_id NOT IN (SELECT track_id FROM rec_dataset)
         """
@@ -260,6 +450,7 @@ def save_track_data_session(track, link, re, sp):
 
 @app.route('/RecEngine/recommend', methods=['GET'])
 def recommend():
+    global rec_dataset
     # Check if the access token is expired and refresh if necessary
     if is_token_expired():
         if not refresh_token():
