@@ -12,27 +12,17 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
   const [containerHeight, setContainerHeight] = useState(575); // Set the starting height
   const [clickedLikes, setClickedLikes] = useState([]);
 
-  // Ref variables
-  const containerRef = useRef(null);
-
+  
   // Constants
   const maxHeight = 3000; // Set the maximum height for recommendations container
-
+  const extendRec = 500
   // Memoized callbakc to handle loading more embeds
   const handleLoadMore = useCallback(() => {
     setVisibleEmbeds((prev) => prev + 5);
-    setContainerHeight((prev) => prev + 500, maxHeight);
+    setContainerHeight((prev) => prev + extendRec, maxHeight);
   
-    const scrollDelay = 500;
-    setTimeout(() => {
-      if (containerRef.current) {
-        window.scrollTo({
-          top: containerRef.current.offsetHeight,
-          behavior: "smooth"
-        });
-      }
-    }, scrollDelay);
-  }, [containerRef, maxHeight]);
+   
+  }, [maxHeight]);
 
   // Handler for clicking like
   const handleClickLike = (index) => {
@@ -63,7 +53,9 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
   // Load meteors when recommendations are received
   useEffect(() => {
     if (recommendationsArray.length > 0 && Object.keys(loaded).length >= 5) {
-      setShowMeteors(true);
+      setTimeout(() => {
+        setShowMeteors(true);
+      }, 500);
     }
   }, [loaded, recommendationsArray]);
 
@@ -119,7 +111,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
           </h2>
         )}
         {/* <div className="recommendations-container p-4 bg-gradient-to-r from-gray-800 to-gray-600 shadow-2xl rounded-2xl transform overflow"> */}
-        <div ref={containerRef} className="recommendations-container p-5 w-full bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative overflow-hidden container-transition" style={{ '--container-height': `${containerHeight}px` }}>
+        <div className="recommendations-container p-5 w-full bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative overflow-hidden container-transition" style={{ '--container-height': `${containerHeight}px` }}>
         {showMeteors && (
           <Meteors
             number={25}

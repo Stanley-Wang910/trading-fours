@@ -54,7 +54,7 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
-        className="relative w-full max-w-md hover:scale-105 transition-transform duration-300 p-[2px] rounded-full"
+        className="relative w-full max-w-md p-[2px] rounded-full"
       >
         <form onSubmit={handleSubmit} className="relative w-full">
           <input

@@ -13,9 +13,9 @@ function Logout({ setToken, setRecommendations }) {
 
   return (
     <button
-      className="absolute top-4 right-2 px-4 py-2 font-semibold text-xs bg-custom-brown shadow-xl rounded-full hover:bg-yellow-700 duration-300"
+      className="logout absolute top-4 right-2 px-4 py-2 font-bold text-[14px] text-gray-400"
       onClick={handleLogout}>
-      Logout
+      Logout  
     </button>
   );
 }

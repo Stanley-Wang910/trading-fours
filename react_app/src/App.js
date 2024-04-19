@@ -4,6 +4,8 @@ import SearchBar from "./components/SearchBar";
 import RecommendationsList from "./components/RecommendationList";
 import Logout from "./components/Logout";
 import Navbar from "./components/Navbar";
+import GradientBackground from "./components/GradientBackground";
+import Footer from "./components/Footer";
 
 import "./App.css";
 
@@ -68,8 +70,10 @@ function App() {
 
 
   return (
-    <div className="App bg-gradient-to-br from-custom_dark to-gray-900 flex flex-col min-h-screen">
-      <div className="App-content flex-grow justify-center items-center min-h-screen relative over">
+    <div className="App z-1 bg-gradient-to-br from-custom_dark to-gray-900 flex flex-col min-h-screen">
+      
+      <div className="App-content z-1 flex-grow justify-center items-center min-h-screen relative over">
+      <GradientBackground className='z-[0]'/>
         {token === "" ? (
           <Login />
         ) : (
@@ -123,9 +127,10 @@ function App() {
         )}
 
       </div>
-      <footer className="bg-gray-800 text-stone-400 font-semibold p-4 pb-6 text-center">
+        <Footer />
+      {/* <footer className="z-[1] bg-custom_dark bg-opacity-60 py-4 border-b border-gray-700 backdrop-filter backdrop-blur-md font-semibold p-4 pb-6 text-center text-gray-400">
         <p>&copy; {new Date().getFullYear()} trading fours, by stanley wang</p>
-      </footer>
+      </footer> */}
     </div>
   );
 }
