@@ -254,6 +254,7 @@ class SQLWork:
         query = f"SELECT name, playlist_id FROM playlists WHERE unique_id = '{unique_id}';"    
         cursor.execute(query)
         results = cursor.fetchall()
+        return results
         cursor.close()
         
     

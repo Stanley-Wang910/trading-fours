@@ -124,10 +124,6 @@ def clear_session():
     session.clear()
     return "Session data cleared"
 
-
-
-
-
 def refresh_token():
     if 'refresh_token' not in session:
         return False
@@ -169,8 +165,7 @@ def append_to_dataset(data, choice):
     append_counter = session['append_counter']
     append = sql_work.append_tracks(new_data, append_counter)
     if append:
-        session['append_counter'] = 0
-
+        session['append_counter'] = 0 
 
 def get_playlist_data_session(link):
     if session.get('last_search') == link and 'playlist_name' in session:
@@ -236,13 +231,22 @@ def recommend():
 
     sp = SpotifyClient(Spotify(auth=session.get('access_token'))) # Initialize SpotifyClient
 
-    link = request.args.get('link')
-    if not link:
-        return jsonify({'error': 'No link provided'}), 400 # Cannot process request
+    query = request.args.get('query')
+    if not query:
+        return jsonify({'error': 'No query provided'}), 400 #Cannot process request
+    
+    
+    
+    # link = request.args.get('link')
+    # if not link:
+    #     return jsonify({'error': 'No link provided'}), 400 # Cannot process request
 
     # Extract the type and ID from the link
-    type_id = link.split('/')[3]
-    link = link.split('/')[-1].split('?')[0]
+    type_id = 'playlist'
+    link = query
+
+    # link.split('/')[3]
+    # .split('/')[-1].split('?')[0]
 
     if type_id == 'playlist':
         # Check if playlist data exists in session
