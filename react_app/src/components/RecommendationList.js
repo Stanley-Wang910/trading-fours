@@ -78,6 +78,9 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     }, 100); // For animation timing
   };
 
+
+  
+
   // Handler for shuffling recommendations
   const handleShuffle = async () => {
     setIsLoading(true);

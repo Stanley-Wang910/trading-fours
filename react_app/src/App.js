@@ -6,6 +6,7 @@ import Logout from "./components/Logout";
 import Navbar from "./components/Navbar";
 import GradientBackground from "./components/GradientBackground";
 import Footer from "./components/Footer";
+import PlaylistDropdown from "./components/PlaylistDropdown";
 
 import "./App.css";
 
@@ -84,9 +85,10 @@ function App() {
           <div className="main-container flex flex-col max-w-2xl w-full mx-auto p-4">
             <div className="flex flex-col items-center">
               <div className="search-container mt-16 mb-1 w-full max-w-lg">
+                <PlaylistDropdown onRecommendations={handleRecommendations} setIsLoading={setIsLoading} onQueryChange={handleQueryChange}/>
                 <SearchBar onRecommendations={handleRecommendations} setIsLoading={setIsLoading} onQueryChange={handleQueryChange} />
               </div>
-              <div className="recommendations-container w-full max-w-2xlflex justify-center items-center">
+              <div className="recommendations-container w-full max-w-2xlflex justify-center items-center z-10">
                 {isLoading ? (
                   <div className="loader">
                     <div className="bar1"></div>

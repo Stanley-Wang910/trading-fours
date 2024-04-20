@@ -231,22 +231,22 @@ def recommend():
 
     sp = SpotifyClient(Spotify(auth=session.get('access_token'))) # Initialize SpotifyClient
 
-    query = request.args.get('query')
-    if not query:
-        return jsonify({'error': 'No query provided'}), 400 #Cannot process request
-    
-    
-    
     # link = request.args.get('link')
-    # if not link:
-    #     return jsonify({'error': 'No link provided'}), 400 # Cannot process request
+    # if not query:
+    #     return jsonify({'error': 'No query provided'}), 400 #Cannot process request
+    
+    
+    
+    link = request.args.get('link')
+    if not link:
+        return jsonify({'error': 'No link provided'}), 400 # Cannot process request
 
-    # Extract the type and ID from the link
-    type_id = 'playlist'
-    link = query
-
-    # link.split('/')[3]
-    # .split('/')[-1].split('?')[0]
+    if '/' in link:
+        # Extract the type and ID from the link
+        type_id = link.split('/')[3]
+        link = link.split('/')[-1].split('?')[0]
+    else:
+        type_id = 'playlist'
 
     if type_id == 'playlist':
         # Check if playlist data exists in session

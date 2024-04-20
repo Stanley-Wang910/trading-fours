@@ -220,7 +220,7 @@ class SQLWork:
             cursor.execute(query, values)
         self.cnx.commit()
 
-        if append_count >= 1:  # Check if conditions for appending to rec_dataset are met
+        if append_count >= 20:  # Check if conditions for appending to rec_dataset are met
             print('appending')
             query = """
                 INSERT INTO rec_dataset (
