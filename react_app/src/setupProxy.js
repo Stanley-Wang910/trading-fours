@@ -10,7 +10,7 @@ module.exports = function (app) {
   );
 
   app.use(
-    "/RecEngine",
+    "/recommend",
     createProxyMiddleware({
       target: "http://localhost:5000",
       changeOrigin: true,

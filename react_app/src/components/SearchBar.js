@@ -29,7 +29,7 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
     onQueryChange(query);
 
     try {
-      const response = await axios.get(`/RecEngine/recommend?link=${query}`);
+      const response = await axios.get(`/recommend?link=${query}`);
       onRecommendations(response.data || []);
     } catch (error) {
       console.error("Error fetching search results", error);
