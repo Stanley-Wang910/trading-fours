@@ -5,9 +5,7 @@ import PlaylistDropdown from "./PlaylistDropdown";
 
 function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
   const [query, setQuery] = useState("");
-  const [isLoading, setIsLocalLoading] = useState(false);
-
-
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
 
   const radius = 100;
   const [visible, setVisible] = React.useState(false);
@@ -42,8 +40,11 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
     setIsLocalLoading(false);
   }, [query, onQueryChange, onRecommendations, setIsLoading]);
 
+  
+
   return (
-    <div className="SearchBar w-full flex justify-center items-center px-4">
+    <div className="flex items-center">
+    <div className="SearchBar w-full flex justify-center items-center mr-[-30px]">
       <motion.div
         style={{
           background: useMotionTemplate`
@@ -73,21 +74,23 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
             type="submit"
             
             whileTap={{ scale: 0.95, onDurationChange: 0}}
-            animate={{ scale: isLoading ? 0.9 : 1 }}
+            animate={{ scale: isLocalLoading ? 0.9 : 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className="absolute right-1 top-1 transform -translate-y-1/2 text-black p-1 rounded-full inline-flex items-center justify-center w-8 h-8 bg-custom-brown hover:bg-yellow-700"
             aria-label="Search"
           >
-            {isLoading ? (
+            {isLocalLoading ? (
               <img src="/icons8-pause-button-30.png" alt="Pause" width="17" height="17" />
             ) : (
               <img src="/icons8-play-button-30.png" alt="Play" width="15" height="15" />
             )}
           </motion.button>
-
-          
         </form>
       </motion.div>
+    </div>
+      <div className="flex justify-self-auto">
+        <PlaylistDropdown onRecommendations={onRecommendations} setIsLoading={setIsLoading} onQueryChange={onQueryChange} setIsLocalLoading={setIsLocalLoading}/>
+      </div>
     </div>
   );
 }

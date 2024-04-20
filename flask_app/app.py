@@ -149,6 +149,10 @@ def refresh_token():
         new_token_info = response.json()
         session['access_token'] = new_token_info.get('access_token')
         session['token_expires'] = datetime.now().timestamp() + new_token_info.get('expires_in')
+        sp = SpotifyClient(Spotify(auth=session.get('access_token')))
+        unique_id, display_name = sql_work.get_user_data(sp)
+        session['unique_id'] = unique_id
+        session['display_name'] = display_name
         return True
     else:
         return False

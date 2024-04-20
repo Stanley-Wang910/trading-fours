@@ -16,7 +16,7 @@ body { height: 100%; }
 
 :root {
   --color1: #1E3A8A;
-  --color2: #c36a447b;
+  --color2: #152654;
   
 }
 
@@ -26,7 +26,7 @@ body { height: 100%; }
 }
 
 .animate-colorChange1 {
-  animation: colorChange1 5s infinite linear;
+  animation: colorChange1 10s infinite linear;
 }
 
 
