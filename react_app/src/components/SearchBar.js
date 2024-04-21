@@ -43,8 +43,8 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
   
 
   return (
-    <div className="flex items-center">
-    <div className="SearchBar w-full flex justify-center items-center mr-[-30px]">
+    <div className="flex items-center mx-4">
+    <div className="SearchBar w-full flex justify-center items-center">
       <motion.div
         style={{
           background: useMotionTemplate`
@@ -68,7 +68,7 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Recommend"
-            className="px-3 py-2 pr-10 border-none rounded-full w-full focus:outline-none bg-gray-700 text-gray-200 placeholder-gray-400"
+            className="px-3 py-2 pr-10 border-none rounded-full w-full focus:outline-none bg-gray-700 text-gray-200 placeholder-gray-300"
           />
          <motion.button
             type="submit"
@@ -88,7 +88,7 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
         </form>
       </motion.div>
     </div>
-      <div className="flex justify-self-auto">
+      <div className="">
         <PlaylistDropdown onRecommendations={onRecommendations} setIsLoading={setIsLoading} onQueryChange={onQueryChange} setIsLocalLoading={setIsLocalLoading}/>
       </div>
     </div>
