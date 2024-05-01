@@ -1,5 +1,5 @@
 import os
-import mysql.connector
+import mysql.connector.pooling
 import pandas as pd
 import json
 
@@ -9,34 +9,37 @@ class SQLWork:
         self.MYSQL_USER = os.getenv("MYSQL_USER")
         self.MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
         self.MYSQL_DB = os.getenv("MYSQL_DB")
-        self.cnx = None
+        self.pool = None
 
     # Connect to MySQL database
     def connect_sql(self):
-        self.cnx = mysql.connector.connect(
+        self.pool = mysql.connector.pooling.MySQLConnectionPool(
+            pool_name="pool",
+            pool_size=5,
             host=self.MYSQL_HOST,
             user=self.MYSQL_USER,
             passwd=self.MYSQL_PASSWORD,
             database=self.MYSQL_DB
         )
             
-        
     def get_dataset(self):
-        rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", self.cnx)
-        rec_dataset = rec_dataset.drop('id', axis=1)
-        return rec_dataset
+        connection = self.pool.get_connection()
+        try:
+            rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", connection)
+            rec_dataset = rec_dataset.drop('id', axis=1)
+            return rec_dataset
+        finally:
+            connection.close()
         
     def get_user_data(self, sp):
-        
+
         user_profile, user_playlists, recently_played, top_artists, top_tracks = sp.get_user_saved_info()
         
         unique_id = user_profile['id']
         
         display_name = user_profile['display_name']
         
-        email = user_profile['email']
-        
-        cursor = self.cnx.cursor()
+        email = user_profile['email']   
 
         self.user_profile_db(unique_id, display_name, email)
 
@@ -49,14 +52,14 @@ class SQLWork:
         self.user_top_tracks_db(unique_id, top_tracks)
 
         return unique_id, display_name
-        cursor.close()
 
 
 
     # Helpers        
     def user_profile_db(self, unique_id, display_name, email):
+        connection = self.pool.get_connection()
         try:
-            cursor = self.cnx.cursor()
+            cursor = connection.cursor()
             query = "SELECT * FROM users WHERE unique_id = %s"
             cursor.execute(query, (unique_id,))
             result = cursor.fetchone()
@@ -68,13 +71,18 @@ class SQLWork:
                 cursor.close()
                 print('User database authenticated')
             
-            self.cnx.commit()
+            connection.commit()
         except mysql.connector.Error as e:
             print(f"Error adding/checking user in database: {e}")
+        finally:
+            cursor.close()
+            connection.close()
+
 
     def user_playlists_db(self, unique_id, user_playlists):
+        connection = self.pool.get_connection()
         try:
-            cursor = self.cnx.cursor()
+            cursor = connection.cursor()
             for playlist in user_playlists['items']:
                 playlist_id = playlist['id']
                 name = playlist['name']
@@ -85,43 +93,48 @@ class SQLWork:
                         f"WHERE NOT EXISTS (SELECT 1 FROM playlists WHERE playlist_id = %s AND unique_id = %s);"
                 
                 cursor.execute(query, (playlist_id, unique_id, name, image_url, playlist_id, unique_id))
-            cursor.close()
             print('Playlists added to database')    
-            self.cnx.commit()
+            connection.commit()
         except mysql.connector.Error as e:
             print(f"Error adding playlists to database: {e}")
+        finally:
+            cursor.close()
+            connection.close()
 
     def user_recently_played_db(self, unique_id, recently_played):
+        connection = self.pool.get_connection()
         try:
-            cursor = self.cnx.cursor()
+            cursor = connection.cursor()
             # Recently Played
             query = "DELETE FROM recently_played WHERE unique_id = %s"
             cursor.execute(query, (unique_id,))
-
+    
             for item in recently_played["items"]:
                 track = item["track"]
                 artist = track["artists"][0]
                 track_id = track["id"]
                 track_name = track["name"]
                 artist_name = artist["name"]
-
+    
                 insert_query = """
                 INSERT INTO recently_played (unique_id, track_id, track_name, artist_name)
                 VALUES (%s, %s, %s, %s)
                 """
                 track_json = json.dumps({'track_id': track_id, 'track_name': track_name, 'artist_name': artist_name})
                 cursor.execute(insert_query, (unique_id, track_id, track_name, artist_name))
-
-            cursor.close()
+    
             print('Recently played added to database')
-            self.cnx.commit()
-
+            connection.commit()
+    
         except mysql.connector.Error as e:
             print(f"Error adding recently played to database: {e}")
-
+        finally:
+            cursor.close()
+            connection.close()
     def user_top_artists_db(self, unique_id, top_artists):
+        connection = self.pool.get_connection()
         try:
-            cursor = self.cnx.cursor()
+            cursor = connection.cursor()
             # Top Artists
             for time_range, artists in top_artists.items():
                 for rank, artist in enumerate(artists['items'], start=1):
@@ -151,16 +164,19 @@ class SQLWork:
                         VALUES (%s, %s, %s, %s)
                         """
                         cursor.execute(insert_query, (unique_id, artist_id, artist_name, rank))    
-            cursor.close()
             print('Top artists added to database')
-            self.cnx.commit()
+            connection.commit()
 
         except mysql.connector.Error as e:
             print(f"Error adding top artists to database: {e}")
+        finally:
+            cursor.close()
+            connection.close()
 
-    def user_top_tracks_db(self,  unique_id, top_tracks):
+    def user_top_tracks_db(self, unique_id, top_tracks):
+        connection = self.pool.get_connection()
         try:
-            cursor = self.cnx.cursor()
+            cursor = connection.cursor()
             # Top Tracks
             for time_range, tracks in top_tracks.items():
                 for rank, track in enumerate(tracks['items'], start=1):
@@ -168,6 +184,7 @@ class SQLWork:
                     track_name = track['name']
                     artist = track['artists'][0]
                     artist_name = artist['name']
+    
                     # Check if the track exists for the user
                     check_query = """
                     SELECT COUNT(*) FROM user_top_tracks
@@ -175,7 +192,7 @@ class SQLWork:
                     """
                     cursor.execute(check_query, (unique_id, track_id))
                     track_exists = cursor.fetchone()[0]
-
+    
                     if track_exists:
                         # Update the existing row with the new rank
                         update_query = f"""
@@ -191,74 +208,82 @@ class SQLWork:
                         VALUES (%s, %s, %s, %s, %s)
                         """
                         cursor.execute(insert_query, (unique_id, track_id, track_name, artist_name, rank))
-            cursor.close()
             print('Top tracks added to database')
-            self.cnx.commit()
-
+            connection.commit()
+    
         except mysql.connector.Error as e:
             print(f"Error adding top tracks to database: {e}")
+        finally:
+            cursor.close()
+            connection.close()
     
     def append_tracks(self, data, append_count):
-        cursor = self.cnx.cursor()
-        for _, row in data.iterrows():
-            query = """
-                INSERT INTO append_data (
-                    artists, track_name, track_id, popularity, duration_ms,
-                    danceability, energy, `key`, loudness, `mode`, speechiness,
-                    acousticness, instrumentalness, liveness, valence, tempo,
-                    time_signature, track_genre
+        connection = self.pool.get_connection()
+        try:
+            cursor = connection.cursor()
+            for _, row in data.iterrows():
+                query = """
+                    INSERT INTO append_data (
+                        artists, track_name, track_id, popularity, duration_ms,
+                        danceability, energy, `key`, loudness, `mode`, speechiness,
+                        acousticness, instrumentalness, liveness, valence, tempo,
+                        time_signature, track_genre
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """
+                values = (
+                    row['artists'], row['track_name'], row['track_id'], row['popularity'],
+                    row['duration_ms'], row['danceability'], row['energy'], row['key'],
+                    row['loudness'], row['mode'], row['speechiness'], row['acousticness'],
+                    row['instrumentalness'], row['liveness'], row['valence'], row['tempo'],
+                    row['time_signature'], row['track_genre']
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            values = (
-                row['artists'], row['track_name'], row['track_id'], row['popularity'],
-                row['duration_ms'], row['danceability'], row['energy'], row['key'],
-                row['loudness'], row['mode'], row['speechiness'], row['acousticness'],
-                row['instrumentalness'], row['liveness'], row['valence'], row['tempo'],
-                row['time_signature'], row['track_genre']
-            )
-            cursor.execute(query, values)
-        self.cnx.commit()
+                cursor.execute(query, values)
+            connection.commit()
+            query = "SELECT COUNT(*) FROM append_data"
+            cursor.execute(query)
+            row_count = cursor.fetchone()[0]
 
-        if append_count >= 20:  # Check if conditions for appending to rec_dataset are met
-            print('appending')
-            query = """
-                INSERT INTO rec_dataset (
-                    artists, track_name, track_id, popularity, duration_ms,
-                    danceability, energy, `key`, loudness, `mode`, speechiness,
-                    acousticness, instrumentalness, liveness, valence, tempo,
-                    time_signature, track_genre
-                )
-                SELECT DISTINCT
-                    artists, track_name, track_id, popularity, duration_ms,
-                    danceability, energy, `key`, loudness, `mode`, speechiness,
-                    acousticness, instrumentalness, liveness, valence, tempo,
-                    time_signature, track_genre
-                FROM append_data
-                WHERE track_id NOT IN (SELECT track_id FROM rec_dataset)
-            """
-            cursor.execute(query)
-            query = "TRUNCATE TABLE append_data"
-            cursor.execute(query)
+            if append_count >= 20 or row_count > 500:  # Check if conditions for appending to rec_dataset are met
+                print('appending')
+                query = """
+                    INSERT INTO rec_dataset (
+                        artists, track_name, track_id, popularity, duration_ms,
+                        danceability, energy, `key`, loudness, `mode`, speechiness,
+                        acousticness, instrumentalness, liveness, valence, tempo,
+                        time_signature, track_genre
+                    )
+                    SELECT DISTINCT
+                        artists, track_name, track_id, popularity, duration_ms,
+                        danceability, energy, `key`, loudness, `mode`, speechiness,
+                        acousticness, instrumentalness, liveness, valence, tempo,
+                        time_signature, track_genre
+                    FROM append_data
+                    WHERE track_id NOT IN (SELECT track_id FROM rec_dataset)
+                """
+                cursor.execute(query)
+                query = "TRUNCATE TABLE append_data"
+                cursor.execute(query)
+                connection.commit()
+                return True
+            else:
+                return False
+        finally:
             cursor.close()
-
-            self.cnx.commit()
-            return True
-        else:
-            return False
-
-
+            connection.close()
 
     def get_unique_user_playlist(self, unique_id):
-        cursor = self.cnx.cursor()
-        query = f"SELECT name, playlist_id FROM playlists WHERE unique_id = '{unique_id}';"    
-        cursor.execute(query)
-        results = cursor.fetchall()
-        return results
-        cursor.close()
-        
+        connection = self.pool.get_connection()
+        try:
+            cursor = connection.cursor()
+            query = f"SELECT name, playlist_id FROM playlists WHERE unique_id = '{unique_id}';"    
+            cursor.execute(query)
+            results = cursor.fetchall()
+            return results
+        finally:
+            cursor.close()
+            connection.close()
     
     def close_sql(self):
-        self.cnx.close()
-        print('Connection closed') 
-    
+        self.pool.closeall()
+        print('All connections in pool closed')

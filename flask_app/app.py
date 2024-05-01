@@ -159,7 +159,7 @@ def append_to_dataset(data, choice):
     if choice == 'track':
         new_data.drop('release_date', axis=1, inplace=True)  # Remove 'release_date' column if choice is 'track'
     elif choice == 'playlist':
-        new_data.drop('date_added', axis=1, inplace=True)  # Remove 'date_added' column if choice is 'playlist'
+        new_data.drop('date_added', axis=1, inplace=True)  # Remo   ve 'date_added' column if choice is 'playlist'
     new_data.rename(columns={'artist': 'artists', 'name': 'track_name', 'id': 'track_id'}, inplace=True)  # Rename columns
     append_counter = session['append_counter']
     append = sql_work.append_tracks(new_data, append_counter)
