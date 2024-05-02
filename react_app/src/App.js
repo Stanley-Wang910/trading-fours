@@ -82,6 +82,9 @@ function App() {
           <div>
             <Navbar LogoutComponent={<Logout setToken={setToken} setRecommendations={setRecommendations} />} />
           </div>
+          <div className="header py-20 translate-y-[50px] text-center">
+            <h1 className="text-2xl text-white">Good Morning, Stanley</h1>
+          </div>
           <div className="main-container flex flex-col max-w-2xl w-full mx-auto p-4">
             <div className="flex flex-col items-center">
               <div className="search-container mt-16 mb-1 w-full max-w-lg z-20">

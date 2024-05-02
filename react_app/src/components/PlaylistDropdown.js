@@ -16,8 +16,7 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
   // Refs
   const dropdownRef = useRef(null); // Reference for the dropdown
   const searchInputRef = useRef(null); // Reference for the search input
-
-  // Effecgt hook to fetch playlists 
+  const listRef = useRef(null); // Reference dropdownRef // Effecgt hook to fetch playlists 
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
@@ -29,7 +28,7 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
     };
 
     fetchPlaylists();
-  }, []); // Runs on component mount
+  }, []); // dropdownRefunt
   
   // Effect hook to fcus on searchbar when Dropdown Opens
   useEffect(() => {
@@ -40,12 +39,26 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
 
   // Effect hook to handle mouse movement and clicks outside the dropdown
   useEffect(() => {
+    const checkMousePosition = () => {
+      if (listRef.current) {
+        const listRect = listRef.current.getBoundingClientRect();
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const isOutsideListVertically =
+          mousePosition.y < listRect.top + scrollTop || mousePosition.y > listRect.bottom + scrollTop;
+
+        if (isOutsideListVertically) {
+          // console.log("Mouse is outside the list vertically");
+          setShowImagePreview(false);
+        }
+      }
+    };
+
     const handleMouseMove = (event) => {
       setMousePosition({ x: event.pageX, y: event.pageY });
     };
 
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (listRef.current && !listRef.current.contains(event.target)) {
         setIsOpen(false);
         setShowImagePreview(false);
       }
@@ -54,16 +67,19 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
     window.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mousedown", handleClickOutside);
 
+    // Check mouse position when the search query changes
+    checkMousePosition();
+
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [searchQuery, mousePosition]);
 
   const handlePlaylistSelect = async (id) => {
     setSelectedPlaylist(id);
     setIsOpen(false);
-    setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on search bar component
+    setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on seadropdownRef  
     setIsLoading(true); // Set the global loading state to true : for loading animation
     onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
     try {
@@ -127,9 +143,8 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
               "max-h-[400px]": isOpen,
             }
           )} 
-          onMouseLeave={() => {
-            setShowImagePreview(false)
-          }}
+          
+          ref={listRef}
         >
           <li className="px-3 py-2">
               <input
