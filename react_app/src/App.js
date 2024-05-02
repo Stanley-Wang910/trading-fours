@@ -63,7 +63,7 @@ function App() {
   useEffect(() => {
     if (isLoading) {
       window.scrollTo({
-        top: 0,
+        top: 200,
         behavior: "smooth"
       });
     }
@@ -72,9 +72,9 @@ function App() {
 
   return (
     <div className="App z-1 bg-gradient-to-b from-custom_dark to-gray-900 flex flex-col min-h-screen">
-      
-      <div className="App-content z-1 flex-grow justify-center items-center min-h-screen relative over">
       <GradientBackground className='z-[0]'/>
+      <div className="App-content z-1 flex-grow justify-center items-center min-h-screen relative over">
+      
         {token === "" ? (
           <Login />
         ) : (
@@ -82,15 +82,15 @@ function App() {
           <div>
             <Navbar LogoutComponent={<Logout setToken={setToken} setRecommendations={setRecommendations} />} />
           </div>
-          <div className="header py-20 translate-y-[50px] text-center">
+          <div className="header py-20 translate-y-[50px] translate-x-[-30%] text-center">
             <h1 className="text-2xl text-white">Good Morning, Stanley</h1>
           </div>
           <div className="main-container flex flex-col max-w-2xl w-full mx-auto p-4">
             <div className="flex flex-col items-center">
-              <div className="search-container mt-16 mb-1 w-full max-w-lg z-20">
+              <div className="search-container mt-16 mb-8 w-full max-w-lg z-20">
                 <SearchBar onRecommendations={handleRecommendations} setIsLoading={setIsLoading} onQueryChange={handleQueryChange} />
               </div>
-              <div className="recommendations-container w-full max-w-2xlflex justify-center items-center z-10">
+              <div className="recommendations-container w-full max-w-2xljustify-center items-center z-10">
                 {isLoading ? (
                   <div className="loader">
                     <div className="bar1"></div>

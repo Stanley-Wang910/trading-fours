@@ -94,10 +94,10 @@ class RecEngine:
             top_songs = pd.concat([top_songs, genre_songs.nlargest(90 // len(top_genres), 'similarity')])
 
         # Randomly select 30 songs from the top_songs DataFrame
-        selected_songs = top_songs.sample(30)
+        # selected_songs = top_songs.sample(30)
 
         # Finalize and update the recommended songs
-        top_recommendations_df = self.finalize_update_recommendations(selected_songs, self.recommended_songs)
+        top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'playlist')
 
         return top_recommendations_df
 
@@ -145,12 +145,12 @@ class RecEngine:
         top_songs = pd.concat([recommendations_df.nlargest(150, 'similarity')])
         
         # Initialize selected_songs DataFrame
-        selected_songs = pd.DataFrame(columns=top_songs.columns)
+        # selected_songs = pd.DataFrame(columns=top_songs.columns)
         
-        selected_songs = top_songs.sample(15)
+        # selected_songs = top_songs.sample(15)
         
         # Finalize and update the recommended songs
-        top_recommendations_df = self.finalize_update_recommendations(selected_songs, self.recommended_songs)
+        top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'track')
         return top_recommendations_df
 
     # Helper Functions
@@ -240,11 +240,20 @@ class RecEngine:
         recommendations_df['similarity'] *= weights
         return recommendations_df
 
-    def finalize_update_recommendations(self, selected_songs, recommended_songs):
-       
-        top_recommendations_df = selected_songs.sort_values(by='similarity', ascending=False)
+    def finalize_update_recommendations(self, top_songs, recommended_songs, type):
 
-        recommended_ids = top_recommendations_df['track_id'].tolist()
+        top_songs = top_songs.drop_duplicates(subset=['track_name', 'artists'], keep='first')
+        
+        top_recommendations_df = top_songs.sort_values(by='similarity', ascending=False)
+        
+        selected_songs = pd.DataFrame(columns=top_recommendations_df.columns)
+
+        if type == 'track':
+            selected_songs = top_recommendations_df.sample(15)
+        elif type == 'playlist':
+            selected_songs = top_recommendations_df.sample(30)
+
+        recommended_ids = selected_songs['track_id'].tolist()
 
         return recommended_ids
 

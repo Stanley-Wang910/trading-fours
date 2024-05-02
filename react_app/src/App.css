@@ -84,7 +84,7 @@ body { height: 100%; }
   justify-content: center;
   font-size: 10px;
   position: absolute;
-  top: 25%;
+  top: 60%;
   left: 50%;
   transform: translateY(-50%) translateX(-50%);
 }

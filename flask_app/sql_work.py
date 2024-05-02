@@ -79,10 +79,29 @@ class SQLWork:
             connection.close()
 
 
-    def user_playlists_db(self, unique_id, user_playlists):
+    def user_playlists_db(self, unique_id, user_playlists): # Maybe add owner_id to filter by current user in playlist dropdwon?
         connection = self.pool.get_connection()
         try:
             cursor = connection.cursor()
+            
+
+            # Get the existing playlist IDs from the database for the current user
+            query = "SELECT playlist_id FROM playlists WHERE unique_id = %s"
+            cursor.execute(query, (unique_id,))
+            existing_playlist_ids = [row[0] for row in cursor.fetchall()]
+            
+            # Get the playlist IDs from the user_playlists items
+            user_playlist_ids = [playlist['id'] for playlist in user_playlists['items']]
+            
+            # Delete playlists from the database if they are not found in the user_playlists items
+            playlist_ids_to_delete = set(existing_playlist_ids) - set(user_playlist_ids)
+            if playlist_ids_to_delete:
+                delete_query = "DELETE FROM playlists WHERE playlist_id IN ({})".format(
+                    ','.join(['%s'] * len(playlist_ids_to_delete))
+                )
+                cursor.execute(delete_query, tuple(playlist_ids_to_delete))
+                print(f"Deleted {cursor.rowcount} playlists from the database")
+
             for playlist in user_playlists['items']:
                 playlist_id = playlist['id']
                 name = playlist['name']
@@ -276,7 +295,7 @@ class SQLWork:
         connection = self.pool.get_connection()
         try:
             cursor = connection.cursor()
-            query = f"SELECT name, playlist_id, image_url FROM playlists WHERE unique_id = '{unique_id}';"    
+            query = f"SELECT name, playlist_id, image_url, unique_id FROM playlists WHERE unique_id = '{unique_id}';"    
             cursor.execute(query)
             results = cursor.fetchall()
             return results
