@@ -1,18 +1,27 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import clsx from "clsx";
 
 function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setIsLocalLoading}) {
-  const [playlists, setPlaylists] = useState([]);
-  const [selectedPlaylist, setSelectedPlaylist] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
+  // State variables
+  const [playlists, setPlaylists] = useState([]); // Holds list of playlists
+  const [selectedPlaylist, setSelectedPlaylist] = useState(""); // Holds the selected playlist
+  const [isOpen, setIsOpen] = useState(false); // Determines if the dropdown is open
+  const [hoveredPlaylist, setHoveredPlaylist] = useState(null); // State for if playlist is hovered
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 }); // Caculates the mouse position
+  const imageRef = useRef(null); // Reference for image preview, used to handle when display
+  const [searchQuery, setSearchQuery] = useState(""); // Holds the search playlists query
+  const [showImagePreview, setShowImagePreview] = useState(false); // Determines if the image preview is shown
   
-  
+  // Refs
+  const dropdownRef = useRef(null); // Reference for the dropdown
+  const searchInputRef = useRef(null); // Reference for the search input
+
+  // Effecgt hook to fetch playlists 
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
         const response = await axios.get("/search");
-        console.log(response.data);
         setPlaylists(response.data || []);
       } catch (error) {
         console.error("Error fetching playlists", error);
@@ -20,80 +29,153 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
     };
 
     fetchPlaylists();
-  }, []);
-  const handlePlaylistSelect = async (id) => {
-      setSelectedPlaylist(id);
-      setIsOpen(false);
-      setIsLocalLoading(true); // Set the local loading state to true
-      setIsLoading(true);
-      onQueryChange(id);
-      try {
-        const response = await axios.get(`/recommend?link=${id}`);
-        onRecommendations(response.data || []);
-      } catch (error) {
-        console.error("Error fetching search results", error);
-        onRecommendations([]);
-      }
-      setIsLocalLoading(false); // Set the local loading state to false
-      setIsLoading(false);
+  }, []); // Runs on component mount
+  
+  // Effect hook to fcus on searchbar when Dropdown Opens
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      searchInputRef.current.focus({ preventScroll: true });
+    }
+  }, [isOpen]); // Runs when isOpen changes
+
+  // Effect hook to handle mouse movement and clicks outside the dropdown
+  useEffect(() => {
+    const handleMouseMove = (event) => {
+      setMousePosition({ x: event.pageX, y: event.pageY });
     };
 
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+        setShowImagePreview(false);
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handlePlaylistSelect = async (id) => {
+    setSelectedPlaylist(id);
+    setIsOpen(false);
+    setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on search bar component
+    setIsLoading(true); // Set the global loading state to true : for loading animation
+    onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
+    try {
+      const response = await axios.get(`/recommend?link=${id}`);
+      onRecommendations(response.data || []);
+    } catch (error) {
+      console.error("Error fetching search results", error);
+      onRecommendations([]);
+    }
+    setIsLocalLoading(false); // Set the local loading state to false
+    setIsLoading(false);
+  };
+  
+ const filteredPlaylists = playlists.filter((playlist) =>
+    playlist[0].toLowerCase().includes(searchQuery.toLowerCase())
+  );
+   
   return (
-      <div className="relative w-full max-w-md">
+    <div ref={dropdownRef} className="relative w-full max-w-md">
+      <div className="dropdownButton relative inline-block">
         <button
-          
           className={clsx(
-            "py-2 rounded-full text-gray-200 placeholder-gray-400 flex items-center justify-between hover:scale-110 transition-transform-opacity duration-300",
+            "py-2 rounded-full text-gray-200 placeholder-gray-400 flex items-center justify-between transition-transform-opacity duration-300 ",
             {
               "hover:translate-x-[5px]": !isOpen,
               "translate-x-[5px]": isOpen,
-              
             }
           )}
           onClick={() => setIsOpen(!isOpen)}
         >
-          <svg 
-            width="15" 
-            height="15" 
-            viewBox="0 0 15 15" 
-            fill="none" 
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 15 15"
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
-            className={clsx(" transition duration-100", {
+            className={clsx("transition duration-100", {
               "rotate-90": isOpen,
               "animate-click": isOpen,
               "animate-close": !isOpen,
-              })}
-            >
-            <path 
+            })}
+          >
+            <path
               d="M6.1584 3.13508C6.35985 2.94621 6.67627 2.95642 6.86514 3.15788L10.6151 7.15788C10.7954 7.3502 10.7954 7.64949 10.6151 7.84182L6.86514 11.8418C6.67627 12.0433 6.35985 12.0535 6.1584 11.8646C5.95694 11.6757 5.94673 11.3593 6.1356 11.1579L9.565 7.49985L6.1356 3.84182C5.94673 3.64036 5.95694 3.32394 6.1584 3.13508Z"
-              fill="#cc8e15" 
-              fill-rule="evenodd" 
-              clip-rule="evenodd">
-            </path>
+              fill="#cc8e15"
+              fillRule="evenodd"
+              clipRule="evenodd"
+            ></path>
           </svg>
-          {/* <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.13523 6.15803C3.3241 5.95657 3.64052 5.94637 3.84197 6.13523L7.5 9.56464L11.158 6.13523C11.3595 5.94637 11.6759 5.95657 11.8648 6.15803C12.0536 6.35949 12.0434 6.67591 11.842 6.86477L7.84197 10.6148C7.64964 10.7951 7.35036 10.7951 7.15803 10.6148L3.15803 6.86477C2.95657 6.67591 2.94637 6.35949 3.13523 6.15803Z" fill="currentColor" fill-rule="evenodd" clip-rule="evenodd"></path></svg> */}
         </button>
-        
+        <div className="w-[115px] absolute top-1/2 left-full transform -translate-y-1/2 translate-x-2 ml-2 px-2 py-1 bg-gray-800 text-white text-xs font-semi-bold rounded opacity-0 pointer-events-none transition-opacity duration-300 tooltip">
+          My Saved Playlists
+        </div>
+      </div>
+       
         <ul
           className={clsx(
-            "dropdown-height-animate overflow-y-auto absolute mt-3 w-80 bg-gray-700 rounded-xl shadow-xl z-20 transition-all duration-200 ease-in-out lg:translate-x-[-10px] translate-x-[-180px] custom-scrollbar",
+            "dropdown-height-animate overflow-y-auto absolute mt-3 w-80 bg-gray-700 rounded-xl shadow-lg z-20 transition-all duration-200 ease-in-out lg:translate-x-[-10px] translate-x-[-180px] custom-scrollbar",
             {
               "max-h-0": !isOpen,
               "max-h-[400px]": isOpen,
             }
-          )}
-
+          )} 
+          onMouseLeave={() => {
+            setShowImagePreview(false)
+          }}
         >
-          {playlists.map((playlist) => {
+          <li className="px-3 py-2">
+              <input
+                type="text"
+                placeholder="Search playlists..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="px-3 py-2 w-full bg-gray-800 text-gray-300 rounded-md focus:outline-none text-sm"
+                ref={searchInputRef}
+              />
+          </li>
+          {filteredPlaylists.map((playlist) => {
             if (!playlist || playlist.length < 2) return null;
             const [name, id] = playlist;
             return (
-              <li key={id} className="px-3 py-2 cursor-pointer text-gray-300 text-sm hover:bg-gray-600 border-b border-gray-500" onClick={() => handlePlaylistSelect(id)}>
+              <li 
+                key={id} 
+                className="px-3 py-2 cursor-pointer text-gray-300 text-sm hover:bg-gray-600 border-b border-gray-500" 
+                onClick={() => handlePlaylistSelect(id)}
+                onMouseEnter={() => {
+                  setHoveredPlaylist(playlist)
+                  setShowImagePreview(true)
+                }}
+                onMouseLeave={() => {
+                  setHoveredPlaylist(null)
+                  setShowImagePreview(false)
+                }}
+              >
                 {name}
               </li>
             );
           })}
         </ul>
+        {isOpen && hoveredPlaylist && showImagePreview && (
+          <div
+            ref={imageRef}
+            className="fixed z-50 p-2 "
+            style={{
+              transform: `translate(${mousePosition.x-700}px, ${mousePosition.y - 60}px)`, // Adjust position without affecting the scale
+              width: "120px"
+              // height: "200px",
+            }}
+          >
+            <img src={hoveredPlaylist[2]} alt={hoveredPlaylist[0]} className="w-full translate-x-[-20px] translate-y-[-170px] lg:translate-x-[-400px] lg:translate-y-[-170px] rounded shadow-lg pointer-events-none" />
+          </div>
+        )}
       </div>
     );
   }

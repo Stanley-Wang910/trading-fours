@@ -71,7 +71,7 @@ function App() {
 
 
   return (
-    <div className="App z-1 bg-gradient-to-br from-custom_dark to-gray-900 flex flex-col min-h-screen">
+    <div className="App z-1 bg-gradient-to-b from-custom_dark to-gray-900 flex flex-col min-h-screen">
       
       <div className="App-content z-1 flex-grow justify-center items-center min-h-screen relative over">
       <GradientBackground className='z-[0]'/>
@@ -84,7 +84,7 @@ function App() {
           </div>
           <div className="main-container flex flex-col max-w-2xl w-full mx-auto p-4">
             <div className="flex flex-col items-center">
-              <div className="search-container mt-16 mb-1 w-full max-w-lg">
+              <div className="search-container mt-16 mb-1 w-full max-w-lg z-20">
                 <SearchBar onRecommendations={handleRecommendations} setIsLoading={setIsLoading} onQueryChange={handleQueryChange} />
               </div>
               <div className="recommendations-container w-full max-w-2xlflex justify-center items-center z-10">
@@ -129,9 +129,6 @@ function App() {
 
       </div>
         <Footer />
-      {/* <footer className="z-[1] bg-custom_dark bg-opacity-60 py-4 border-b border-gray-700 backdrop-filter backdrop-blur-md font-semibold p-4 pb-6 text-center text-gray-400">
-        <p>&copy; {new Date().getFullYear()} trading fours, by stanley wang</p>
-      </footer> */}
     </div>
   );
 }

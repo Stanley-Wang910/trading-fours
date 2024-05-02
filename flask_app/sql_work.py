@@ -276,7 +276,7 @@ class SQLWork:
         connection = self.pool.get_connection()
         try:
             cursor = connection.cursor()
-            query = f"SELECT name, playlist_id FROM playlists WHERE unique_id = '{unique_id}';"    
+            query = f"SELECT name, playlist_id, image_url FROM playlists WHERE unique_id = '{unique_id}';"    
             cursor.execute(query)
             results = cursor.fetchall()
             return results

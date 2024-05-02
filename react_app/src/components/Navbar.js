@@ -68,7 +68,7 @@ const Navbar = ({LogoutComponent }) => {
             </>
           )}
         </button>
-        <div className="flex items-center space-x-4 px-2 ">
+        <div className="flex items-center space-x-4 px-[60px]">
           <a
             href="https://github.com/Stanley-Wang910/spotify-rec-engine"
             target="_blank"

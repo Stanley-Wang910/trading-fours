@@ -27,17 +27,14 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Set a secret key for session management
+
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 sql_work = SQLWork()
 # Initialize Genre Class Model
-gc = GenreClassifier() #// Pass in DF
+gc = GenreClassifier()
 model, scaler, label_encoder, X_train = gc.load_model()
-# REC_DATASET_PATH = 'data/datasets/rec_dataset.csv'
-# rec_dataset = pd.read_csv(REC_DATASET_PATH)
-# append_data = pd.read_csv('data/datasets/append_data.csv')
-global rec_dataset
+
 
 
 # Generate a random state string

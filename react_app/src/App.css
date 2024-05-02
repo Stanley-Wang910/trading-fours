@@ -16,7 +16,7 @@ body { height: 100%; }
 
 :root {
   --color1: #1E3A8A;
-  --color2: #152654;
+  --color2: rgba(75, 102, 176, 0.549);
   
 }
 
@@ -26,11 +26,8 @@ body { height: 100%; }
 }
 
 .animate-colorChange1 {
-  animation: colorChange1 5s infinite linear;
+  animation: colorChange1 8s infinite linear;
 }
-
-
-
 
 ::-webkit-scrollbar {
   width: 12px;
@@ -163,6 +160,10 @@ body { height: 100%; }
   opacity: 1;
   pointer-events: auto;
 }
+.dropdownButton:hover .tooltip {
+  opacity: 1;
+  pointer-events: auto;
+}
 
 .opacity-100 {
   opacity: 1;
@@ -201,24 +202,7 @@ body { height: 100%; }
 
 }
 
-/* 
-@keyframes popEffect {
-  0% {
-    transform: translateY(0) scale(1) ;
-  }
-  25% {
-    transform: translateY(0) scale(1.005);
-  }
-  50% {
-    transform: translateY(0) scale(1.01) ;
-  }
-  75% {
-    transform: translateY(0) scale(1.005) ;
-  }
-  100% {
-    transform: translateY(0) scale(1) ;
-  }
-} */
+
 
 .embed.active {
   opacity: 80%;
@@ -226,14 +210,7 @@ body { height: 100%; }
   animation: popEffect 0.3s ease-out 1.75s; 
 }
 
-/* .rotate4Y {
-  cursor: pointer;  transition: transform 1s ease-in-out;
-}
 
-.rotate4Y:hover {
-  transform: rotateY(720deg);
-}
- */
 .svg-short {
   overflow: hidden;
 }
@@ -512,4 +489,23 @@ body { height: 100%; }
 
 li:last-child {
   border-bottom: none;
+}
+
+
+.search-container {
+  opacity: 0;
+  transform: translateY(-20px);
+  animation: fadeInUp 0.5s ease-out forwards;
+  animation-delay: 0.5s;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
