@@ -63,7 +63,7 @@ function App() {
   useEffect(() => {
     if (isLoading) {
       window.scrollTo({
-        top: 200,
+        top: 200, // Adjust as needed to meet Search Bar
         behavior: "smooth"
       });
     }
