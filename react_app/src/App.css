@@ -4,6 +4,8 @@
 
 
 
+
+
 html { background-color: #1C2128;
   
   height: 100%;
@@ -28,6 +30,21 @@ body { height: 100%; }
 .animate-colorChange1 {
   animation: colorChange1 8s infinite linear;
 }
+
+
+.fade-in-gradient {
+  animation: fadeInGradient 1s ease-in-out;
+}
+
+@keyframes fadeInGradient {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
 
 ::-webkit-scrollbar {
   width: 12px;
@@ -494,9 +511,9 @@ li:last-child {
 
 .search-container {
   opacity: 0;
-  transform: translateY(-20px);
+  transform: translateY(-10px);
   animation: fadeInUp 0.5s ease-out forwards;
-  animation-delay: 0.5s;
+  animation-delay: 1s;
 }
 
 @keyframes fadeInUp {

@@ -58,7 +58,10 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
     };
 
     const handleClickOutside = (event) => {
-      if (listRef.current && !listRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        listRef.current && !listRef.current.contains(event.target)) {
         setIsOpen(false);
         setShowImagePreview(false);
       }
@@ -183,7 +186,7 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
             ref={imageRef}
             className="fixed z-50 p-2 "
             style={{
-              transform: `translate(${mousePosition.x-700}px, ${mousePosition.y - 60}px)`, // Adjust position without affecting the scale
+              transform: `translate(${mousePosition.x-700}px, ${mousePosition.y - 302}px)`, // Adjust position without affecting the scale
               width: "120px"
               // height: "200px",
             }}

@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar";
 import GradientBackground from "./components/GradientBackground";
 import Footer from "./components/Footer";
 import PlaylistDropdown from "./components/PlaylistDropdown";
+import Greeting from "./components/Greeting";
 
 import "./App.css";
 
@@ -63,7 +64,7 @@ function App() {
   useEffect(() => {
     if (isLoading) {
       window.scrollTo({
-        top: 200, // Adjust as needed to meet Search Bar
+        top: 250, // Adjust as needed to meet Search Bar
         behavior: "smooth"
       });
     }
@@ -72,7 +73,7 @@ function App() {
 
   return (
     <div className="App z-1 bg-gradient-to-b from-custom_dark to-gray-900 flex flex-col min-h-screen">
-      <GradientBackground className='z-[0]'/>
+      <GradientBackground className={`z-[0] ${token !== "" ? "fade-in-gradient" : "opacity-0"}`}/>
       <div className="App-content z-1 flex-grow justify-center items-center min-h-screen relative over">
       
         {token === "" ? (
@@ -82,12 +83,10 @@ function App() {
           <div>
             <Navbar LogoutComponent={<Logout setToken={setToken} setRecommendations={setRecommendations} />} />
           </div>
-          <div className="header py-20 translate-y-[50px] translate-x-[-30%] text-center">
-            <h1 className="text-2xl text-white">Good Morning, Stanley</h1>
-          </div>
+          <Greeting />
           <div className="main-container flex flex-col max-w-2xl w-full mx-auto p-4">
             <div className="flex flex-col items-center">
-              <div className="search-container mt-16 mb-8 w-full max-w-lg z-20">
+              <div className="search-container mt-16 mb-4 w-full max-w-lg z-20">
                 <SearchBar onRecommendations={handleRecommendations} setIsLoading={setIsLoading} onQueryChange={handleQueryChange} />
               </div>
               <div className="recommendations-container w-full max-w-2xljustify-center items-center z-10">
@@ -131,7 +130,9 @@ function App() {
         )}
 
       </div>
-        <Footer />
+        <div className="mt-[12vh]">
+          <Footer />
+        </div>
     </div>
   );
 }

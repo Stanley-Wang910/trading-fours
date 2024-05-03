@@ -310,11 +310,16 @@ def recommend():
 
 @app.route('/search', methods=['GET'])
 def autocomplete_playlist():
-
     unique_id = session.get('unique_id')
     playlists = sql_work.get_unique_user_playlist(unique_id)
     return jsonify(playlists)
 
+
+@app.route('/user', methods=['GET'])
+def get_user_data():
+    unique_id = session.get('unique_id')
+    display_name = session.get('display_name')
+    return jsonify({'unique_id': unique_id, 'display_name': display_name})
 
     
 
