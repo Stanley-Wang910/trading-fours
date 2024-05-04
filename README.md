@@ -1,4 +1,4 @@
-# trading fours (Spotify Recommendation Engine)
+# Trading Fours (Spotify Recommendation Engine)
 
 ## Description
 
@@ -7,7 +7,7 @@ This project is a robust Spotify Recommendation Engine that takes a playlist or 
 ## Example Usage & Analysis
 
 Current State (Youtube Demo):
-[![YouTube Video Demo](https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/78ccde6e-b337-481d-92a2-ca0e2c796504)](https://www.youtube.com/watch?v=tzjeOJVYI7o)
+[![YouTube Video Demo](https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/78ccde6e-b337-481d-92a2-ca0e2c796504)](https://youtu.be/vhLH-nkAxKA?si=VowvksWtWva9jXmC)
 
 ## Features Coming Soon
 
