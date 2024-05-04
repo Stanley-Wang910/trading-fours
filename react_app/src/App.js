@@ -9,6 +9,8 @@ import Footer from "./components/Footer";
 import PlaylistDropdown from "./components/PlaylistDropdown";
 import Greeting from "./components/Greeting";
 
+import axios from "axios";
+
 import "./App.css";
 
 
@@ -20,6 +22,9 @@ function App() {
   const [query, setQuery] = useState("");
   const [recommendationPosition, setRecommendationPosition] = useState("center");
   const [showInfoContainer, setShowInfoContainer] = useState(false);
+  
+
+  const [favoritedTracks, setFavoritedTracks] = useState([]);
 
   // Ref variables
   const prevPositionRef = useRef(recommendationPosition);
@@ -42,6 +47,7 @@ function App() {
   
   // Update Recommendations State
   const handleRecommendations = (data) => {
+    console.log("Setting recommendations", data);
     setRecommendations(data);
   };
   
@@ -69,6 +75,32 @@ function App() {
       });
     }
   }, [isLoading]);  // Dependency on isLoading
+
+  
+
+  const sendFavoritedTracks = async () => {
+    try {
+      console.log('Sending favorited tracks to backend:', favoritedTracks);
+      // console.log(recommendations.id)
+      const response = await axios.post("http://localhost:5000/api/favorited", { 
+        favoritedTracks,
+        recommendationID: recommendations.id
+       });
+      console.log(response);
+
+      setFavoritedTracks([]);
+    } catch (error) {
+      console.error('Error sending favorited tracks to backend:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isLoading && favoritedTracks.length > 0) {
+      sendFavoritedTracks();
+    }
+  }, [isLoading, favoritedTracks]);
+
+
 
 
   return (
@@ -104,10 +136,12 @@ function App() {
                     <RecommendationsList
                       recommendations={recommendations}
                       onRecommendations={handleRecommendations}
+                      isLoading={isLoading}
                       setIsLoading={setIsLoading}
                       query={query}
                       position={recommendationPosition}
                       onTogglePosition={handleTogglePosition}
+                      setFavoritedTracks={setFavoritedTracks}
                     />
                     {showInfoContainer && (
                       <div

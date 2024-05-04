@@ -4,7 +4,7 @@ import { Meteors } from './ui/meteors.tsx'; // Adjust the path as necessary base
 import clsx from "clsx";
 
 
-function RecommendationsList({ recommendations, onRecommendations, setIsLoading, query, position, onTogglePosition }) {
+function RecommendationsList({ recommendations, onRecommendations, setIsLoading, query, position, onTogglePosition, setFavoritedTracks }) {
   //State variables
   const [visibleEmbeds, setVisibleEmbeds] = useState(5); // State to track the number of visible embeds
   const [loaded, setLoaded] = useState([]);
@@ -20,20 +20,31 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
   const handleLoadMore = useCallback(() => {
     setVisibleEmbeds((prev) => prev + 5);
     setContainerHeight((prev) => prev + extendRec, maxHeight);
-  
-   
   }, [maxHeight]);
 
   // Handler for clicking like
   const handleClickLike = (index) => {
+    const trackID = recommendationsArray[index];
+    console.log("Clicked like", index, trackID);
     setClickedLikes((prevClickedLikes) => {
       if (prevClickedLikes.includes(index)) {
+        setFavoritedTracks((prevFavorited) =>
+          prevFavorited.filter((id) => id !== trackID)
+        );
         return prevClickedLikes.filter((likeIndex) => likeIndex !== index);
       } else {
+        setFavoritedTracks((prevFavorited) => {
+          if (!prevFavorited.includes(trackID)) {
+            return [...prevFavorited, trackID];
+          }
+          return prevFavorited;
+        });
         return [...prevClickedLikes, index];
       }
     });
+    // console.log("Favorited", favorited);
   };
+
 
   // Check if recommendations is a playlist
   const isPlaylist = recommendations && recommendations.hasOwnProperty("playlist"); // Check if recommendations is a playlist
@@ -48,7 +59,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
 
   // Get the array of recommended ids
   const recommendationsArray = recommendations.recommended_ids || []; // Get the array of recommended ids
-  console.log(recommendationsArray);
+  // console.log(recommendationsArray);
 
   // Load meteors when recommendations are received
   useEffect(() => {

@@ -18,7 +18,8 @@ body { height: 100%; }
 
 :root {
   --color1: #1E3A8A;
-  --color2: rgba(75, 102, 176, 0.549);
+  --color2: #7054bdaf;
+  --color3: rgba(75, 102, 176, 0.549); 
   
 }
 
@@ -26,9 +27,18 @@ body { height: 100%; }
   0%, 100% { fill: var(--color1); }
   50% { fill: var(--color2); }
 }
+@keyframes colorChange2 {
+  0%, 100% { fill: var(--color1); }
+  50% { fill: var(--color3); }
+}
+
 
 .animate-colorChange1 {
-  animation: colorChange1 8s infinite linear;
+  animation: colorChange1 10s infinite linear;
+}
+
+.animate-colorChange2 {
+  animation: colorChange2 10s infinite linear;
 }
 
 

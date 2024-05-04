@@ -15,8 +15,6 @@ function Greeting() {
     'rhythm',
     'tune',
     'beat',
-    'harmony',
-    'style',
     'mood',
     'groove',
     'jam',
@@ -34,7 +32,6 @@ function Greeting() {
     'refrain',
     'playlist',
     'album',
-    'single',
     'EP',
     'mixtape'];
     const [lastWord, setLastWord] = useState('song');
@@ -58,7 +55,7 @@ function Greeting() {
             if (currentIndex === 0) {
               clearInterval(interval);
             }
-          }, 60);
+          }, 70);
         };
     
         const shuffledWords = shuffleWords();
@@ -68,28 +65,28 @@ function Greeting() {
         setLastWord(words[randomIndex]);
       }, []);
 
-    useEffect(() => {
-        let interval;
-        if (isHovering) {
-            let currentIndex = 0;
-            interval = setInterval(() => {
-            setLastWord(words[currentIndex]);
-            currentIndex = (currentIndex + 1) % words.length;
-            }, 100);
-        }
+    // useEffect(() => {
+    //     let interval;
+    //     if (isHovering) {
+    //         let currentIndex = 0;
+    //         interval = setInterval(() => {
+    //         setLastWord(words[currentIndex]);
+    //         currentIndex = (currentIndex + 1) % words.length;
+    //         }, 100);
+    //     }
 
-        return () => {
-            clearInterval(interval);
-        };
-    }, [isHovering]);
+    //     return () => {
+    //         clearInterval(interval);
+    //     };
+    // }, [isHovering]);
 
-    const handleMouseEnter = () => {
-        setIsHovering(true);
-    };
+    // const handleMouseEnter = () => {
+    //     setIsHovering(true);
+    // };
 
-    const handleMouseLeave = () => {
-        setIsHovering(false);
-    };
+    // const handleMouseLeave = () => {
+    //     setIsHovering(false);
+    // };
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -158,8 +155,9 @@ function Greeting() {
             <div className='animate-slide-in-words opacity-0'>
               <div className="text-[20px] font-merriweather text-stone-200 mt-2 translate-x-[40%] translate-y-1/2 overflow-hidden w-[330px]">
                 <div className=' whitespace-nowrap'
-                  onMouseEnter={handleMouseEnter}
-                  onMouseLeave={handleMouseLeave}>
+                  // onMouseEnter={handleMouseEnter}
+                  // onMouseLeave={handleMouseLeave}
+                  >
                     discoveryournewfavorite
                   <span className="text-yellow-500 italic relative inline-block">
                     {lastWord} 

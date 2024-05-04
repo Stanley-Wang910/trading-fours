@@ -298,14 +298,16 @@ def recommend():
         return jsonify({
             'playlist': playlist_name,
             'top_genres': top_genres,
-            'recommended_ids': recommended_ids
+            'recommended_ids': recommended_ids,
+            'id': link
         })
     elif type_id == 'track':
         return jsonify({
             'track': track_name,
             'artist': artist_name,
             'release_date': release_date,
-            'recommended_ids': recommended_ids
+            'recommended_ids': recommended_ids,
+            'id': link
         })
 
 @app.route('/search', methods=['GET'])
@@ -320,6 +322,21 @@ def get_user_data():
     unique_id = session.get('unique_id')
     display_name = session.get('display_name')
     return jsonify({'unique_id': unique_id, 'display_name': display_name})
+
+@app.route('/api/favorited', methods=['POST'])
+def save_favorited():
+    data = request.get_json()
+    favorited_tracks = data.get('favoritedTracks', [])
+    recommendation_id = data.get('recommendationID')
+    if favorited_tracks:
+
+        print(favorited_tracks)
+        print(recommendation_id)
+        return jsonify({'message': 'Favorited tracks saved'})
+    else:
+        return jsonify({'error': 'No favorited tracks provided'}), 400
+
+
 
     
 

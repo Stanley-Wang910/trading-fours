@@ -2,11 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 
 const Navbar = ({LogoutComponent }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const svgContainerRef = useRef(null);
   
   useEffect(() => {
     const handleScroll = () => {
-      const scrollTop = window.pageYOffset;
+      const scrollTop = window.scrollY;
       const scrollThreshold = 50 // Adjust this value as needed
   
       if (scrollTop > scrollThreshold) {
