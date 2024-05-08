@@ -82,7 +82,7 @@ function App() {
     try {
       console.log('Sending favorited tracks to backend:', favoritedTracks);
       // console.log(recommendations.id)
-      const response = await axios.post("http://localhost:5000/api/favorited", { 
+      const response = await axios.post("/favorited", { 
         favoritedTracks,
         recommendationID: recommendations.id
        });

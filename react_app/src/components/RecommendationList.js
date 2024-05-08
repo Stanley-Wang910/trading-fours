@@ -165,7 +165,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
                       width="100%"
                       height="132"
                       allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                      loading="eager"
+                      loading="lazy"
                     ></iframe>
                   </div>
                 </div>

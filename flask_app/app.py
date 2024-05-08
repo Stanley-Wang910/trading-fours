@@ -88,6 +88,7 @@ def auth_callback():
         sp = SpotifyClient(Spotify(auth=session.get('access_token')))
         unique_id, display_name = sql_work.get_user_data(sp)
         session['unique_id'] = unique_id
+        print(unique_id, "stored in session")
         session['display_name'] = display_name
         
         
@@ -165,21 +166,17 @@ def append_to_dataset(data, choice):
 
 def get_playlist_data_session(link):
     if session.get('last_search') == link and 'playlist_name' in session:
-        print('Playlist session data exists')
-        p_vector = session.get('p_vector')
-        p_vector = pd.read_json(p_vector, orient='records')
+        p_vector = sql_work.get_vector_from_db(link, 'playlist')
         playlist_name = session.get('playlist_name')
         top_genres = session.get('top_genres')
         previously_recommended = session.get('recommended_songs', [])
-        print(previously_recommended) #
+        print("Number of tracks previously recommended:", len(previously_recommended)) 
         return p_vector, playlist_name, top_genres, previously_recommended
     return None
 
 def get_track_data_session(link):
     if session.get('last_search') == link and 'track_name' in session:
-        print('Track session data exists')
-        t_vector = session.get('t_vector')
-        t_vector = pd.read_json(t_vector, orient='records')
+        t_vector = sql_work.get_vector_from_db(link, 'track')
         track_name = session.get('track_name')
         artist_name = session.get('artist_name')
         release_date = session.get('release_date')
@@ -193,10 +190,11 @@ def save_playlist_data_session(playlist, link, re, sp):
     playlist_name = sp.get_playlist_track_name(link) # Get playlist name
     top_genres = re.get_top_genres(p_vector) # Get top genres
     playlist_ids = playlist['id'].tolist() # Get playlist track IDs
-    p_vector_json = p_vector.to_json(orient='records') # Convert playlist vector to JSON
     top_genres = top_genres.tolist() 
+
     # Save playlist data to session
-    session['p_vector'] = p_vector_json 
+    p_vector_dict = p_vector.to_dict(orient='records')[0]
+    sql_work.add_vector_to_db(p_vector_dict, link, 'playlist')
     session['playlist_name'] = playlist_name 
     session['top_genres'] = top_genres  
     session['last_search'] = link 
@@ -207,9 +205,10 @@ def save_track_data_session(track, link, re, sp):
     track_id = track['id'].tolist() # Get track ID
     track_name, artist_name, release_date = sp.get_playlist_track_name(link, 'track') # Get track name, artist name, and release date
     t_vector = re.track_vector(track) # Get track vector
-    t_vector_json = t_vector.to_json(orient='records') # Convert track vector to JSON
+    
     # Save track data to session
-    session['t_vector'] = t_vector_json
+    t_vector_dict = t_vector.to_dict(orient='records')[0]
+    sql_work.add_vector_to_db(t_vector_dict, link, 'track')
     session['track_name'] = track_name
     session['artist_name'] = artist_name
     session['release_date'] = release_date
@@ -252,7 +251,7 @@ def recommend():
             p_vector, playlist_name, top_genres, previously_recommended = playlist_data
             re = RecEngine(sp, previously_recommended=previously_recommended)
         else:
-            print('Playlist data does not exist')
+            print('Saving playlist data to session')
             previously_recommended = session['recommended_songs'] = []
             re = RecEngine(sp, previously_recommended=previously_recommended)  
             playlist = sp.predict(link, type_id, model, scaler, label_encoder, X_train)
@@ -271,9 +270,11 @@ def recommend():
         # Check if track data exists in session
         track_data = get_track_data_session(link)
         if track_data:
+            print('Track data exists')
             t_vector, track_name, artist_name, release_date, track_id, previously_recommended = track_data
             re = RecEngine(sp, previously_recommended=previously_recommended)
         else:
+            print('Saving track data to session')
             previously_recommended = session['recommended_songs'] = []
             re = RecEngine(sp, previously_recommended=previously_recommended) 
             track = sp.predict(link, type_id, model, scaler, label_encoder, X_train)
@@ -323,19 +324,18 @@ def get_user_data():
     display_name = session.get('display_name')
     return jsonify({'unique_id': unique_id, 'display_name': display_name})
 
-@app.route('/api/favorited', methods=['POST'])
+@app.route('/favorited', methods=['POST'])
 def save_favorited():
     data = request.get_json()
     favorited_tracks = data.get('favoritedTracks', [])
     recommendation_id = data.get('recommendationID')
     if favorited_tracks:
-
-        print(favorited_tracks)
-        print(recommendation_id)
-        return jsonify({'message': 'Favorited tracks saved'})
+        unique_id = session.get('unique_id')
+        print(unique_id)
+        sql_work.add_liked_tracks(unique_id, recommendation_id, favorited_tracks)
+        return jsonify({'message': 'Favorited tracks saved successfully'})
     else:
-        return jsonify({'error': 'No favorited tracks provided'}), 400
-
+        return jsonify({'message': 'No favorited tracks provided'})
 
 
     

@@ -130,8 +130,6 @@ class RecEngine:
         final_track_vector, final_rec_df, recommendations_df = self.prepare_data(self.sp, rec_dataset, track_vector, track_id)
         
         # Apply weight to track genre
-        print(track_genre)
-        print(track_vector)
         weight = {track_genre: 0.9}
         final_rec_df = self.apply_weights(final_rec_df, weight)
         
@@ -192,7 +190,6 @@ class RecEngine:
             ids = self.sp.analyze_playlist(id, 'rec')
         else:
             ids = id # Handle for track recommendation
-            print(ids)
         # One-hot encode the genre column in both dataframes
         final_rec_df = self.ohe_features(rec_dataset) ###
         
