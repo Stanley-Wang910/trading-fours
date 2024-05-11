@@ -1,4 +1,4 @@
-![alt text](logo.png)
+![alt text](logot4.png)
 
 trading fours is your own personalized Spotify recommendation engine.
 
