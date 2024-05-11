@@ -1,71 +1,28 @@
-# Trading Fours (Spotify Recommendation Engine)
+![alt text](logo.png)
 
-## Description
+trading fours is your own personalized Spotify recommendation engine.
 
-This project is a robust Spotify Recommendation Engine that takes a playlist or a track as input. It uses a random forest classification model to predict overarching track or playlist genre. This model was trained on over 200,000 songs and 20 genres. The recommendation engine then utilizes the spotipy library and the Spotify Web API to retrieve individual track attributes, and creates a vector representative of the playlist/track within a ~45 dimensional space. This vector is compared against an immense & continually updated dataset of diverse songs in both genre and audio features and is then assigned a cosine similarity, which is finally used to determine the best recommendations for the given playlist/track.
+- Search for a playlist or song / or browse your own library of saved playlists directly on the site, and T4 will recommend alike tracks based on genre & track attributes
+- Its thinking is influenced by what you have been listening to as of late, and will use that data to tailor the songs it recommends to you
+- Behind the scenes, user and song info is being safely handled and stored using MySQL, and the bulk of the recommendations is being done via Python, where playlist / track data is being processed and computed in a ~45 dimensional space against a dataset of over 200,000+ songs (and growing!) to provide the best recommendations.
 
-## Example Usage & Analysis
+## Demo:
 
-Current State (Youtube Demo):
 [![YouTube Video Demo](https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/78ccde6e-b337-481d-92a2-ca0e2c796504)](https://youtu.be/vhLH-nkAxKA?si=VowvksWtWva9jXmC)
 
 ## Features Coming Soon
 
-2. MySQL Database interactions for tailored user recommendations and profile customizations 
+1. Explicit Feedback Recommendation Implementation
+2. Personalized Recommendations By Artist
+3. Recommendations for Users and Friends!
+4. Recommendation Info Visualization
+5. App Hosting
 
 ## Contact
 
     Email: wangstanley910@gmail.com
     School Email: stanley.wang@mail.mcgill.ca
     LinkedIn: https://www.linkedin.com/in/stanley910/
-
-## Installation
-
-To install and run this project, follow these steps:
-
-1. Clone the repository to your local machine:
-    ```
-    git clone https://github.com/Stanley-Wang910/spotify-rec-engine.git
-    ```
-
-2. Navigate to the project directory:
-    ```
-    cd <path to your project directory>
-    ```
-
-3. Install the required dependencies:
-    ```
-    pip install -r requirements.txt
-    ```
-
-## Usage
-
-To use this Spotify Recommendation Engine, follow these steps:
-
-1. Create a Spotify Developer Account:
-    - Go to the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/) and log in or create a new account.
-    - Create a new app and note down the Client ID and Client Secret.
-
-2. Set up the Redirect URI:
-    - In the Spotify Developer Dashboard, go to your app settings.
-    - Add a Redirect URI for your application. This should be the URL where the user will be redirected after authentication. For example, `http://localhost:8000/callback`.
-
-3. Create a `.env` file in the root directory of your project:
-    - Open a text editor and create a new file named `.env`.
-    - Add the following lines to the `.env` file, replacing `<YOUR_CLIENT_ID>`, `<YOUR_CLIENT_SECRET>`, and `YOUR_USER_ID` with your actual Client ID, Client Secret, and User ID:
-      ```
-      CLIENT_ID=<YOUR_CLIENT_ID>
-      CLIENT_SECRET=<YOUR_CLIENT_SECRET>
-      SPOTIFY_USER_ID=<YOUR_USER_ID>
-      REDIRECT_URI=http://localhost:8000/callback
-      ```
-
-4. Run the program!
-    - in terminal:
-      ```
-      <User Directory>\RecEngine> python .\src\main.py
-      ```
-    - Have fun!
 
 ## Data Sources
 
@@ -76,5 +33,4 @@ The initial dataframe of ~200,000 songs was collected and altered from the follo
 
 However, the dataframe is continually updated by playlists and tracks that users enter!
 
-
-
+Logo Notes by: <a href="https://www.freepik.com/free-vector/illustration-set-music-note-icons_2582736.htm#query=music%20note%20svg&position=12&from_view=keyword&track=ais_user&uuid=d09becc7-341a-4a7c-9fac-31370426cbc0">rawpixel.com</a>
