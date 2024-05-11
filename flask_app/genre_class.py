@@ -111,9 +111,12 @@ class GenreClassifier:
         self.X_train = joblib.load(features_filename)  # Load the features
         #print(f"Features loaded from {features_filename}.")
 
-        return self.model, self.scaler, self.label_encoder, self.X_train
-
-    
+        return {
+            'model': self.model,
+            'scaler': self.scaler,
+            'label_encoder': self.label_encoder,
+            'X_train': self.X_train
+        }
 
 
    

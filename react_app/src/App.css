@@ -4,7 +4,7 @@
 
 
 
-
+/* Body */
 
 html { background-color: #1C2128;
   
@@ -56,6 +56,7 @@ body { height: 100%; }
 }
 
 
+/* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 12px;
   /* Vertical scrollbar width */
@@ -85,6 +86,8 @@ body { height: 100%; }
   /* Darker color on hover */
 }
 
+
+/* Logout Button */
 .logout {
   background-position-y: -10%;
   background-image: linear-gradient(180deg, transparent 50%, #cc8e15 50%) !important;
@@ -103,6 +106,7 @@ body { height: 100%; }
 }
 
 
+/* Loading Animation */
 .loader {
   margin: 0 auto;
   width: 60px;
@@ -173,6 +177,7 @@ body { height: 100%; }
 }
 
 
+/* Recommendations Container */
 .transition-transform {
   transition-property: transform;
   transition-duration: 0.5s;
@@ -187,10 +192,6 @@ body { height: 100%; }
   opacity: 1;
   pointer-events: auto;
 }
-.dropdownButton:hover .tooltip {
-  opacity: 1;
-  pointer-events: auto;
-}
 
 .opacity-100 {
   opacity: 1;
@@ -200,7 +201,6 @@ body { height: 100%; }
   opacity: 0;
 }
 
-
 @keyframes followPath {
   from {
     transform: translateY(0);
@@ -209,6 +209,7 @@ body { height: 100%; }
     transform: translateY(calc(50vh - 14px)); /* Adjust the value based on button height */
   }
 }
+
 .container-transition {
   transition: height 0.5s ease-in-out;
   height: var(--container-height);
@@ -229,8 +230,6 @@ body { height: 100%; }
 
 }
 
-
-
 .embed.active {
   opacity: 80%;
   transform: translateY(0);
@@ -238,38 +237,33 @@ body { height: 100%; }
 }
 
 
+/* Logo Animation */
 .svg-short {
   overflow: hidden;
 }
-
 
 .svg-short:hover .t {
   animation: drop-down 0.65s ease-out;
   animation-play-state: running;
   animation-delay: 0.20s;
-  
 }
 
 .svg-short:hover .four {
   animation: drop-down 0.65s ease-out;
   animation-play-state: running;
   animation-delay: 0.25s;
-  
 }
 
 .svg-trading  {
   overflow: hidden;
 }
 
-
 .svg-trading-animate .rest-animate {
   animation: slideOutUp 0.1s ease-in-out forwards;
 }
 
 .svg-trading-animate .f-animate {
-
   animation: slideLeftFade 0.3s ease-in forwards;
-
 }
 
 
@@ -281,14 +275,8 @@ body { height: 100%; }
   100% {
     transform: translateX(-55%);
     opacity: 0%;
-  }
-  
-  
+  } 
 }
-
-
-
-
 
 .svg-trading-reverse .rest-animate {
   animation: slideInDown 0.35s ease-in-out forwards;
@@ -296,7 +284,6 @@ body { height: 100%; }
 .svg-trading-reverse .f-animate {
   animation: slideRightEnter 0.25s ease-out forwards;
 }
-
 
 @keyframes slideRightEnter {
   0% {
@@ -307,11 +294,7 @@ body { height: 100%; }
     transform: translateX(0);
     opacity: 100%;
   }
-  
-  
 }
-
-
 
 @keyframes slideOutUp {
   0% {
@@ -335,8 +318,6 @@ body { height: 100%; }
     opacity: 1;
   }
 }
-
-
 
 .svg-short-animate .four {
   animation: slideInLeft 0.35s ease forwards;
@@ -378,6 +359,15 @@ body { height: 100%; }
     transform: translateX(100%);
     opacity: 0;
   }
+}
+
+
+
+
+/* Playlist Dropdown */
+.dropdownButton:hover .tooltip {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 
@@ -464,23 +454,6 @@ body { height: 100%; }
 
 }
 
-
-/* .dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  z-index: 20;
-  max-height: 200px;
-  overflow-y: auto;
-  background-color: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-radius: 0.375rem;
-  padding: 0.5rem 0;
-  transition: all 0.2s ease-in-out;
-  opacity: 0;
-  pointer-events: none;
-} */
-
 .dropdown-height-animate {
   transition: max-height 0.3s ease-in-out;
 }
@@ -519,13 +492,9 @@ li:last-child {
 }
 
 
-.search-container {
-  opacity: 0;
-  transform: translateY(-10px);
-  animation: fadeInUp 0.5s ease-out forwards;
-  animation-delay: 1s;
-}
 
+
+/* Search Bar */
 @keyframes fadeInUp {
   0% {
     opacity: 0;
@@ -535,4 +504,10 @@ li:last-child {
     opacity: 1;
     transform: translateY(0);
   }
+}
+.search-container {
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: fadeInUp 0.5s ease-out forwards;
+  animation-delay: 1s;
 }

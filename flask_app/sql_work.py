@@ -150,12 +150,20 @@ class SQLWork:
         finally:
             cursor.close()
             connection.close()
+
     def user_top_artists_db(self, unique_id, top_artists):
         connection = self.pool.get_connection()
         try:
             cursor = connection.cursor()
             # Top Artists
             for time_range, artists in top_artists.items():
+                clear_query = """
+                UPDATE user_top_artists
+                SET {}_rank = NULL
+                WHERE unique_id = %s
+                """.format(time_range)
+                cursor.execute(clear_query, (unique_id,))
+
                 for rank, artist in enumerate(artists['items'], start=1):
                     artist_id = artist['id']
                     artist_name = artist['name']
@@ -170,24 +178,33 @@ class SQLWork:
 
                     if artist_exists:
                         # Update the existing row with the new rank
-                        update_query = f"""
+                        update_query = """
                         UPDATE user_top_artists
-                        SET {time_range}_rank = %s
+                        SET {}_rank = %s
                         WHERE unique_id = %s AND artist_id = %s
-                        """
+                        """.format(time_range)
                         cursor.execute(update_query, (rank, unique_id, artist_id))
                     else:
                         # Insert a new row for the artist
-                        insert_query = f"""
-                        INSERT INTO user_top_artists (unique_id, artist_id, artist_name, {time_range}_rank)
+                        insert_query = """
+                        INSERT INTO user_top_artists (unique_id, artist_id, artist_name, {}_rank)
                         VALUES (%s, %s, %s, %s)
-                        """
+                        """.format(time_range)
                         cursor.execute(insert_query, (unique_id, artist_id, artist_name, rank))    
+            delete_query = """
+            DELETE FROM user_top_artists
+            WHERE unique_id = %s
+            AND short_term_rank IS NULL
+            AND medium_term_rank IS NULL
+            AND long_term_rank IS NULL
+            """
+            
             print('Top artists added to database')
             connection.commit()
 
         except mysql.connector.Error as e:
             print(f"Error adding top artists to database: {e}")
+            connection.rollback()
         finally:
             cursor.close()
             connection.close()
@@ -198,6 +215,13 @@ class SQLWork:
             cursor = connection.cursor()
             # Top Tracks
             for time_range, tracks in top_tracks.items():
+                clear_query = """
+                UPDATE user_top_tracks
+                SET {}_rank = NULL
+                WHERE unique_id = %s
+                """.format(time_range)
+                cursor.execute(clear_query, (unique_id,))
+
                 for rank, track in enumerate(tracks['items'], start=1):
                     track_id = track['id']
                     track_name = track['name']
@@ -214,24 +238,37 @@ class SQLWork:
     
                     if track_exists:
                         # Update the existing row with the new rank
-                        update_query = f"""
+                        update_query = """
                         UPDATE user_top_tracks
-                        SET {time_range}_rank = %s
+                        SET {}_rank = %s
                         WHERE unique_id = %s AND track_id = %s
-                        """
+                        """.format(time_range)
                         cursor.execute(update_query, (rank, unique_id, track_id))
                     else:
                         # Insert a new row for the track
-                        insert_query = f"""
-                        INSERT INTO user_top_tracks (unique_id, track_id, track_name, artist_name, {time_range}_rank)
+                        insert_query = """
+                        INSERT INTO user_top_tracks (unique_id, track_id, track_name, artist_name, {}_rank)
                         VALUES (%s, %s, %s, %s, %s)
-                        """
+                        """.format(time_range)
                         cursor.execute(insert_query, (unique_id, track_id, track_name, artist_name, rank))
+            
+            # Delete tracks with null rankings in all three categories for the user
+            delete_query = """
+            DELETE FROM user_top_tracks
+            WHERE unique_id = %s
+            AND short_term_rank IS NULL
+            AND medium_term_rank IS NULL
+            AND long_term_rank IS NULL
+            """
+            cursor.execute(delete_query, (unique_id,))
+            
+            
             print('Top tracks added to database')
             connection.commit()
     
         except mysql.connector.Error as e:
             print(f"Error adding top tracks to database: {e}")
+            connection.rollback()
         finally:
             cursor.close()
             connection.close()
@@ -490,6 +527,75 @@ class SQLWork:
                 return None
         except mysql.connector.Error as e:
             print(f"Error getting vector from database: {e}")
+        finally:
+            cursor.close()
+            connection.close()
+
+    def get_user_top_tracks(self, unique_id):
+        connection = self.pool.get_connection()
+        try:
+            cursor = connection.cursor()
+            query = f"SELECT * FROM user_top_tracks WHERE unique_id = '{unique_id}'"
+            cursor.execute(query)
+            results = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+        
+            # Create a list of dictionaries with column names as keys
+            output = []
+            for row in results:
+                row_dict = {column_names[i]: value for i, value in enumerate(row)}
+                output.append(row_dict)
+            
+            print('User top tracks retrieved from database')
+            return output
+        except mysql.connector.Error as e:
+            print(f"Error retrieving user top tracks from database: {e}")
+        finally:
+            cursor.close()
+            connection.close()
+
+    def get_user_top_artists(self, unique_id):
+        connection = self.pool.get_connection()
+        try:
+            cursor = connection.cursor()
+            query = f"SELECT * FROM user_top_artists WHERE unique_id = '{unique_id}'"
+            cursor.execute(query)
+            results = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+        
+            # Create a list of dictionaries with column names as keys
+            output = []
+            for row in results:
+                row_dict = {column_names[i]: value for i, value in enumerate(row)}
+                output.append(row_dict)
+            
+            print('User top artists retrieved from database')
+            return output
+        except mysql.connector.Error as e:
+            print(f"Error retrieving user top artists from database: {e}")
+        finally:
+            cursor.close()
+            connection.close()
+    
+    def get_user_recently_played(self, unique_id):
+        connection = self.pool.get_connection()
+        try:
+            cursor = connection.cursor()
+            query = f"SELECT * FROM recently_played WHERE unique_id = '{unique_id}'"
+            cursor.execute(query)
+            results = cursor.fetchall()
+            column_names = [desc[0] for desc in cursor.description]
+        
+            # Create a list of dictionaries with column names as keys
+            output = []
+            for row in results:
+                row_dict = {column_names[i]: value for i, value in enumerate(row)}
+                output.append(row_dict)
+            
+            print('User recently played tracks retrieved from database')
+            return output
+        except mysql.connector.Error as e:
+            print(f"Error retrieving user recently played tracks from database: {e}")
         finally:
             cursor.close()
             connection.close()

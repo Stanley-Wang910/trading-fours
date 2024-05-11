@@ -68,7 +68,7 @@ class SpotifyClient:
         playlist_id = id_dic[playlist_name]
         self.analyze_playlist(playlist_id)
 
-    def analyze_playlist(self, playlist_id, type_analyze='classify'):
+    def analyze_playlist(self, input_data, type_analyze='classify'):
         """
         Analyzes a Spotify playlist by retrieving the tracks, their audio features, and merging them into a DataFrame.
 
@@ -78,27 +78,50 @@ class SpotifyClient:
         Returns:
         - playlist_with_features (pd.DataFrame): A DataFrame containing the playlist tracks and their audio features.
         """
-        # Retrieve the tracks from the playlist
-        playlist_data = []
-        for track_item in self.sp.playlist(playlist_id)['tracks']['items']:
-            track = track_item['track']
-            if track and track['id']: 
-                playlist_data.append({
-                    'artist': track['artists'][0]['name'],
-                    'name': track['name'],
-                    'id': track['id'],
-                    'date_added': track_item['added_at'],
-                    'popularity': track['popularity'],
-                    'explicit': track['explicit']
-                })
-
-        # Create a DataFrame from the playlist data
-        playlist = pd.DataFrame(playlist_data)
-        playlist['date_added'] = pd.to_datetime(playlist['date_added'])
-        playlist = playlist.sort_values('date_added', ascending=False)
+        if isinstance(input_data, str):
+            # Input is a playlist ID
+            playlist_id = input_data
+            
+            # Retrieve the tracks from the playlist
+            playlist_data = []
+            for track_item in self.sp.playlist(playlist_id)['tracks']['items']:
+                track = track_item['track']
+                if track and track['id']:
+                    playlist_data.append({
+                        'artist': track['artists'][0]['name'],
+                        'name': track['name'],
+                        'id': track['id'],
+                        'date_added': track_item['added_at'],
+                        'popularity': track['popularity'],
+                        'explicit': track['explicit']
+                    })
+            
+            # Create a DataFrame from the playlist data
+            playlist = pd.DataFrame(playlist_data)
+            playlist['date_added'] = pd.to_datetime(playlist['date_added'])
+            playlist = playlist.sort_values('date_added', ascending=False)
+            
+            # Retrieve the track IDs from the playlist
+            track_ids = playlist['id'].tolist()
+            
+        elif isinstance(input_data, list):
+            # Input is a list of track IDs
+            track_ids = input_data
+            
+            # Retrieve track information for the given track IDs
+            tracks_info = self.sp.tracks(track_ids)['tracks']
+            
+            # Create a DataFrame from the track information
+            playlist = pd.DataFrame([{
+                'artist': track['artists'][0]['name'],
+                'name': track['name'],
+                'id': track['id'],
+                'popularity': track['popularity'],
+                'explicit': track['explicit']
+            } for track in tracks_info])
         
-        # Retrieve the audio features for the tracks
-        track_ids = playlist['id'].tolist()
+        else:
+            raise ValueError("Invalid input type. Expected a playlist ID or a list of track IDs.")
         if type_analyze == 'rec':
             return track_ids
         audio_features_list = self.sp.audio_features(track_ids)
@@ -117,7 +140,7 @@ class SpotifyClient:
 
     def get_playlist_track_name(self, id, input='playlist'):
         """
-        Retrieves the name of a Spotify playlist given its ID.
+        Retrieves the name of a Spotify playlist / track given its ID.
 
         Parameters:
         - playlist_id (str): The ID of the Spotify playlist.
@@ -164,7 +187,7 @@ class SpotifyClient:
     #             track_links.append('https://open.spotify.com/track/' + track['id'])
     #     return track_links
     
-    def get_song_features(self, track_id):
+    def get_song_features(self, track_ids):
         """
         Retrieves the audio features of a list of track IDs from Spotify API.
 
@@ -174,12 +197,12 @@ class SpotifyClient:
         Returns:
             pandas.DataFrame: A DataFrame containing the audio features of the tracks, along with additional information such as artist, name, popularity, and explicitness.
         """
-        if not track_id:
+        if not track_ids:
             print("No track provided.")
             return
         
         # Retrieve audio features for the track IDs
-        audio_features_list = self.sp.audio_features(track_id)
+        audio_features_list = self.sp.audio_features(track_ids)
 
         # Convert the list of audio features into a DataFrame
         audio_features_df = pd.DataFrame(audio_features_list)
@@ -188,14 +211,17 @@ class SpotifyClient:
         selected_columns = ['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms', 'time_signature']
 
         # Retrieve additional information for each track
-        tracks_info_list = {
-            'id' : track_id,
-            'artist' : self.sp.track(track_id)['artists'][0]['name'],
-            'name': self.sp.track(track_id)['name'],
-            'popularity' : self.sp.track(track_id)['popularity'],
-            'explicit' : self.sp.track(track_id)['explicit'],
-
-            }
+        tracks_info_list = []
+        for track_id in track_ids:
+            track_info = self.sp.track(track_id)
+            tracks_info_list.append({
+                'id': track_id,
+                'artist': track_info['artists'][0]['name'],
+                'name': track_info['name'],
+                'popularity': track_info['popularity'],
+                'explicit': track_info['explicit'],
+                'release_date': track_info['album']['release_date']
+            })
 
         # Create a DataFrame for the additional track information
         tracks_info_df = pd.DataFrame(tracks_info_list, index=[0])
@@ -257,11 +283,15 @@ class SpotifyClient:
 
         return df
 
-    def predict(self, data_entry, choice, model, scaler, label_encoder, X_train):
+    def predict(self, data_entry, choice, class_items):
+        model = class_items['model']
+        scaler = class_items['scaler']
+        label_encoder = class_items['label_encoder']
+        X_train = class_items['X_train']
         # Check if model and label encoder are loaded
         #Get song features or analyze playlist based on int_choice
         if (choice == 'track'):
-            data = self.get_song_features(data_entry)
+            data = self.get_song_features([data_entry])
             release_date = data['release_date']
             data.drop('release_date', axis=1, inplace=True)
         elif (choice == 'playlist'):
