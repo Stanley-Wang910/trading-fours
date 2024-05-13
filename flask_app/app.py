@@ -267,7 +267,13 @@ def recommend():
             p_vector, playlist_name, top_genres = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
         
         # Get recommendations
-        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, link, class_items)
+        if 'user_top_tracks' in session:
+            user_top_tracks = session['user_top_tracks']
+            print("User top tracks:", user_top_tracks)
+        else:
+            user_top_tracks = []
+            print("User top tracks not found")
+        recommended_ids, user_top_tracks = re.recommend_by_playlist(rec_dataset, p_vector, link, user_top_tracks, class_items)
 
     elif type_id == 'track':
         # Check if track data exists in session
@@ -290,12 +296,20 @@ def recommend():
             
             t_vector, track_name, artist_name, release_date, track_id = save_track_data_session(track, link, re, sp) # Save Track data to session
         
+        if 'user_top_tracks' in session:
+            user_top_tracks = session['user_top_tracks']
+            print("User top tracks:", user_top_tracks)
+        else:
+            user_top_tracks = []
+            print("User top tracks not found")
         # Get recommendations
-        recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_id, class_items)
+        recommended_ids, user_top_tracks = re.recommend_by_track(rec_dataset, t_vector, track_id, user_top_tracks, class_items)
 
     # Update recommended songs in session
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
     session['recommended_songs'] = list(updated_recommendations)
+
+    session['user_top_tracks'] = user_top_tracks
 
 
     if type_id == 'playlist':
@@ -340,7 +354,7 @@ def save_favorited():
     else:
         return jsonify({'message': 'No favorited tracks provided'})
 
-@app.route('/test')
+@app.route('/test') ### Keep for testing new features
 def test():
     unique_id = session.get('unique_id')
     sp = SpotifyClient(Spotify(auth=session.get('access_token')))
@@ -401,7 +415,6 @@ def test():
     
     return jsonify(long_term)
 
-    
 
 if __name__ == '__main__':
     global rec_dataset

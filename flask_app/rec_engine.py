@@ -67,13 +67,13 @@ class RecEngine:
 
         return final_playlist_vector
 
-    def recommend_by_playlist(self, rec_dataset, final_playlist_vector, playlist_id, class_items):
+    def recommend_by_playlist(self, rec_dataset, final_playlist_vector, playlist_id, user_top_tracks, class_items):
         
         top_genres = self.get_top_genres(final_playlist_vector)
         
         # Prepare data for recommendation
         final_playlist_vector, final_rec_df, recommendations_df = self.prepare_data(self.sp, top_genres, rec_dataset, final_playlist_vector, playlist_id, 'playlist')
-        personalized_vector = self.similar_top_tracks(final_playlist_vector, top_genres, class_items)
+        personalized_vector, user_top_tracks = self.similar_top_tracks(final_playlist_vector, top_genres, user_top_tracks, class_items)
        
 
         
@@ -99,7 +99,7 @@ class RecEngine:
         # Finalize and update the recommended songs
         top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'playlist')
 
-        return top_recommendations_df
+        return top_recommendations_df, user_top_tracks
 
     def track_vector(self, track):
         # One-hot encode categorical features
@@ -108,19 +108,8 @@ class RecEngine:
 
         return track_vector
 
-    def recommend_by_track(self, rec_dataset, track_vector, track_id, class_items):
-        """
-        Recommends songs based on a given track.
-
-        Args:
-            rec_dataset (DataFrame): The recommendation dataset.
-            track_vector (DataFrame): The vector representation of the track.
-            final_rec_df (DataFrame): The final recommendation dataframe.
-            era_choice (str): Indicates whether to consider the era of the track.
-
-        Returns:
-            DataFrame: The top recommended songs based on the given track.
-        """
+    def recommend_by_track(self, rec_dataset, track_vector, track_id, user_top_tracks, class_items):
+       
         # Get track genre
         track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
         if track_genre_column:
@@ -132,7 +121,7 @@ class RecEngine:
 
         # Prepare data for recommendation
         final_track_vector, final_rec_df, recommendations_df = self.prepare_data(self.sp, [track_genre], rec_dataset, track_vector, track_id)
-        personalized_vector = self.similar_top_tracks(final_track_vector, [track_genre], class_items)
+        personalized_vector, user_top_tracks = self.similar_top_tracks(final_track_vector, [track_genre], user_top_tracks, class_items)
         
         # Apply weight to track genre
         weight = {track_genre: 0.9}
@@ -150,7 +139,7 @@ class RecEngine:
         
         # Finalize and update the recommended songs
         top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'track')
-        return top_recommendations_df
+        return top_recommendations_df, user_top_tracks
 
     # Helper Functions
     def ohe_features(self, df):
@@ -307,8 +296,12 @@ class RecEngine:
 
         return short_term_track_ids, medium_term_track_ids, long_term_track_ids
     
-    def similar_top_tracks(self, final_vector, final_genres, class_items):
-        short_term, medium_term, long_term = self.get_user_top_tracks()
+    def similar_top_tracks(self, final_vector, final_genres, user_top_tracks, class_items):
+        print(user_top_tracks)
+        if not user_top_tracks:
+            short_term, medium_term, long_term = self.get_user_top_tracks()
+        else:
+            short_term = user_top_tracks
         random.shuffle(short_term)
         sub_section_size = 5
         sub_sections = [short_term[i:i+sub_section_size] for i in range(0, len(short_term), sub_section_size)] # Genius List Comp
@@ -340,7 +333,7 @@ class RecEngine:
         print(f"Most similar tracks: {similar_names}")
 
 
-        return best_similar_vector
+        return best_similar_vector, short_term
 
 
     def get_user_top_artists(self): 
