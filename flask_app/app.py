@@ -36,8 +36,8 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 sql_work = SQLWork()
 # Initialize Genre Class Model
-# gc = GenreClassifier()
-# class_items = gc.load_model()
+gc = GenreClassifier()
+class_items = gc.load_model()
 
 
 

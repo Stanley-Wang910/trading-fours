@@ -156,7 +156,7 @@ function Greeting() {
                   // onMouseEnter={handleMouseEnter}
                   // onMouseLeave={handleMouseLeave}
                   >
-                    discoveryournewfavorite
+                    discover your new favorite&nbsp;
                   <span className="text-yellow-500 italic relative inline-block">
                     {lastWord} 
                   </span>
