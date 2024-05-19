@@ -36,8 +36,8 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 sql_work = SQLWork()
 # Initialize Genre Class Model
-gc = GenreClassifier()
-class_items = gc.load_model()
+# gc = GenreClassifier()
+# class_items = gc.load_model()
 
 
 
@@ -359,61 +359,62 @@ def test():
     unique_id = session.get('unique_id')
     sp = SpotifyClient(Spotify(auth=session.get('access_token')))
     re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
-    short_term, medium_term, long_term = re.get_user_top_tracks() #
-    
-    playlist_id = input("Enter playlist ID: ")
-    playlist_id = playlist_id.split("/")[-1].split("?")[0]
+    short_term, medium_term, long_term = re.get_user_top_artists() #
+    related_artists = sp.get_related_artists(short_term)
+    return jsonify(related_artists, short_term)
+    # playlist_id = input("Enter playlist ID: ")
+    # playlist_id = playlist_id.split("/")[-1].split("?")[0]
 
-    recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
-    recommend_p_vector = re.playlist_vector(recommend_playlist)
-    recommend_top_genres = re.get_top_genres(recommend_p_vector)
+    # recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
+    # recommend_p_vector = re.playlist_vector(recommend_playlist)
+    # recommend_top_genres = re.get_top_genres(recommend_p_vector)
 
-    random.shuffle(short_term) #
+    # random.shuffle(short_term) #
 
-    sub_section_size = 5 #
-    sub_sections = [short_term[i:i+sub_section_size] for i in range(0, len(short_term), sub_section_size)] # Genius List Comp
+    # sub_section_size = 5 #
+    # sub_sections = [short_term[i:i+sub_section_size] for i in range(0, len(short_term), sub_section_size)] # Genius List Comp
  
-    max_similarity = -float('inf') #
-    most_similar_sub_section = None #
+    # max_similarity = -float('inf') #
+    # most_similar_sub_section = None #
 
 
-    for sub_section in sub_sections: #
-        sub_section_tracks = sp.predict(sub_section, 'playlist', class_items)
-        sub_section_vector = re.playlist_vector(sub_section_tracks)
-        sub_section_top_genres = re.get_top_genres(sub_section_vector)
+    # for sub_section in sub_sections: #
+    #     sub_section_tracks = sp.predict(sub_section, 'playlist', class_items)
+    #     sub_section_vector = re.playlist_vector(sub_section_tracks)
+    #     sub_section_top_genres = re.get_top_genres(sub_section_vector)
 
-        weights = {genre: 1.2 for genre in recommend_top_genres if genre in sub_section_top_genres}        
-        weighted_sub_section_vector = re.apply_weights(sub_section_vector, weights)
-        weighted_p_vector = re.apply_weights(recommend_p_vector, weights)
-        similarity = cosine_similarity(weighted_p_vector.values.reshape(1, -1), weighted_sub_section_vector.values.reshape(1, -1))[0][0]
+    #     weights = {genre: 1.2 for genre in recommend_top_genres if genre in sub_section_top_genres}        
+    #     weighted_sub_section_vector = re.apply_weights(sub_section_vector, weights)
+    #     weighted_p_vector = re.apply_weights(recommend_p_vector, weights)
+    #     similarity = cosine_similarity(weighted_p_vector.values.reshape(1, -1), weighted_sub_section_vector.values.reshape(1, -1))[0][0]
 
-        if similarity > max_similarity:
-            max_similarity = similarity
-            most_similar_sub_section = sub_section
+    #     if similarity > max_similarity:
+    #         max_similarity = similarity
+    #         most_similar_sub_section = sub_section
 
-    similar_tracks = sp.sp.tracks(most_similar_sub_section) #
-    similar_names = [track['name'] for track in similar_tracks['tracks']] #
-    print("similar tracks:", similar_names) #
+    # similar_tracks = sp.sp.tracks(most_similar_sub_section) #
+    # similar_names = [track['name'] for track in similar_tracks['tracks']] #
+    # print("similar tracks:", similar_names) #
     
     
-    personal_tracks = sp.predict(most_similar_sub_section, 'playlist', class_items) #
-    personal_p_vector = re.playlist_vector(personal_tracks) #
+    # personal_tracks = sp.predict(most_similar_sub_section, 'playlist', class_items) #
+    # personal_p_vector = re.playlist_vector(personal_tracks) #
     
-    recommended_ids = re.recommend_by_playlist(rec_dataset, recommend_p_vector, personal_p_vector, playlist_id)
+    # recommended_ids = re.recommend_by_playlist(rec_dataset, recommend_p_vector, personal_p_vector, playlist_id)
 
-    recommended_tracks = sp.sp.tracks(recommended_ids)
-    recommended_songs = []
-    for track in recommended_tracks['tracks']:
-        song = {
-            'name': track['name'],
-            'artists': [artist['name'] for artist in track['artists']]
-        }
-        recommended_songs.append(song)
+    # recommended_tracks = sp.sp.tracks(recommended_ids)
+    # recommended_songs = []
+    # for track in recommended_tracks['tracks']:
+    #     song = {
+    #         'name': track['name'],
+    #         'artists': [artist['name'] for artist in track['artists']]
+    #     }
+    #     recommended_songs.append(song)
 
-    print(recommended_songs)
+    # print(recommended_songs)
     # print(recommended_ids)
     
-    return jsonify(long_term)
+    # return jsonify(short_term)
 
 
 if __name__ == '__main__':

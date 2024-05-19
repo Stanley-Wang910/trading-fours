@@ -17,17 +17,6 @@ class RecEngine:
         self.weights = {0: 0.9, 1: 0.85, 2: 0.80} # Default weights for the top 3 genres, easy to calibrate
 
     def playlist_vector(self, playlist_df, weight=1.1):
-        """
-        Calculates the playlist vector based on the given playlist and recommendation dataframes.
-
-        Args:
-            playlist_df (pandas.DataFrame): The dataframe representing the playlist.
-            rec_df (pandas.DataFrame): The dataframe representing the recommendations.
-            weight (float, optional): The weight factor for the months behind. Defaults to 1.1.
-
-        Returns:
-            pandas.Series: The final playlist vector.
-        """
         playlist_df = self.ohe_features(playlist_df)
 
         # Drop unnecessary columns from the playlist dataframe
@@ -172,7 +161,7 @@ class RecEngine:
         
         # Get the top 3 genres from the final playlist vector
         top_genres = final_playlist_vector[genre_columns].iloc[0].nlargest(3).index.str.replace('track_genre_', '')
-        print(top_genres)
+        # print(top_genres)
         return top_genres
 
     def prepare_data(self, sp, top_genres, rec_dataset, vector, id, type='track'):
@@ -295,6 +284,22 @@ class RecEngine:
                 long_term_track_ids[track['long_term_rank'] - 1] = track['track_id']
 
         return short_term_track_ids, medium_term_track_ids, long_term_track_ids
+
+    def get_user_top_artists(self): 
+        top_artists = self.sql_cnx.get_user_top_artists(self.unique_id)
+        short_term_artists = sorted([item for item in top_artists if item['short_term_rank'] is not None], key=lambda x: x['short_term_rank'])
+        medium_term_artists = sorted([item for item in top_artists if item['medium_term_rank'] is not None], key=lambda x: x['medium_term_rank'])
+        long_term_artists = sorted([item for item in top_artists if item['long_term_rank'] is not None], key=lambda x: x['long_term_rank'])
+        
+        short_term_artists = random.sample([item for item in short_term_artists if item['short_term_rank'] in range(1, 6)], 1) + \
+                     random.sample([item for item in short_term_artists if item['short_term_rank'] in range(6, 11)], 1) + \
+                     random.sample([item for item in short_term_artists if item['short_term_rank'] in range(11, 21)], 1)
+        # Remove 'id' key from each artist dictionary
+        for artist in top_artists:
+            artist.pop('id', None)
+            artist.pop("unique_id", None)
+
+        return short_term_artists, medium_term_artists, long_term_artists
     
     def similar_top_tracks(self, final_vector, final_genres, user_top_tracks, class_items):
         print(user_top_tracks)
@@ -335,19 +340,6 @@ class RecEngine:
 
         return best_similar_vector, short_term
 
-
-    def get_user_top_artists(self): 
-        top_artists = self.sql_cnx.get_user_top_artists(self.unique_id)
-        short_term_artists = sorted([item for item in top_artists if item['short_term_rank'] is not None], key=lambda x: x['short_term_rank'])
-        medium_term_artists = sorted([item for item in top_artists if item['medium_term_rank'] is not None], key=lambda x: x['medium_term_rank'])
-        long_term_artists = sorted([item for item in top_artists if item['long_term_rank'] is not None], key=lambda x: x['long_term_rank'])
-        
-        # Remove 'id' key from each artist dictionary
-        for artist in top_artists:
-            artist.pop('id', None)
-            artist.pop("unique_id", None)
-
-        return short_term_artists, medium_term_artists, long_term_artists
 
     def get_user_recently_played(self):
         recently_played = self.sql_cnx.get_user_recently_played(self.unique_id)

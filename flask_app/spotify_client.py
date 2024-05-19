@@ -139,15 +139,7 @@ class SpotifyClient:
         return playlist_with_features
 
     def get_playlist_track_name(self, id, input='playlist'):
-        """
-        Retrieves the name of a Spotify playlist / track given its ID.
-
-        Parameters:
-        - playlist_id (str): The ID of the Spotify playlist.
-
-        Returns:
-        - str: The name of the playlist.
-        """
+        
         if input == 'playlist':
             playlist = self.sp.playlist(id)
             playlist_name = playlist['name']
@@ -159,33 +151,6 @@ class SpotifyClient:
             artist_name = track['artists'][0]['name']
             album_release = track['album']['release_date'].split('-')[0]
             return track_name, artist_name, album_release
-        
-    # def get_track_links(self, df):
-    #     track_links = []
-    #     # Iterate over the rows of the DataFrame
-    #     for index, row in df.iterrows():
-    #         track_name = row['track_name']
-    #         artist_name = row['artists']
-            
-    #         #track_name = re.sub('[^A-Za-z0-9 ]+', '', track_name)[:50]
-    #         results = self.sp.search(q='track:{}'.format(track_name), type='track')
-    #         #Flag to check if the track is found
-    #         found = False
-    #         # Iterate over the search results
-    #         # Iterate over the search results
-    #         for track in results['tracks']['items']:
-    #             # Check if the artist's name matches
-    #             for artist in track['artists']:
-    #                 if artist['name'].lower() == artist_name.lower():
-    #                     # Check if the duration matches
-    #                     track_links.append(track['external_urls']['spotify'])
-    #                     found = True
-    #                     break
-    #             if found:
-    #                 break
-    #         if not found:
-    #             track_links.append('https://open.spotify.com/track/' + track['id'])
-    #     return track_links
     
     def get_song_features(self, track_ids):
         """
@@ -333,3 +298,13 @@ class SpotifyClient:
 
         # Return the data DataFrame with predicted genre labels
         return data
+
+    def get_related_artists(self, artist_data):
+        artist_ids = [f"{artist['artist_name']} ({artist['artist_id']})" for artist in artist_data]
+        related_artists = {}
+        for artist_id in artist_ids:
+            artist_name = artist_id.split("(")[0].strip()
+            artist_id_only = artist_id.split("(")[1].split(")")[0]
+            data = self.sp.artist_related_artists(artist_id_only)['artists']
+            related_artists[artist_name] = {artist['id']: artist['name'] for artist in data}
+        return related_artists
