@@ -6,6 +6,7 @@ from spotipy.oauth2 import SpotifyClientCredentials
 from spotipy.oauth2 import SpotifyOAuth
 from spotipy.client import SpotifyException
 import warnings
+import random
 
 warnings.filterwarnings("ignore")
 
@@ -306,5 +307,10 @@ class SpotifyClient:
             artist_name = artist_id.split("(")[0].strip()
             artist_id_only = artist_id.split("(")[1].split(")")[0]
             data = self.sp.artist_related_artists(artist_id_only)['artists']
-            related_artists[artist_name] = {artist['id']: artist['name'] for artist in data}
+
+            sampled_data = random.sample(data, 3)
+            related_artists[artist_name] = {artist['id']: artist['name'] for artist in sampled_data}
+            
         return related_artists
+
+    
