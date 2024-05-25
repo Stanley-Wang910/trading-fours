@@ -36,8 +36,8 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 sql_work = SQLWork()
 # Initialize Genre Class Model
-# gc = GenreClassifier()
-# class_items = gc.load_model()
+gc = GenreClassifier()
+class_items = gc.load_model()
 
 
 
@@ -356,13 +356,59 @@ def save_favorited():
 
 @app.route('/test') ### Keep for testing new features
 def test():
+   
     unique_id = session.get('unique_id')
     sp = SpotifyClient(Spotify(auth=session.get('access_token')))
+   
     re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
+    playlist_id = input("Enter playlist ID: ")
+    playlist_id = playlist_id.split("/")[-1].split("?")[0]
+
+    recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
+    recommend_p_vector = re.playlist_vector(recommend_playlist)
+    recommend_top_genres = re.get_top_genres(recommend_p_vector)
     short_term, medium_term, long_term = re.get_user_top_artists() #
-    related_artists = re.get_related_artists(short_term)
-    random_artists = re.get_random_artists(related_artists, 6)
-    return jsonify(related_artists, random_artists)
+    artist_names = [artist['artist_name'] for artist in short_term]
+    print(artist_names)
+
+    tracks_by_artists_df = sql_work.get_tracks_by_artists(artist_names)
+    tracks_by_artists_df.to_csv('tracks_by_artists.csv', index=False)
+    similar_artists_df = re.find_similar_artists(tracks_by_artists_df, recommend_p_vector, playlist_id, class_items)
+    similar_artists_df.to_csv('similar_artists.csv', index=False)
+
+    track_counts = similar_artists_df['artists'].value_counts()
+
+    # Get a list of artists with 5 or more tracks
+    artists_with_5_or_more_tracks = track_counts[track_counts >= 5].index
+
+    # Filter the DataFrame to include only these artists
+    filtered_df = similar_artists_df[similar_artists_df['artists'].isin(artists_with_5_or_more_tracks)]
+
+    # Now calculate the mean similarity
+    mean_similarities = filtered_df.groupby('artists')['similarity'].mean()
+
+    top_3_artists = mean_similarities.nlargest(3)
+    print(top_3_artists)
+
+    # top_tracks = sp.get_artist_top_tracks(short_term)
+    # related_artists = re.get_related_artists(short_term)
+    # random_artists = re.get_random_artists(related_artists, 6)
+    
+
+    # recommended_tracks = sp.sp.tracks(recommended_ids)
+    # recommended_songs = []
+    # for track in recommended_tracks['tracks']:
+    #     song = {
+    #         'name': track['name'],
+    #         'artists': [artist['name'] for artist in track['artists']]
+    #     }
+    #     recommended_songs.append(song)
+
+    # print(recommended_songs)
+    # print(recommended_ids)
+    # recommended_ids.to_csv('recommended_ids.csv', index=False)
+
+    return jsonify(short_term)
     # playlist_id = input("Enter playlist ID: ")
     # playlist_id = playlist_id.split("/")[-1].split("?")[0]
 

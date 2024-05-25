@@ -291,9 +291,9 @@ class RecEngine:
         medium_term_artists = sorted([item for item in top_artists if item['medium_term_rank'] is not None], key=lambda x: x['medium_term_rank'])
         long_term_artists = sorted([item for item in top_artists if item['long_term_rank'] is not None], key=lambda x: x['long_term_rank'])
         
-        short_term_artists = random.sample([item for item in short_term_artists if item['short_term_rank'] in range(1, 6)], 1) + \
-                     random.sample([item for item in short_term_artists if item['short_term_rank'] in range(6, 11)], 1) + \
-                     random.sample([item for item in short_term_artists if item['short_term_rank'] in range(11, 21)], 1)
+        # short_term_artists = random.sample([item for item in short_term_artists if item['short_term_rank'] in range(1, 6)], 1) + \
+        #              random.sample([item for item in short_term_artists if item['short_term_rank'] in range(6, 11)], 1) + \
+        #              random.sample([item for item in short_term_artists if item['short_term_rank'] in range(11, 21)], 1)
         # Remove 'id' key from each artist dictionary
         for artist in top_artists:
             artist.pop('id', None)
@@ -372,7 +372,23 @@ class RecEngine:
         random_artists = random.sample(artist_names, num_artists)
         return random_artists
 
+    def get_artists_dataset(self):
+        artists_lists = self.sql_cnx.get_artists_dataset()
+        return artist_dataset
        
+    def find_similar_artists(self, tracks_by_artists_df, final_playlist_vector, playlist_id, class_items):
+
+        top_genres = self.get_top_genres(final_playlist_vector)
+        final_playlist_vector, final_artists_tracks_df, recommendations_df = self.prepare_data(self.sp, top_genres, tracks_by_artists_df, final_playlist_vector, playlist_id, 'playlist')
+
+        self.weights = {top_genres[0]: 0.9, top_genres[1]: 0.85, top_genres[2]: 0.8}
+        final_artists_tracks_df = self.apply_weights(final_artists_tracks_df, self.weights)
+
+        similar_artists_df = self.calc_cosine_similarity(final_artists_tracks_df, final_playlist_vector, recommendations_df, self.weights, 'playlist')
+
+        similar_artists_df = similar_artists_df.sort_values(by='similarity', ascending=False)
+        return similar_artists_df
+        
 
 
 

@@ -249,6 +249,18 @@ class SpotifyClient:
 
         return df
 
+    def get_artist_top_tracks(self, artist_data):
+        top_tracks = []
+        for artist in artist_data:
+            artist_id = artist["artist_id"]
+            tracks = self.sp.artist_top_tracks(artist_id, 'US')['tracks']
+            for track in tracks:
+                top_tracks.append({
+                    'name': track['name'],
+                    'id': track['id'],
+                })
+        return top_tracks
+
     def predict(self, data_entry, choice, class_items):
         model = class_items['model']
         scaler = class_items['scaler']

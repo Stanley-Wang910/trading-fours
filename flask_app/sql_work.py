@@ -600,6 +600,26 @@ class SQLWork:
             cursor.close()
             connection.close()
 
+    def get_tracks_by_artists(self, artist_names):
+        connection = self.pool.get_connection()
+        try:
+            placeholders = ', '.join(['%s'] * len(artist_names))
+            query = f"""
+                SELECT * FROM rec_dataset
+                WHERE artists IN ({placeholders})
+            """
+            cursor = connection.cursor()
+            cursor.execute(query, artist_names)
+            results = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            tracks_df = pd.DataFrame(results, columns=columns)
+            return tracks_df
+        except mysql.connector.Error as e:
+            print(f"Error getting tracks by artists from database: {e}")
+        finally:
+            cursor.close()
+            connection.close()
+            
 
        
     
