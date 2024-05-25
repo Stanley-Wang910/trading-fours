@@ -300,17 +300,6 @@ class SpotifyClient:
         # Return the data DataFrame with predicted genre labels
         return data
 
-    def get_related_artists(self, artist_data):
-        artist_ids = [f"{artist['artist_name']} ({artist['artist_id']})" for artist in artist_data]
-        related_artists = {}
-        for artist_id in artist_ids:
-            artist_name = artist_id.split("(")[0].strip()
-            artist_id_only = artist_id.split("(")[1].split(")")[0]
-            data = self.sp.artist_related_artists(artist_id_only)['artists']
-
-            sampled_data = random.sample(data, 3)
-            related_artists[artist_name] = {artist['id']: artist['name'] for artist in sampled_data}
-            
-        return related_artists
+   
 
     

@@ -348,9 +348,29 @@ class RecEngine:
             item.pop("unique_id", None)
         
         return recently_played
-
-        
     
+    def get_related_artists(self, artist_data):
+            artist_ids = [f"{artist['artist_name']} ({artist['artist_id']})" for artist in artist_data]
+            related_artists = {}
+            for artist_id in artist_ids:
+                artist_name = artist_id.split("(")[0].strip()
+                artist_id_only = artist_id.split("(")[1].split(")")[0]
+                data = self.sp.sp.artist_related_artists(artist_id_only)['artists']
+
+                sampled_data = random.sample(data, 3)
+                related_artists[artist_name] = {artist['id']: artist['name'] for artist in sampled_data}
+                
+            return related_artists
+            
+    def get_random_artists(self, data, num_artists=6):
+        # Flatten the dictionary structure
+        artist_names = set()
+        for main_artist, related_artists in data.items():
+            artist_names.add(main_artist)
+            artist_names.update(related_artists.values())   
+        artist_names = list(artist_names)
+        random_artists = random.sample(artist_names, num_artists)
+        return random_artists
 
        
 

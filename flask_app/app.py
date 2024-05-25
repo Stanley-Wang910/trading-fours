@@ -360,8 +360,9 @@ def test():
     sp = SpotifyClient(Spotify(auth=session.get('access_token')))
     re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
     short_term, medium_term, long_term = re.get_user_top_artists() #
-    related_artists = sp.get_related_artists(short_term)
-    return jsonify(related_artists, short_term)
+    related_artists = re.get_related_artists(short_term)
+    random_artists = re.get_random_artists(related_artists, 6)
+    return jsonify(related_artists, random_artists)
     # playlist_id = input("Enter playlist ID: ")
     # playlist_id = playlist_id.split("/")[-1].split("?")[0]
 
