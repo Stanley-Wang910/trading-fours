@@ -167,7 +167,8 @@ class RecEngine:
     def prepare_data(self, sp, top_genres, rec_dataset, vector, id, type='track'):
         # Correct handling for recommendation type
         if type == 'playlist':
-            ids = self.sp.analyze_playlist(id, 'rec') # Why?
+            ids = self.sp.analyze_playlist(id, 'rec') # Why?\
+            ids = set(ids)
         else:
             ids = id # Handle for track recommendation
         # One-hot encode the genre column in both dataframes
@@ -177,13 +178,13 @@ class RecEngine:
         print("final_rec_df length:", len(final_rec_df))
         
         # Exclude tracks from the recommendation dataframe that are already in the playlist
-        final_rec_df = final_rec_df[~final_rec_df['track_id'].isin(ids)] ###
+        final_rec_df = final_rec_df[~final_rec_df['track_id'].apply(lambda x: x in ids)]
 
         # Filter the recommendations dataframe based on the track ids in the final recommendation dataframe
         rec_dataset = rec_dataset.merge(final_rec_df[['track_id']], on='track_id')
         
         # Exclude songs that have already been recommended
-        rec_dataset = rec_dataset[~rec_dataset['track_id'].isin(self.recommended_songs)]
+        rec_dataset = rec_dataset[~rec_dataset['track_id'].apply(lambda x: x in self.recommended_songs)]
         final_rec_df = final_rec_df.merge(rec_dataset[['track_id']], on='track_id')
         
         # Sort the columns of the final vector and final recommendation dataframe to have the same order
