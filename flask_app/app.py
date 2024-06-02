@@ -192,9 +192,9 @@ def get_track_data_session(link):
 def save_playlist_data_session(playlist, link, re, sp):
     p_vector = re.playlist_vector(playlist) # Get playlist vector
     playlist_name = sp.get_playlist_track_name(link) # Get playlist name
-    top_genres = re.get_top_genres(p_vector) # Get top genres
+    top_genres, top_ratios = re.get_top_genres(p_vector) # Get top genres
     playlist_ids = playlist['id'].tolist() # Get playlist track IDs
-    top_genres = top_genres.tolist() 
+    # top_genres = top_genres.tolist() 
 
     # Save playlist data to session
     p_vector_dict = p_vector.to_dict(orient='records')[0]
@@ -375,18 +375,19 @@ def test():
     # Get user top artists
     short_term, medium_term, long_term = re.get_user_top_artists() #
     artist_names = [artist['artist_name'] for artist in short_term]
-    print(artist_names)
-
-
     # Get tracks by top short term artists
     tracks_by_artists_df = sql_work.get_tracks_by_artists(artist_names)
-    tracks_by_artists_df.to_csv('tracks_by_artists.csv', index=False)
-
     # Tracks by artists sorted by similarity
     top_3_artists = re.find_similar_artists(tracks_by_artists_df, recommend_p_vector, playlist_id, class_items, recommend_top_genres, genre_ratios)
+    
+    artist_ids = [artist['artist_id'] for artist in short_term if artist['artist_name'] in top_3_artists]
+
+    # Get related artists
+    related_artists = re.get_related_artists(artist_ids, short_term)
+
     print(top_3_artists)
     
-    return jsonify(short_term)
+    return jsonify(related_artists)
 
 
 if __name__ == '__main__':

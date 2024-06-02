@@ -58,7 +58,7 @@ class RecEngine:
 
     def recommend_by_playlist(self, rec_dataset, final_playlist_vector, playlist_id, user_top_tracks, class_items):
         
-        top_genres = self.get_top_genres(final_playlist_vector)
+        top_genres, top_ratios = self.get_top_genres(final_playlist_vector)
         
         # Prepare data for recommendation
         final_playlist_vector, final_rec_df, recommendations_df = self.prepare_data(self.sp, top_genres, rec_dataset, final_playlist_vector, playlist_id, 'playlist')
@@ -359,18 +359,17 @@ class RecEngine:
         
         return recently_played
     
-    def get_related_artists(self, artist_data):
-            artist_ids = [f"{artist['artist_name']} ({artist['artist_id']})" for artist in artist_data]
-            related_artists = {}
-            for artist_id in artist_ids:
-                artist_name = artist_id.split("(")[0].strip()
-                artist_id_only = artist_id.split("(")[1].split(")")[0]
-                data = self.sp.sp.artist_related_artists(artist_id_only)['artists']
+    def get_related_artists(self, artist_ids, top_artists):
+        artist_id_to_name = {artist['artist_id']: artist['artist_name'] for artist in top_artists}
+        related_artists = {}
+        for artist_id in artist_ids:
+            data = self.sp.sp.artist_related_artists(artist_id)['artists']
 
-                sampled_data = random.sample(data, 3)
-                related_artists[artist_name] = {artist['id']: artist['name'] for artist in sampled_data}
-                
-            return related_artists
+            artist_name = artist_id_to_name.get(artist_id, artist_id)  # Use artist_id as fallback if name not found
+
+            related_artists[artist_name] = {artist['id']: artist['name'] for artist in data}
+            
+        return related_artists
             
     def get_random_artists(self, data, num_artists=6):
         # Flatten the dictionary structure
@@ -381,10 +380,6 @@ class RecEngine:
         artist_names = list(artist_names)
         random_artists = random.sample(artist_names, num_artists)
         return random_artists
-
-    def get_artists_dataset(self):
-        artists_lists = self.sql_cnx.get_artists_dataset()
-        return artist_dataset
        
     def find_similar_artists(self, tracks_by_artists_df, final_playlist_vector, playlist_id, class_items, top_genres, top_genre_ratios):
 
@@ -420,14 +415,18 @@ class RecEngine:
         similar_artists_df['weighted_similarity'] = weighted_similarities
         similar_artists_df['final_similarity'] = similar_artists_df['similarity'] + similar_artists_df['weighted_similarity']
 
+      
+
+
         # Get the mean similarity for each artist
         mean_similarities = similar_artists_df.groupby('artists')['final_similarity'].mean()
 
         # Get the top 3 artists based on the mean similarity
-        top_artists = mean_similarities.nlargest(3).index
+        top_artists = mean_similarities.nlargest(3).reset_index()
+        top_artists_dict = {artist['artists']: artist['final_similarity'] for _, artist in top_artists.iterrows()}
 
         
-        return top_artists
+        return top_artists_dict
         
 
 
