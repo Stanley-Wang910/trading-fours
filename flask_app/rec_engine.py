@@ -423,7 +423,8 @@ class RecEngine:
 
         # Get the top 3 artists based on the mean similarity
         top_artists = mean_similarities.nlargest(3).reset_index()
-        top_artists_dict = {artist['artists']: artist['final_similarity'] for _, artist in top_artists.iterrows()}
+        print(top_artists)
+        top_artists_dict = {artist['artists']: artist['final_similarity'] for _, artist in top_artists.iterrows() if artist['final_similarity'] > 0.8}
 
         
         return top_artists_dict
