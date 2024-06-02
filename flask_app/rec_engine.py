@@ -84,10 +84,12 @@ class RecEngine:
         for genre in top_genres:
             genre_songs = recommendations_df[recommendations_df['track_genre'] == genre]
             top_songs = pd.concat([top_songs, genre_songs.nlargest(90 // len(top_genres), 'similarity')])
+        
+        top_songs.to_csv('top_songs.csv', index=False)
 
         # Finalize and update the recommended songs
         top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'playlist')
-
+        # When sending in top_songs from related_artists function, make sure to handle the case where there are not enough representation of top 3 genres / change so that it is not limited to the top 3 genres
         return top_recommendations_df, user_top_tracks
 
     def track_vector(self, track):
@@ -244,7 +246,7 @@ class RecEngine:
         elif type == 'playlist':
 
             genre_counts = top_songs['track_genre'].value_counts().head(3) # Make more precise
-
+            print(genre_counts)
             total_songs = 30
             genre1_count = int(total_songs * 0.6) # Most Occurences
             genre2_count = int(total_songs * 0.25)
@@ -259,7 +261,7 @@ class RecEngine:
         
         recommended_ids = selected_songs['track_id'].tolist()
         
-        print(selected_songs)
+        selected_songs.to_csv('selected_songs.csv')
 
         return recommended_ids
 

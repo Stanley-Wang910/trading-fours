@@ -385,9 +385,25 @@ def test():
     # Get related artists
     related_artists = re.get_related_artists(artist_ids, short_term)
 
-    print(top_3_artists)
-    
-    return jsonify(related_artists)
+    artist_names = set()
+    for main_artist, related_artist in related_artists.items():
+        artist_names.add(main_artist)
+        artist_names.update(related_artist.values())
+
+    artist_names = list(artist_names)
+    # Keep in cache and run randomize each revisit to the route
+    random_artists = random.sample(artist_names, 6)
+    print(random_artists)
+
+    related_artists_df = sql_work.get_tracks_by_artists(random_artists)
+    related_artists_df.to_csv('related_artists.csv', index=False)
+
+    user_top_tracks = []
+    recommended_ids, user_top_tracks = re.recommend_by_playlist(related_artists_df, recommend_p_vector, playlist_id, user_top_tracks, class_items)
+
+
+   
+    return jsonify(artist_names)
 
 
 if __name__ == '__main__':
