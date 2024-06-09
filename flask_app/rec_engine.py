@@ -62,6 +62,7 @@ class RecEngine:
         
         # Prepare data for recommendation
         final_playlist_vector, final_rec_df, recommendations_df = self.prepare_data(self.sp, top_genres, rec_dataset, final_playlist_vector, playlist_id, 'playlist')
+        # Is this calculation needed each time? Maybe save the personalized vector to session?
         personalized_vector, user_top_tracks = self.similar_top_tracks(final_playlist_vector, top_genres, user_top_tracks, class_items)
        
 
@@ -171,7 +172,7 @@ class RecEngine:
 
         for genre, ratio in top_genres_ratios.items():
             print(f"{genre}: {ratio:.2%}")
-
+    
 
         return top_genres_names, top_genres_ratios
 
@@ -245,18 +246,25 @@ class RecEngine:
             selected_songs = top_songs.sample(15)
         elif type == 'playlist':
 
-            genre_counts = top_songs['track_genre'].value_counts().head(3) # Make more precise
+            genre_counts = top_songs['track_genre'].value_counts()
+
+            if genre_counts.shape[0] >= 3:
+                genre_counts = genre_counts.head(3)
+            else:
+                genre_counts = genre_counts.head(genre_counts.shape[0])
+
             print(genre_counts)
             total_songs = 30
-            genre1_count = int(total_songs * 0.6) # Most Occurences
-            genre2_count = int(total_songs * 0.25)
-            genre3_count = total_songs - genre1_count - genre2_count
+            genre_counts_cumsum = genre_counts.cumsum()
+            genre_counts_cumsum = genre_counts_cumsum / genre_counts_cumsum.max()
+            genre_counts_cumsum = (genre_counts_cumsum * total_songs).round().astype(int)
+            
+            selected_songs = pd.concat([
+                top_songs[top_songs['track_genre'] == genre_counts.index[0]].nlargest(genre_counts_cumsum.iloc[0], 'similarity'),
+                top_songs[top_songs['track_genre'] == genre_counts.index[1]].nlargest(genre_counts_cumsum.iloc[1], 'similarity') if genre_counts.shape[0] > 1 else pd.DataFrame(),
+                top_songs[top_songs['track_genre'] == genre_counts.index[2]].nlargest(genre_counts_cumsum.iloc[2], 'similarity') if genre_counts.shape[0] > 2 else pd.DataFrame()
+            ], ignore_index=True)
 
-            genre1_songs = top_songs[top_songs['track_genre'] == genre_counts.index[0]].nlargest(genre1_count, 'similarity')
-            genre2_songs = top_songs[top_songs['track_genre'] == genre_counts.index[1]].nlargest(genre2_count, 'similarity')
-            genre3_songs = top_songs[top_songs['track_genre'] == genre_counts.index[2]].nlargest(genre3_count, 'similarity')
-
-            selected_songs = pd.concat([genre3_songs, genre2_songs, genre1_songs])
             selected_songs = selected_songs.sample(frac=1).reset_index(drop=True)
         
         recommended_ids = selected_songs['track_id'].tolist()
@@ -300,8 +308,8 @@ class RecEngine:
     def get_user_top_artists(self): 
         top_artists = self.sql_cnx.get_user_top_artists(self.unique_id)
         short_term_artists = sorted([item for item in top_artists if item['short_term_rank'] is not None], key=lambda x: x['short_term_rank'])
-        medium_term_artists = sorted([item for item in top_artists if item['medium_term_rank'] is not None], key=lambda x: x['medium_term_rank'])
-        long_term_artists = sorted([item for item in top_artists if item['long_term_rank'] is not None], key=lambda x: x['long_term_rank'])
+        # medium_term_artists = sorted([item for item in top_artists if item['medium_term_rank'] is not None], key=lambda x: x['medium_term_rank'])
+        # long_term_artists = sorted([item for item in top_artists if item['long_term_rank'] is not None], key=lambda x: x['long_term_rank'])
         
         # short_term_artists = random.sample([item for item in short_term_artists if item['short_term_rank'] in range(1, 6)], 1) + \
         #              random.sample([item for item in short_term_artists if item['short_term_rank'] in range(6, 11)], 1) + \
@@ -311,9 +319,9 @@ class RecEngine:
             artist.pop('id', None)
             artist.pop("unique_id", None)
 
-        return short_term_artists, medium_term_artists, long_term_artists
+        return short_term_artists
     
-    def similar_top_tracks(self, final_vector, final_genres, user_top_tracks, class_items):
+    def  similar_top_tracks(self, final_vector, final_genres, user_top_tracks, class_items):
         print(user_top_tracks)
         if not user_top_tracks:
             short_term, medium_term, long_term = self.get_user_top_tracks()

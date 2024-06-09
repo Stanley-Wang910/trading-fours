@@ -96,6 +96,7 @@ def auth_callback():
         session['display_name'] = display_name
         
         
+        
         # Redirecting or handling logic here
         return redirect('/')
     else:
@@ -200,10 +201,11 @@ def save_playlist_data_session(playlist, link, re, sp):
     p_vector_dict = p_vector.to_dict(orient='records')[0]
     sql_work.add_vector_to_db(p_vector_dict, link, 'playlist')
     session['playlist_name'] = playlist_name 
-    session['top_genres'] = top_genres  
+    session['top_genres'] = top_genres 
+    session['top_ratios'] = top_ratios
     session['last_search'] = link 
     print('Playlist data saved to session')
-    return p_vector, playlist_name, top_genres
+    return p_vector, playlist_name, top_genres, top_ratios
 
 def save_track_data_session(track, link, re, sp):
     track_id = track['id'].tolist() # Get track ID
@@ -229,10 +231,6 @@ def recommend():
             return redirect('/auth/login')
 
     sp = SpotifyClient(Spotify(auth=session.get('access_token'))) # Initialize SpotifyClient
-
-    # link = request.args.get('link')
-    # if not query:
-    #     return jsonify({'error': 'No query provided'}), 400 #Cannot process request
     
     unique_id = session.get('unique_id')
     link = request.args.get('link')
@@ -264,7 +262,8 @@ def recommend():
 
             
             append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
-            p_vector, playlist_name, top_genres = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
+            p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
+
         
         # Get recommendations
         if 'user_top_tracks' in session:
@@ -367,24 +366,25 @@ def test():
 
     # Process playlist
     recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
+
+
     recommend_p_vector = re.playlist_vector(recommend_playlist)
     recommend_top_genres, genre_ratios = re.get_top_genres(recommend_p_vector)
     print(recommend_top_genres)
     print(genre_ratios)
 
     # Get user top artists
-    short_term, medium_term, long_term = re.get_user_top_artists() #
+    short_term = re.get_user_top_artists() #
     artist_names = [artist['artist_name'] for artist in short_term]
     # Get tracks by top short term artists
     tracks_by_artists_df = sql_work.get_tracks_by_artists(artist_names)
     # Tracks by artists sorted by similarity
     top_3_artists = re.find_similar_artists(tracks_by_artists_df, recommend_p_vector, playlist_id, class_items, recommend_top_genres, genre_ratios)
-    
+    print(top_3_artists)
     artist_ids = [artist['artist_id'] for artist in short_term if artist['artist_name'] in top_3_artists]
 
     # Get related artists
     related_artists = re.get_related_artists(artist_ids, short_term)
-
     artist_names = set()
     for main_artist, related_artist in related_artists.items():
         artist_names.add(main_artist)
@@ -400,8 +400,6 @@ def test():
 
     user_top_tracks = []
     recommended_ids, user_top_tracks = re.recommend_by_playlist(related_artists_df, recommend_p_vector, playlist_id, user_top_tracks, class_items)
-
-
    
     return jsonify(artist_names)
 
