@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import time
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime, timedelta
@@ -14,7 +15,7 @@ class RecEngine:
         self.sql_cnx = sql_cnx
         self.recommended_songs = set(previously_recommended) if previously_recommended else set()
               
-        self.weights = {0: 0.9, 1: 0.85, 2: 0.80} # Default weights for the top 3 genres, easy to calibrate
+        # self.weights = {0: 0.9, 1: 0.85, 2: 0.80} # Default weights for the top 3 genres, easy to calibrate
 
     def playlist_vector(self, playlist_df, weight=1.1):
         playlist_df = self.ohe_features(playlist_df)
@@ -45,8 +46,7 @@ class RecEngine:
             # If the most recent date is the default value, exclude only the 'date_added' column
             final_playlist_vector = playlist_df[playlist_df.columns.difference(['date_added'])]
 
-        # Sum the values along the rows to get a single vector
-        final_playlist_vector = final_playlist_vector.sum(axis=0)
+       
 
         # Normalize the final playlist vector
         final_playlist_vector = self.normalize_vector(final_playlist_vector)
@@ -56,25 +56,24 @@ class RecEngine:
 
         return final_playlist_vector
 
-    def recommend_by_playlist(self, rec_dataset, final_playlist_vector, playlist_id, user_top_tracks, class_items):
+    def recommend_by_playlist(self, rec_dataset, final_playlist_vector, playlist_id, user_top_tracks, class_items, top_genres, top_ratios):
         
-        top_genres, top_ratios = self.get_top_genres(final_playlist_vector)
         
         # Prepare data for recommendation
         final_playlist_vector, final_rec_df, recommendations_df = self.prepare_data(self.sp, top_genres, rec_dataset, final_playlist_vector, playlist_id, 'playlist')
         # Is this calculation needed each time? Maybe save the personalized vector to session?
-        personalized_vector, user_top_tracks = self.similar_top_tracks(final_playlist_vector, top_genres, user_top_tracks, class_items)
        
 
-        
+        weights = self.create_weights(top_genres, top_ratios)
         # Apply weights to the top genres
-        self.weights = {top_genres[0]: 0.9, top_genres[1]: 0.85, top_genres[2]: 0.8}
-        final_rec_df = self.apply_weights(final_rec_df, self.weights)
+        # self.weights = {top_genres[0]: 0.9, top_genres[1]: 0.85, top_genres[2]: 0.8}
+        final_rec_df = self.apply_weights(final_rec_df, weights)
 
         # Calculate cosine similarity between final playlist vector and recommendations
+        personalized_vector = self.similar_top_tracks(final_playlist_vector, weights, user_top_tracks, class_items)
 
         combined_vector = 0.7 * final_playlist_vector + 0.3 * personalized_vector
-        recommendations_df = self.calc_cosine_similarity(final_rec_df, combined_vector, recommendations_df, self.weights, 'playlist')
+        recommendations_df = self.calc_cosine_similarity(final_rec_df, combined_vector, recommendations_df, weights, 'playlist')
 
         
 
@@ -90,11 +89,11 @@ class RecEngine:
 
         # If no songs are found, return an empty list
         if top_songs.empty:
-            return [], user_top_tracks
+            return []
         # Finalize and update the recommended songs
         top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'playlist')
         # When sending in top_songs from related_artists function, make sure to handle the case where there are not enough representation of top 3 genres / change so that it is not limited to the top 3 genres
-        return top_recommendations_df, user_top_tracks
+        return top_recommendations_df
 
     def track_vector(self, track):
         # One-hot encode categorical features
@@ -116,7 +115,7 @@ class RecEngine:
 
         # Prepare data for recommendation
         final_track_vector, final_rec_df, recommendations_df = self.prepare_data(self.sp, [track_genre], rec_dataset, track_vector, track_id)
-        personalized_vector, user_top_tracks = self.similar_top_tracks(final_track_vector, [track_genre], user_top_tracks, class_items)
+        personalized_vector = self.similar_top_tracks(final_track_vector, [track_genre], user_top_tracks, class_items)
         
         # Apply weight to track genre
         weight = {track_genre: 0.9}
@@ -129,15 +128,17 @@ class RecEngine:
         # Initialize an empty DataFrame to store top songs
         top_songs = pd.DataFrame()
         
-        # Get top songs based on similarity
-        top_songs = pd.concat([recommendations_df.nlargest(45, 'similarity')])
+        # Get top songs based on similarity 
+        # That also have the same genre as the track
+        genre_songs = recommendations_df[recommendations_df['track_genre'] == track_genre]
+        top_songs = pd.concat([genre_songs.nlargest(45, 'similarity')])
         
         # Finalize and update the recommended songs
         top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'track')
-        return top_recommendations_df, user_top_tracks
-
+        return top_recommendations_df
     # Helper Functions
     def ohe_features(self, df):
+        df.to_csv('df.csv', index=False)
         all_genres = pd.read_csv('data/datasets/genre_counts.csv')
         df = pd.get_dummies(df, columns=['track_genre', 'mode', 'key'])  # One-hot encode the genre column
     
@@ -158,8 +159,12 @@ class RecEngine:
 
     def normalize_vector(self, vector):
         num_tracks = len(vector)
-        normal_vector = vector / num_tracks
+        sum_vector = vector.sum(axis=0)
+        print("len vector", num_tracks)
+        normal_vector = sum_vector / num_tracks
         return normal_vector
+        
+
 
     def get_top_genres(self, final_playlist_vector):
         final_playlist_vector.to_csv('final_playlist_vector.csv')
@@ -221,6 +226,8 @@ class RecEngine:
                 stripped_genre = genre.replace('track_genre_', '')
                 if stripped_genre in weights:
                     final_rec_df[genre] *= weights[stripped_genre]
+                else:
+                    final_rec_df[genre] *= weights['default']
         return final_rec_df
 
     def calc_cosine_similarity(self, final_rec_df, combined_vector, recommendations_df, weights, rec_type):
@@ -228,10 +235,7 @@ class RecEngine:
         # Calculate the cosine similarity between the final vector and the final recommendation dataframe
         recommendations_df['similarity'] = cosine_similarity(final_rec_df.values, combined_vector.values.reshape(1, -1))[:,0]
         
-        if rec_type == 'playlist':
-            nan_weight = 0.75 # For tracks that aren't in the top 3 genres
-        elif rec_type == 'track':
-            nan_weight = 0.85
+        nan_weight = weights.get('default', 0.75 if rec_type == 'playlist' else 0.85)
 
         weights = recommendations_df['track_genre'].map(weights).fillna(nan_weight)
         recommendations_df['similarity'] *= weights
@@ -306,7 +310,7 @@ class RecEngine:
             if track['long_term_rank'] is not None:
                 long_term_track_ids[track['long_term_rank'] - 1] = track['track_id']
 
-        return short_term_track_ids, medium_term_track_ids, long_term_track_ids
+        return short_term_track_ids
 
     def get_user_top_artists(self): 
         top_artists = self.sql_cnx.get_user_top_artists(self.unique_id)
@@ -324,44 +328,29 @@ class RecEngine:
 
         return short_term_artists
     
-    def  similar_top_tracks(self, final_vector, final_genres, user_top_tracks, class_items):
-        print(user_top_tracks)
-        if not user_top_tracks:
-            short_term, medium_term, long_term = self.get_user_top_tracks()
-        else:
-            short_term = user_top_tracks
-        random.shuffle(short_term)
-        sub_section_size = 5
-        sub_sections = [short_term[i:i+sub_section_size] for i in range(0, len(short_term), sub_section_size)] # Genius List Comp
-        max_similarity = -float('inf') #
-        most_similar_sub_section = None
-        best_final_vector = None
-        best_similar_vector = None
-        for sub_section in sub_sections: #
-            sub_section_tracks = self.sp.predict(sub_section, 'playlist', class_items)
-            sub_section_vector = self.playlist_vector(sub_section_tracks)
-            sub_section_vector.drop(['duration_ms', 'popularity'], axis=1, inplace=True)
-            sub_section_top_genres = self.get_top_genres(sub_section_vector)
+    def similar_top_tracks(self, final_vector, weights, user_top_tracks, class_items):
+        user_top_tracks = self.sp.predict(user_top_tracks, 'playlist', class_items)
+        user_top_tracks_ohe = self.ohe_features(user_top_tracks)
 
-            weights = {genre: 1.2 for genre in final_genres if genre in sub_section_top_genres}        
-            weighted_sub_section_vector = self.apply_weights(sub_section_vector, weights)
-            weighted_final_vector = self.apply_weights(final_vector, weights)
+        user_top_tracks_ohe, final_vector = self.sort_columns(user_top_tracks_ohe, final_vector)
+        user_top_tracks_ohe = self.apply_weights(user_top_tracks_ohe, weights)
 
-            similarity = cosine_similarity(weighted_final_vector.values.reshape(1, -1), weighted_sub_section_vector.values.reshape(1, -1))[0][0]
+        user_top_tracks['similarity'] = cosine_similarity(user_top_tracks_ohe.values, final_vector.values.reshape(1, -1))[:,0]
+        nan_weight = weights.get('default')
 
-            if similarity > max_similarity:
-                max_similarity = similarity
-                most_similar_sub_section = sub_section
-                best_final_vector = weighted_final_vector
-                best_similar_vector = sub_section_vector
-                
+        weights = user_top_tracks['track_genre'].map(weights).fillna(nan_weight)
+        user_top_tracks['similarity'] *= weights
 
-        similar_names = self.sp.sp.tracks(most_similar_sub_section) #
-        similar_names = [track['name'] for track in similar_names['tracks']] 
-        print(f"Most similar tracks: {similar_names}")
+        user_top_tracks = user_top_tracks.sort_values(by='similarity', ascending=False)
+
+        personalized_vector = user_top_tracks_ohe.head(5)
+
+        # Normalize the final playlist vector
+        personalized_vector = self.normalize_vector(personalized_vector)
+        personalized_vector = personalized_vector.to_frame().T
 
 
-        return best_similar_vector, short_term
+        return personalized_vector
 
 
     def get_user_recently_played(self):
@@ -442,7 +431,19 @@ class RecEngine:
         
         return top_artists_dict
         
+    def create_weights(self, top_genres, top_ratios):
+        print(top_ratios)
 
+        weights = {genre: ratio for genre, ratio in top_ratios.items()}
+
+        min_top_genre_weight = min(weights.values())
+        default_weight = min_top_genre_weight * 0.8 # Lower than smallest top genre weight
+
+        weights['default'] = default_weight 
+
+        print(weights)
+
+        return weights
 
 
         

@@ -97,10 +97,11 @@ def auth_callback():
 
         re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
 
-        short_term = re.get_user_top_artists() 
-        session['top_artists'] = short_term
-
-        session['top_artists_last_cached'] = datetime.now().isoformat()
+        short_term_artists = re.get_user_top_artists() 
+        short_term_tracks = re.get_user_top_tracks()
+        session['top_artists'] = short_term_artists
+        session['top_tracks'] = short_term_tracks
+        session['top_last_cached'] = datetime.now().isoformat()
 
         
         
@@ -161,7 +162,7 @@ def refresh_token():
         session['display_name'] = display_name
 
         recache_threshold = timedelta(days=1)
-        last_cached_str = session.get('top_artists_last_cached')
+        last_cached_str = session.get('top_last_cached')
 
         if last_cached_str is None:
             last_cached = None
@@ -172,8 +173,10 @@ def refresh_token():
 
             re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
 
-            short_term = re.get_user_top_artists()
-            session['top_artists'] = short_term
+            short_term_artists = re.get_user_top_artists()
+            short_term_tracks = re.get_user_top_tracks()
+            session['top_artists'] = short_term_artists
+            session['top_tracks'] = short_term_tracks
 
         return True
     else:
@@ -198,9 +201,10 @@ def get_playlist_data_session(link):
         p_vector = sql_work.get_vector_from_db(link, 'playlist')
         playlist_name = session.get('playlist_name')
         top_genres = session.get('top_genres')
+        top_ratios = session.get('top_ratios')
         previously_recommended = session.get('recommended_songs', [])
         print("Number of tracks previously recommended:", len(previously_recommended)) 
-        return p_vector, playlist_name, top_genres, previously_recommended
+        return p_vector, playlist_name, top_genres, top_ratios, previously_recommended
     return None
 
 def get_track_data_session(link):
@@ -273,7 +277,7 @@ def recommend():
         playlist_data = get_playlist_data_session(link)
         if playlist_data:
             print('Playlist data exists')
-            p_vector, playlist_name, top_genres, previously_recommended = playlist_data
+            p_vector, playlist_name, top_genres, top_ratios, previously_recommended = playlist_data
             re = RecEngine(sp, unique_id, sql_work, previously_recommended=previously_recommended)
         else:
             print('Saving playlist data to session')
@@ -287,16 +291,20 @@ def recommend():
             
             append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
             p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
-
+            print(top_ratios)
         
         # Get recommendations
-        if 'user_top_tracks' in session:
-            user_top_tracks = session['user_top_tracks']
-            print("User top tracks:", user_top_tracks)
+        
+        if 'top_tracks' in session:
+            user_top_tracks = session['top_tracks']
+            print("User top tracks found")
         else:
-            user_top_tracks = []
             print("User top tracks not found")
-        recommended_ids, user_top_tracks = re.recommend_by_playlist(rec_dataset, p_vector, link, user_top_tracks, class_items)
+            user_top_tracks = re.get_user_top_tracks()
+            session['top_tracks'] = user_top_tracks
+            
+
+        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, link, user_top_tracks, class_items, top_genres, top_ratios)
 
     elif type_id == 'track':
         # Check if track data exists in session
@@ -319,14 +327,16 @@ def recommend():
             
             t_vector, track_name, artist_name, release_date, track_id = save_track_data_session(track, link, re, sp) # Save Track data to session
         
-        if 'user_top_tracks' in session:
-            user_top_tracks = session['user_top_tracks']
-            print("User top tracks:", user_top_tracks)
+        if 'top_tracks' in session:
+            user_top_tracks = session['top_tracks']
+            print("User top tracks found")
         else:
-            user_top_tracks = []
             print("User top tracks not found")
+            user_top_tracks = re.get_user_top_tracks()
+            session['top_tracks'] = user_top_tracks
+            
         # Get recommendations
-        recommended_ids, user_top_tracks = re.recommend_by_track(rec_dataset, t_vector, track_id, user_top_tracks, class_items)
+        recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_id, user_top_tracks, class_items)
 
     # Update recommended songs in session
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
@@ -390,6 +400,15 @@ def test():
     playlist_id = input("Enter playlist ID: ")
     playlist_id = playlist_id.split("/")[-1].split("?")[0]
 
+    # track = sp.predict(playlist_id, 'track', class_items)
+    # track_vector = re.track_vector(track)
+    # track_vector.to_csv('track_vector.csv')
+    # track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
+    # if track_genre_column:
+    #     track_genre = track_genre_column[0].replace('track_genre_', '')
+    # print(track_genre)
+    # jsonify('hello')
+
     # Process playlist
     recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
 
@@ -426,8 +445,8 @@ def test():
     related_artists_df = sql_work.get_tracks_by_artists(random_artists)
     related_artists_df.to_csv('related_artists.csv', index=False)
 
-    user_top_tracks = []
-    recommended_ids, user_top_tracks = re.recommend_by_playlist(related_artists_df, recommend_p_vector, playlist_id, user_top_tracks, class_items)
+    user_top_tracks = session['top_tracks']
+    recommended_ids = re.recommend_by_playlist(related_artists_df, recommend_p_vector, playlist_id, user_top_tracks, class_items)
    
     return jsonify(artist_names)
 
