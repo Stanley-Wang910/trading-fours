@@ -1,0 +1,9 @@
+id,artists,track_name,track_id,popularity,duration_ms,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,time_signature,track_genre,similarity
+21090,Halsey,You should be sad,7lidXGPXPYLNThITAOTlkK,73,205473,0.591,0.585,2,-6.35,1,0.0277,0.143,0.0,0.109,0.324,110.94,4.0,Electronic,0.8999315466575163
+21071,Halsey,Control,3SKzTIl9mW0DadTys9SFo3,72,214761,0.549,0.675,4,-5.637,0,0.0332,0.399,0.0,0.181,0.206,119.898,4.0,Electronic,0.8998839978510109
+21054,Halsey,Colors,1TnUURhehaoMWKAqQtirm6,68,249499,0.512,0.812,1,-4.809,1,0.0617,0.0534,0.0,0.092,0.521,100.02,4.0,Electronic,0.8998699784589189
+20947,Halsey,Gasoline,2IO7yf562c1zLzpanal1DT,72,199593,0.731,0.58,10,-7.328,0,0.0399,0.223,0.0,0.129,0.319,119.997,4.0,Electronic,0.8998667802323629
+21234,Halsey,Nightmare,340UVheS8z3ncW9TTUhAbc,68,231998,0.611,0.622,9,-5.075,0,0.0734,0.0188,0.0,0.359,0.538,146.11,4.0,Electronic,0.8997716633324737
+21025,Halsey,Graveyard,2ufmtcIFdFpuUYBPXK5f67,69,181805,0.667,0.583,11,-5.127,0,0.0747,0.231,4.48e-05,0.181,0.187,92.043,4.0,Electronic,0.8997665370404735
+20957,Halsey,Bad At Love,7y9iMe8SOB6z3NoHE2OfXl,74,181279,0.675,0.751,0,-3.539,1,0.0296,0.0604,0.0,0.0893,0.612,118.384,4.0,Electronic,0.8997006917538406
+21022,Halsey,New Americana,6Xs7OKt6i0Ddq8B4M5Dgvr,65,183808,0.339,0.707,0,-5.121,0,0.0428,0.0113,0.0,0.337,0.359,173.993,4.0,Electronic,0.899655655397183

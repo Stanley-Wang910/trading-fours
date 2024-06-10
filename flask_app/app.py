@@ -14,7 +14,7 @@ from spotipy import Spotify
 from spotify_client import SpotifyClient
 from rec_engine import RecEngine
 from genre_class import GenreClassifier
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 import mysql.connector
 from dotenv import load_dotenv
@@ -94,6 +94,14 @@ def auth_callback():
         session['unique_id'] = unique_id
         print(unique_id, "stored in session")
         session['display_name'] = display_name
+
+        re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
+
+        short_term = re.get_user_top_artists() 
+        session['top_artists'] = short_term
+
+        session['top_artists_last_cached'] = datetime.now().isoformat()
+
         
         
         
@@ -151,6 +159,22 @@ def refresh_token():
         unique_id, display_name = sql_work.get_user_data(sp)
         session['unique_id'] = unique_id
         session['display_name'] = display_name
+
+        recache_threshold = timedelta(days=1)
+        last_cached_str = session.get('top_artists_last_cached')
+
+        if last_cached_str is None:
+            last_cached = None
+        else:
+            last_cached = datetime.fromisoformat(last_cached_str)
+        
+        if last_cached is None or datetime.now() - last_cached > recache_threshold:
+
+            re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
+
+            short_term = re.get_user_top_artists()
+            session['top_artists'] = short_term
+
         return True
     else:
         return False
@@ -376,7 +400,8 @@ def test():
     print(genre_ratios)
 
     # Get user top artists
-    short_term = re.get_user_top_artists() #
+    # short_term = re.get_user_top_artists() #
+    short_term = session.get('top_artists')
     artist_names = [artist['artist_name'] for artist in short_term]
     print(artist_names)
     # Get tracks by top short term artists

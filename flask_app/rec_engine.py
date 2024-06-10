@@ -88,6 +88,9 @@ class RecEngine:
         
         top_songs.to_csv('top_songs.csv', index=False)
 
+        # If no songs are found, return an empty list
+        if top_songs.empty:
+            return [], user_top_tracks
         # Finalize and update the recommended songs
         top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'playlist')
         # When sending in top_songs from related_artists function, make sure to handle the case where there are not enough representation of top 3 genres / change so that it is not limited to the top 3 genres
