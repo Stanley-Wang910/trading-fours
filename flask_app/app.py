@@ -355,14 +355,16 @@ def save_favorited():
 
 @app.route('/test') ### Keep for testing new features
 def test():
-   
-    unique_id = session.get('unique_id')
-    sp = SpotifyClient(Spotify(auth=session.get('access_token')))
-   
+    unique_id: str = session.get('unique_id')
+    access_token: str = session.get('access_token')
+    
+    # Create Spotify client and RecEngine instance
+    sp = SpotifyClient(Spotify(auth=access_token))
     re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
+
+    # Get playlist ID from user input
     playlist_id = input("Enter playlist ID: ")
     playlist_id = playlist_id.split("/")[-1].split("?")[0]
-
 
     # Process playlist
     recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
@@ -376,13 +378,14 @@ def test():
     # Get user top artists
     short_term = re.get_user_top_artists() #
     artist_names = [artist['artist_name'] for artist in short_term]
+    print(artist_names)
     # Get tracks by top short term artists
     tracks_by_artists_df = sql_work.get_tracks_by_artists(artist_names)
+
     # Tracks by artists sorted by similarity
     top_3_artists = re.find_similar_artists(tracks_by_artists_df, recommend_p_vector, playlist_id, class_items, recommend_top_genres, genre_ratios)
     print(top_3_artists)
     artist_ids = [artist['artist_id'] for artist in short_term if artist['artist_name'] in top_3_artists]
-
     # Get related artists
     related_artists = re.get_related_artists(artist_ids, short_term)
     artist_names = set()
