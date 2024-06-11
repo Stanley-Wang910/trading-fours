@@ -7,6 +7,7 @@ from spotipy.oauth2 import SpotifyOAuth
 from spotipy.client import SpotifyException
 import warnings
 import random
+import time
 
 warnings.filterwarnings("ignore")
 
@@ -80,30 +81,43 @@ class SpotifyClient:
         - playlist_with_features (pd.DataFrame): A DataFrame containing the playlist tracks and their audio features.
         """
         if isinstance(input_data, str):
+            print("Getting track IDs from playlist...")
+            start_time = time.time()
             # Input is a playlist ID
             playlist_id = input_data
             
             # Retrieve the tracks from the playlist
+
             playlist_data = []
-            for track_item in self.sp.playlist(playlist_id)['tracks']['items']:
-                track = track_item['track']
-                if track and track['id']:
-                    playlist_data.append({
-                        'artist': track['artists'][0]['name'],
-                        'name': track['name'],
-                        'id': track['id'],
+            playlist_tracks = self.sp.playlist(playlist_id)['tracks']
+
+            while playlist_tracks:
+                playlist_data.extend([
+                    {
+                        'artist': track_item['track']['artists'][0]['name'],
+                        'name': track_item['track']['name'],
+                        'id': track_item['track']['id'],
                         'date_added': track_item['added_at'],
-                        'popularity': track['popularity'],
-                        'explicit': track['explicit']
-                    })
-            
+                        'popularity': track_item['track']['popularity'],
+                        'explicit': track_item['track']['explicit']
+                    }
+                    for track_item in playlist_tracks['items']
+                    if track_item['track'] and track_item['track']['id']
+                ])
+                if playlist_tracks['next']:
+                    playlist_tracks = self.sp.next(playlist_tracks)
+                else:
+                    playlist_tracks = None
+
             # Create a DataFrame from the playlist data
             playlist = pd.DataFrame(playlist_data)
             playlist['date_added'] = pd.to_datetime(playlist['date_added'])
             playlist = playlist.sort_values('date_added', ascending=False)
-            
+            playlist = playlist.drop_duplicates(subset='id')
+
             # Retrieve the track IDs from the playlist
             track_ids = playlist['id'].tolist()
+            print("Track IDs retrieved in {:.2f} seconds.".format(time.time() - start_time))
             
         elif isinstance(input_data, list):
             # Input is a list of track IDs
@@ -123,10 +137,22 @@ class SpotifyClient:
         
         else:
             raise ValueError("Invalid input type. Expected a playlist ID or a list of track IDs.")
+        
         if type_analyze == 'rec':
             return track_ids
-        audio_features_list = self.sp.audio_features(track_ids)
+        
+        def chunks(lst, n):
+            for i in range(0, len(lst), n):
+                yield lst[i:i + n]
+        
+        audio_features_list = []
+        for chunk in chunks(track_ids, 100):
+            audio_features_list.extend(self.sp.audio_features(chunk))
+            print("Chunk processed. Current number of audio features:", len(audio_features_list))
+
+
         audio_features_df = pd.DataFrame(audio_features_list)
+        print("Total audio features retrieved:", len(audio_features_df))
 
         # Select specific columns for the audio features DataFrame
         selected_columns = ['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms', 'time_signature']
@@ -134,6 +160,8 @@ class SpotifyClient:
 
         # Merge the playlist DataFrame with the audio features DataFrame
         playlist_with_features = pd.merge(playlist, audio_features_df, on='id', how='inner')
+        print("Length of merged playlist with features:", len(playlist_with_features))
+
         playlist_with_features = self.rearrange_columns(playlist_with_features)
         
         # Return the resulting DataFrame
@@ -273,9 +301,10 @@ class SpotifyClient:
             release_date = data['release_date']
             data.drop('release_date', axis=1, inplace=True)
         elif (choice == 'playlist'):
-            data = self.analyze_playlist(data_entry)
+            data = self.analyze_playlist(data_entry) # do this, don't need to do again
             
-        
+        print("Predicting...")
+        start_time = time.time()
         # Create a DataFrame from the data
         data_df = pd.DataFrame(data)
         
@@ -308,7 +337,8 @@ class SpotifyClient:
         if (choice == 'track'):
             data['release_date'] = release_date
             data.drop('date_added', axis=1, inplace=True)
-
+        
+        print("Prediction completed in {:.2f} seconds.".format(time.time() - start_time))
         # Return the data DataFrame with predicted genre labels
         return data
 

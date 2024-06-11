@@ -23,6 +23,7 @@ from sql_work import SQLWork
 
 import random
 from sklearn.metrics.pairwise import cosine_similarity
+import time
 
 
 # Load environment variables
@@ -38,8 +39,6 @@ sql_work = SQLWork()
 # Initialize Genre Class Model
 gc = GenreClassifier()
 class_items = gc.load_model()
-
-
 
 # Generate a random state string
 def generate_random_string(length=16):
@@ -284,6 +283,8 @@ def recommend():
             previously_recommended = session['recommended_songs'] = []
             re = RecEngine(sp, unique_id, sql_work, previously_recommended=previously_recommended)
             playlist = sp.predict(link, type_id, class_items)
+            playlist.to_csv('playlist.csv', index=False)
+            track_ids = set(playlist['id'])
 
             session['append_counter'] = session.get('append_counter', 0) + 1
             print("Append counter:", session['append_counter'])
@@ -291,6 +292,7 @@ def recommend():
             
             append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
             p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
+            p_vector.to_csv('p_vector.csv', index=False)
             print(top_ratios)
         
         # Get recommendations
@@ -304,7 +306,7 @@ def recommend():
             session['top_tracks'] = user_top_tracks
             
 
-        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, link, user_top_tracks, class_items, top_genres, top_ratios)
+        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, link, user_top_tracks, class_items, top_genres, top_ratios)
 
     elif type_id == 'track':
         # Check if track data exists in session
@@ -343,7 +345,6 @@ def recommend():
     session['recommended_songs'] = list(updated_recommendations)
 
     session['user_top_tracks'] = user_top_tracks
-
 
     if type_id == 'playlist':
         return jsonify({
@@ -396,25 +397,34 @@ def test():
     sp = SpotifyClient(Spotify(auth=access_token))
     re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
 
+    print("OHE Features")
+    start_time = time.time()
+    ohe_rec_dataset = re.ohe_features(rec_dataset)
+    end_time = time.time()
+
+    print("Time taken:", end_time - start_time, "seconds")
+    ohe_rec_dataset.to_csv('ohe_rec_dataset.csv', index=False)
+    return jsonify({'message': 'Test successful'})
+    
     # Get playlist ID from user input
-    playlist_id = input("Enter playlist ID: ")
-    playlist_id = playlist_id.split("/")[-1].split("?")[0]
+    # playlist_id = input("Enter playlist ID: ")
+    # playlist_id = playlist_id.split("/")[-1].split("?")[0]
 
-    track = sp.predict(playlist_id, 'track', class_items)
-    track.to_csv('track.csv')
+    # track = sp.predict(playlist_id, 'track', class_items)
+    # track.to_csv('track.csv')
 
-    track_vector = re.track_vector(track)
-    track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
-    if track_genre_column:
-        track_genre = track_genre_column[0].replace('track_genre_', '')
-    print(track_genre)
-    playlist_id = input("Enter playlist ID: ")
-    playlist_id = playlist_id.split("/")[-1].split("?")[0]
+    # track_vector = re.track_vector(track)
+    # track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
+    # if track_genre_column:
+    #     track_genre = track_genre_column[0].replace('track_genre_', '')
+    # print(track_genre)
+    # playlist_id = input("Enter playlist ID: ")
+    # playlist_id = playlist_id.split("/")[-1].split("?")[0]
 
-    playlist = sp.predict(playlist_id, 'playlist', class_items)
-    playlist.to_csv('playlist.csv')
+    # playlist = sp.predict(playlist_id, 'playlist', class_items)
+    # playlist.to_csv('playlist.csv')
 
-    return jsonify('hello')
+    # return jsonify('hello')
 
     # # Process playlist
     # recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
