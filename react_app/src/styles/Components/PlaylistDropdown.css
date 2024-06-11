@@ -1,0 +1,127 @@
+
+/* Playlist Dropdown */
+.dropdownButton:hover .tooltip {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  
+  @keyframes drop-down {
+  
+    0% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    8% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    16% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    24% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    32% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    40% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    48% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    56% {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    64% {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    95% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    
+  
+  }
+  
+  @keyframes dropdownClick {
+    0% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(2px) rotate(90deg) scale(1.1);
+    }
+    100% {
+      transform: translateY(0) rotate(90deg);
+    }
+  }
+  
+  .animate-click {
+    animation: dropdownClick 0.3s ease-in-out;
+  }
+  
+  @keyframes dropdownClose {
+    0% {
+      transform: translateY(0) rotate(90deg);
+    }
+    50% {
+      transform: translateY(2px) rotate(90deg) scale(1.1);
+    }
+    100% {
+      transform: translateY(0) rotate(0deg);
+    }
+  }
+  
+  .animate-close {
+    animation: dropdownClose 0.3s ease-in-out;
+  
+  }
+  
+  .dropdown-height-animate {
+    transition: max-height 0.3s ease-in-out;
+  }
+  
+  .dropdown-height-animate.max-h-0 {
+    max-height: 0;
+   
+  }
+  
+  .dropdown-height-animate.max-h-\[400px\] {
+    max-height: 400px;
+    opacity: 1;
+  }
+  
+  
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background-color: transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cc8e15;
+    border-radius: 10px;
+    border: none;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #a16207;
+  }
+  
+  li:last-child {
+    border-bottom: none;
+  }

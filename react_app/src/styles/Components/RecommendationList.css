@@ -1,0 +1,59 @@
+
+/* Recommendations Container */
+.transition-transform {
+    transition-property: transform;
+    transition-duration: 0.5s;
+    transition-timing-function: ease-in-out;
+  }
+  
+  .-translate-x-full {
+    transform: translateX(-65%);
+  }
+  
+  .buttonDiv:hover + .tooltip {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .opacity-100 {
+    opacity: 1;
+  }
+  
+  .opacity-0 {
+    opacity: 0;
+  }
+  
+  @keyframes followPath {
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(calc(50vh - 14px)); /* Adjust the value based on button height */
+    }
+  }
+  
+  .container-transition {
+    transition: height 0.5s ease-in-out;
+    height: var(--container-height);
+  }
+  
+  .embed-container {
+    position: relative;
+    overflow: visible;
+  
+  }
+  
+  .embed {
+    position: relative;
+    opacity: 0;
+    transform: translateY(-300%) scale(1);
+    /* transform: translateX(-400%); */
+    transition: opacity 2s, transform 1.75s;
+  
+  }
+  
+  .embed.active {
+    opacity: 80%;
+    transform: translateY(0);
+    animation: popEffect 0.3s ease-out 1.75s; 
+  }

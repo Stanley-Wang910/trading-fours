@@ -1,0 +1,18 @@
+/* Logout Button */
+.logout {
+    background-position-y: -10%;
+    background-image: linear-gradient(180deg, transparent 50%, #cc8e15 50%) !important;
+    transition: all 0.1s ease;
+    background-size: 7px;
+    background-size: auto 200%;
+    padding: 6px 6px;
+   
+  
+  }
+  
+  .logout:hover {
+    background-position-y: 100%;
+    color: #000000;
+    transition: all 0.1s ease;
+  }
+  

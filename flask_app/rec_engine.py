@@ -139,7 +139,7 @@ class RecEngine:
         
         
         print("Calculating recommendations...")
-        combined_vector = 0.7 * final_track_vector + 0.3 * personalized_vector
+        combined_vector = 0.9 * final_track_vector + 0.1 * personalized_vector
         # Calculate cosine similarity between final track vector and recommendations
         recommendations_df = self.calc_cosine_similarity(final_rec_df, combined_vector, recommendations_df, weights, 'track')
 
@@ -356,7 +356,8 @@ class RecEngine:
         genre_weights = user_top_tracks['track_genre'].map(weights).fillna(nan_weight)
         user_top_tracks['weighted_similarity'] = user_top_tracks['similarity'] * genre_weights
 
-        user_top_tracks.to_csv('user_top_tracks_weighted.csv')
+        sorted_tracks = user_top_tracks.sort_values(by='weighted_similarity', ascending=False)
+        sorted_tracks.to_csv('user_top_tracks_weighted.csv')
         # Normalize the final playlist vector
         personalized_vector = user_top_tracks_ohe.multiply(user_top_tracks['weighted_similarity'], axis=0).sum() / user_top_tracks['weighted_similarity'].sum()
         personalized_vector = personalized_vector.to_frame().T

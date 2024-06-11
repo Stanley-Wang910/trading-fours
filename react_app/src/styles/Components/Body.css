@@ -1,0 +1,11 @@
+
+/* Body */
+
+html { background-color: #1C2128;
+  
+    height: 100%;
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden; }
+  
+  body { height: 100%; }

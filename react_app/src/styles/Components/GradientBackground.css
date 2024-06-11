@@ -1,0 +1,38 @@
+:root {
+    --color1: #1E3A8A;
+    --color2: #7054bdaf;
+    --color3: rgba(75, 102, 176, 0.549); 
+    
+  }
+  
+  @keyframes colorChange1 {
+    0%, 100% { fill: var(--color1); }
+    50% { fill: var(--color2); }
+  }
+  @keyframes colorChange2 {
+    0%, 100% { fill: var(--color1); }
+    50% { fill: var(--color3); }
+  }
+  
+  
+  .animate-colorChange1 {
+    animation: colorChange1 10s infinite linear;
+  }
+  
+  .animate-colorChange2 {
+    animation: colorChange2 10s infinite linear;
+  }
+  
+  
+  .fade-in-gradient {
+    animation: fadeInGradient 1s ease-in-out;
+  }
+  
+  @keyframes fadeInGradient {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }

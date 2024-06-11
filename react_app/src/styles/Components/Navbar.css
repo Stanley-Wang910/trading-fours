@@ -1,0 +1,124 @@
+/* Logo Animation */
+.svg-short {
+    overflow: hidden;
+  }
+  
+  .svg-short:hover .t {
+    animation: drop-down 0.65s ease-out;
+    animation-play-state: running;
+    animation-delay: 0.20s;
+  }
+  
+  .svg-short:hover .four {
+    animation: drop-down 0.65s ease-out;
+    animation-play-state: running;
+    animation-delay: 0.25s;
+  }
+  
+  .svg-trading  {
+    overflow: hidden;
+  }
+  
+  .svg-trading-animate .rest-animate {
+    animation: slideOutUp 0.1s ease-in-out forwards;
+  }
+  
+  .svg-trading-animate .f-animate {
+    animation: slideLeftFade 0.3s ease-in forwards;
+  }
+  
+  
+  @keyframes slideLeftFade {
+    0% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(-55%);
+      opacity: 0%;
+    } 
+  }
+  
+  .svg-trading-reverse .rest-animate {
+    animation: slideInDown 0.35s ease-in-out forwards;
+  }
+  .svg-trading-reverse .f-animate {
+    animation: slideRightEnter 0.25s ease-out forwards;
+  }
+  
+  @keyframes slideRightEnter {
+    0% {
+      transform: translateX(-55%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 100%;
+    }
+  }
+  
+  @keyframes slideOutUp {
+    0% {
+      /* Because of translate-y-1/2 */
+      transform: translateY(0%); 
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-125%);
+      opacity: 0;
+    }
+  }
+  
+  @keyframes slideInDown {
+    0% {
+      transform: translateY(-125%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  .svg-short-animate .four {
+    animation: slideInLeft 0.35s ease forwards;
+  }
+  
+  .svg-short-reverse .four {
+    animation: slideOutRight 0.5s ease-in-out forwards;
+  }
+  
+  @keyframes slideInLeft {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    25% {
+      transform: translateX(75%);
+      opacity: 0%;
+    }
+    50% {
+      transform: translateX(50%);
+      opacity: 0%;
+    }
+    75% {
+      transform: translateX(25%);
+      opacity: 0%;
+    }
+    100% {
+      transform: translateX();
+      opacity: 100%;
+    }
+  }
+  
+  @keyframes slideOutRight {
+    0% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+
