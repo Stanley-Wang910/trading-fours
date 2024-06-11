@@ -7,6 +7,7 @@ from spotify_client import SpotifyClient
 
 import random
 
+#AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH FUCKING KILL MEEEEEE!!!!!!!! OINASODNWODNWO DUBPA:IUD HPAUIDH OASIDH OASGDY OAUDGY
 
 class RecEngine:
     def __init__(self, spotify_client, unique_id, sql_cnx, previously_recommended=None):
@@ -40,39 +41,45 @@ class RecEngine:
             cols_to_update = playlist_df_weighted.columns.difference(['date_added', 'weight', 'months_behind'])
             playlist_df_weighted.update(playlist_df_weighted[cols_to_update].mul(playlist_df_weighted.weight, axis=0))
 
+            weight_sum = playlist_df_weighted['weight'].sum()
             # Get the final playlist vector by excluding unnecessary columns
-            final_playlist_vector = playlist_df_weighted[playlist_df_weighted.columns.difference(['date_added', 'weight', 'months_behind'])]
+            final_playlist_vector = playlist_df_weighted[playlist_df_weighted.columns.difference(['date_added', 'weight', 'months_behind'])].sum(axis=0) / weight_sum
         else:
             # If the most recent date is the default value, exclude only the 'date_added' column
-            final_playlist_vector = playlist_df[playlist_df.columns.difference(['date_added'])]
+            final_playlist_vector = playlist_df.drop(columns=['date_added']).mean(axis=0)
 
        
-
         # Normalize the final playlist vector
-        final_playlist_vector = self.normalize_vector(final_playlist_vector)
+        # final_playlist_vector = self.normalize_vector(final_playlist_vector)
 
         # Transposes into a one row vector
         final_playlist_vector = final_playlist_vector.to_frame().T
+        final_playlist_vector.to_csv('final_playlist_vector.csv', index=False)
+
 
         return final_playlist_vector
 
     def recommend_by_playlist(self, rec_dataset, final_playlist_vector, playlist_id, user_top_tracks, class_items, top_genres, top_ratios):
         
-        
+        print("Preparing data...")
         # Prepare data for recommendation
         final_playlist_vector, final_rec_df, recommendations_df = self.prepare_data(self.sp, top_genres, rec_dataset, final_playlist_vector, playlist_id, 'playlist')
         # Is this calculation needed each time? Maybe save the personalized vector to session?
        
-
+        print("Calculating weights...")
         weights = self.create_weights(top_genres, top_ratios)
         # Apply weights to the top genres
         # self.weights = {top_genres[0]: 0.9, top_genres[1]: 0.85, top_genres[2]: 0.8}
+        print("Applying weights...")
         final_rec_df = self.apply_weights(final_rec_df, weights)
 
+        print("Finding personalized vector...")
         # Calculate cosine similarity between final playlist vector and recommendations
         personalized_vector = self.similar_top_tracks(final_playlist_vector, weights, user_top_tracks, class_items)
 
         combined_vector = 0.7 * final_playlist_vector + 0.3 * personalized_vector
+
+        print("Calculating recommendations...")
         recommendations_df = self.calc_cosine_similarity(final_rec_df, combined_vector, recommendations_df, weights, 'playlist')
 
         
@@ -80,6 +87,7 @@ class RecEngine:
         # Initialize an empty DataFrame to store top songs
         top_songs = pd.DataFrame()
 
+        print("Selecting top songs...")
         # Select top songs from each genre based on similarity and add them to the top_songs DataFrame
         for genre in top_genres:
             genre_songs = recommendations_df[recommendations_df['track_genre'] == genre]
@@ -90,6 +98,8 @@ class RecEngine:
         # If no songs are found, return an empty list
         if top_songs.empty:
             return []
+        
+        print("Finalizing and updating recommendations...")
         # Finalize and update the recommended songs
         top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'playlist')
         # When sending in top_songs from related_artists function, make sure to handle the case where there are not enough representation of top 3 genres / change so that it is not limited to the top 3 genres
@@ -167,7 +177,7 @@ class RecEngine:
 
 
     def get_top_genres(self, final_playlist_vector):
-        final_playlist_vector.to_csv('final_playlist_vector.csv')
+        # final_playlist_vector.to_csv('final_playlist_vector.csv')
         # Get the genre columns from the final playlist vector
         genre_columns = final_playlist_vector.columns[final_playlist_vector.columns.str.startswith('track_genre_')]
         
@@ -333,21 +343,17 @@ class RecEngine:
         user_top_tracks_ohe = self.ohe_features(user_top_tracks)
 
         user_top_tracks_ohe, final_vector = self.sort_columns(user_top_tracks_ohe, final_vector)
-        user_top_tracks_ohe = self.apply_weights(user_top_tracks_ohe, weights)
-
         user_top_tracks['similarity'] = cosine_similarity(user_top_tracks_ohe.values, final_vector.values.reshape(1, -1))[:,0]
+        user_top_tracks.to_csv('user_top_tracks.csv')
         nan_weight = weights.get('default')
+        genre_weights = user_top_tracks['track_genre'].map(weights).fillna(nan_weight)
+        user_top_tracks['weighted_similarity'] = user_top_tracks['similarity'] * genre_weights
 
-        weights = user_top_tracks['track_genre'].map(weights).fillna(nan_weight)
-        user_top_tracks['similarity'] *= weights
-
-        user_top_tracks = user_top_tracks.sort_values(by='similarity', ascending=False)
-
-        personalized_vector = user_top_tracks_ohe.head(5)
-
+        user_top_tracks.to_csv('user_top_tracks_weighted.csv')
         # Normalize the final playlist vector
-        personalized_vector = self.normalize_vector(personalized_vector)
+        personalized_vector = user_top_tracks_ohe.multiply(user_top_tracks['weighted_similarity'], axis=0).sum() / user_top_tracks['weighted_similarity'].sum()
         personalized_vector = personalized_vector.to_frame().T
+        personalized_vector.to_csv('personalized_vector.csv', index=False)
 
 
         return personalized_vector
@@ -432,7 +438,6 @@ class RecEngine:
         return top_artists_dict
         
     def create_weights(self, top_genres, top_ratios):
-        print(top_ratios)
 
         weights = {genre: ratio for genre, ratio in top_ratios.items()}
 

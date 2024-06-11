@@ -322,8 +322,8 @@ def recommend():
             session['append_counter'] = session.get('append_counter', 0) + 1
             print("Append counter:", session['append_counter'])
 
-            # Append Track to dataset
-            append_to_dataset(track, type_id)
+            
+            append_to_dataset(track, type_id) # Append Track to dataset
             
             t_vector, track_name, artist_name, release_date, track_id = save_track_data_session(track, link, re, sp) # Save Track data to session
         
