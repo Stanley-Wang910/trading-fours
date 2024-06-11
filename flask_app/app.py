@@ -400,55 +400,62 @@ def test():
     playlist_id = input("Enter playlist ID: ")
     playlist_id = playlist_id.split("/")[-1].split("?")[0]
 
-    # track = sp.predict(playlist_id, 'track', class_items)
-    # track_vector = re.track_vector(track)
-    # track_vector.to_csv('track_vector.csv')
-    # track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
-    # if track_genre_column:
-    #     track_genre = track_genre_column[0].replace('track_genre_', '')
-    # print(track_genre)
-    # jsonify('hello')
+    track = sp.predict(playlist_id, 'track', class_items)
+    track.to_csv('track.csv')
 
-    # Process playlist
-    recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
+    track_vector = re.track_vector(track)
+    track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
+    if track_genre_column:
+        track_genre = track_genre_column[0].replace('track_genre_', '')
+    print(track_genre)
+    playlist_id = input("Enter playlist ID: ")
+    playlist_id = playlist_id.split("/")[-1].split("?")[0]
+
+    playlist = sp.predict(playlist_id, 'playlist', class_items)
+    playlist.to_csv('playlist.csv')
+
+    return jsonify('hello')
+
+    # # Process playlist
+    # recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
 
 
-    recommend_p_vector = re.playlist_vector(recommend_playlist)
-    recommend_top_genres, genre_ratios = re.get_top_genres(recommend_p_vector)
-    print(recommend_top_genres)
-    print(genre_ratios)
+    # recommend_p_vector = re.playlist_vector(recommend_playlist)
+    # recommend_top_genres, genre_ratios = re.get_top_genres(recommend_p_vector)
+    # print(recommend_top_genres)
+    # print(genre_ratios)
 
-    # Get user top artists
-    # short_term = re.get_user_top_artists() #
-    short_term = session.get('top_artists')
-    artist_names = [artist['artist_name'] for artist in short_term]
-    print(artist_names)
-    # Get tracks by top short term artists
-    tracks_by_artists_df = sql_work.get_tracks_by_artists(artist_names)
+    # # Get user top artists
+    # # short_term = re.get_user_top_artists() #
+    # short_term = session.get('top_artists')
+    # artist_names = [artist['artist_name'] for artist in short_term]
+    # print(artist_names)
+    # # Get tracks by top short term artists
+    # tracks_by_artists_df = sql_work.get_tracks_by_artists(artist_names)
 
-    # Tracks by artists sorted by similarity
-    top_3_artists = re.find_similar_artists(tracks_by_artists_df, recommend_p_vector, playlist_id, class_items, recommend_top_genres, genre_ratios)
-    print(top_3_artists)
-    artist_ids = [artist['artist_id'] for artist in short_term if artist['artist_name'] in top_3_artists]
-    # Get related artists
-    related_artists = re.get_related_artists(artist_ids, short_term)
-    artist_names = set()
-    for main_artist, related_artist in related_artists.items():
-        artist_names.add(main_artist)
-        artist_names.update(related_artist.values())
+    # # Tracks by artists sorted by similarity
+    # top_3_artists = re.find_similar_artists(tracks_by_artists_df, recommend_p_vector, playlist_id, class_items, recommend_top_genres, genre_ratios)
+    # print(top_3_artists)
+    # artist_ids = [artist['artist_id'] for artist in short_term if artist['artist_name'] in top_3_artists]
+    # # Get related artists
+    # related_artists = re.get_related_artists(artist_ids, short_term)
+    # artist_names = set()
+    # for main_artist, related_artist in related_artists.items():
+    #     artist_names.add(main_artist)
+    #     artist_names.update(related_artist.values())
 
-    artist_names = list(artist_names)
-    # Keep in cache and run randomize each revisit to the route
-    random_artists = random.sample(artist_names, 6)
-    print(random_artists)
+    # artist_names = list(artist_names)
+    # # Keep in cache and run randomize each revisit to the route
+    # random_artists = random.sample(artist_names, 6)
+    # print(random_artists)
 
-    related_artists_df = sql_work.get_tracks_by_artists(random_artists)
-    related_artists_df.to_csv('related_artists.csv', index=False)
+    # related_artists_df = sql_work.get_tracks_by_artists(random_artists)
+    # related_artists_df.to_csv('related_artists.csv', index=False)
 
-    user_top_tracks = session['top_tracks']
-    recommended_ids = re.recommend_by_playlist(related_artists_df, recommend_p_vector, playlist_id, user_top_tracks, class_items)
+    # user_top_tracks = session['top_tracks']
+    # recommended_ids = re.recommend_by_playlist(related_artists_df, recommend_p_vector, playlist_id, user_top_tracks, class_items)
    
-    return jsonify(artist_names)
+    # return jsonify(artist_names)
 
 
 if __name__ == '__main__':

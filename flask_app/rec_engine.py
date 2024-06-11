@@ -115,6 +115,7 @@ class RecEngine:
     def recommend_by_track(self, rec_dataset, track_vector, track_id, user_top_tracks, class_items):
        
         # Get track genre
+        print("Getting track genre...")
         track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
         if track_genre_column:
             track_genre = track_genre_column[0].replace('track_genre_', '')
@@ -123,26 +124,36 @@ class RecEngine:
         if 'release_date' in track_vector.columns:
             track_vector = track_vector.drop(columns=['release_date'])
 
-        # Prepare data for recommendation
+        print("Preparing data...")
         final_track_vector, final_rec_df, recommendations_df = self.prepare_data(self.sp, [track_genre], rec_dataset, track_vector, track_id)
-        personalized_vector = self.similar_top_tracks(final_track_vector, [track_genre], user_top_tracks, class_items)
-        
-        # Apply weight to track genre
-        weight = {track_genre: 0.9}
-        final_rec_df = self.apply_weights(final_rec_df, weight)
 
+
+        print("Calculating weights...")
+        # Apply weight to track genre
+        # Consider doing cosine similarity first and then apply weight to similarity scores?
+        weights = {track_genre: 0.9, 'default': 0.8}
+        final_rec_df = self.apply_weights(final_rec_df, weights)
+
+        print("Finding personalized vector...")
+        # Prepare data for recommendation
+        personalized_vector = self.similar_top_tracks(final_track_vector, weights, user_top_tracks, class_items)
+        
+        
+        print("Calculating recommendations...")
         combined_vector = 0.7 * final_track_vector + 0.3 * personalized_vector
         # Calculate cosine similarity between final track vector and recommendations
-        recommendations_df = self.calc_cosine_similarity(final_rec_df, combined_vector, recommendations_df, weight, 'track')
+        recommendations_df = self.calc_cosine_similarity(final_rec_df, combined_vector, recommendations_df, weights, 'track')
 
         # Initialize an empty DataFrame to store top songs
         top_songs = pd.DataFrame()
         
+        print("Selecting top songs...")
         # Get top songs based on similarity 
         # That also have the same genre as the track
         genre_songs = recommendations_df[recommendations_df['track_genre'] == track_genre]
         top_songs = pd.concat([genre_songs.nlargest(45, 'similarity')])
         
+        print("Finalizing and updating recommendations...")
         # Finalize and update the recommended songs
         top_recommendations_df = self.finalize_update_recommendations(top_songs, self.recommended_songs, 'track')
         return top_recommendations_df
