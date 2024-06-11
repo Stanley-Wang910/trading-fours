@@ -54,7 +54,6 @@ class RecEngine:
 
         # Transposes into a one row vector
         final_playlist_vector = final_playlist_vector.to_frame().T
-        final_playlist_vector.to_csv('final_playlist_vector.csv', index=False)
 
 
         return final_playlist_vector
@@ -159,7 +158,6 @@ class RecEngine:
         return top_recommendations_df
     # Helper Functions
     def ohe_features(self, df):
-        df.to_csv('df.csv', index=False)
         all_genres = pd.read_csv('data/datasets/genre_counts.csv')
         df = pd.get_dummies(df, columns=['track_genre', 'mode', 'key'])  # One-hot encode the genre column
     
@@ -188,7 +186,6 @@ class RecEngine:
 
 
     def get_top_genres(self, final_playlist_vector):
-        # final_playlist_vector.to_csv('final_playlist_vector.csv')
         # Get the genre columns from the final playlist vector
         genre_columns = final_playlist_vector.columns[final_playlist_vector.columns.str.startswith('track_genre_')]
         
@@ -355,7 +352,6 @@ class RecEngine:
 
         user_top_tracks_ohe, final_vector = self.sort_columns(user_top_tracks_ohe, final_vector)
         user_top_tracks['similarity'] = cosine_similarity(user_top_tracks_ohe.values, final_vector.values.reshape(1, -1))[:,0]
-        user_top_tracks.to_csv('user_top_tracks.csv')
         nan_weight = weights.get('default')
         genre_weights = user_top_tracks['track_genre'].map(weights).fillna(nan_weight)
         user_top_tracks['weighted_similarity'] = user_top_tracks['similarity'] * genre_weights
@@ -364,8 +360,6 @@ class RecEngine:
         # Normalize the final playlist vector
         personalized_vector = user_top_tracks_ohe.multiply(user_top_tracks['weighted_similarity'], axis=0).sum() / user_top_tracks['weighted_similarity'].sum()
         personalized_vector = personalized_vector.to_frame().T
-        personalized_vector.to_csv('personalized_vector.csv', index=False)
-
 
         return personalized_vector
 
