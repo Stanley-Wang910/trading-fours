@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from spotify_client import SpotifyClient
 
 import random
+import time
 
 #AHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH FUCKING KILL MEEEEEE!!!!!!!! OINASODNWODNWO DUBPA:IUD HPAUIDH OASIDH OASGDY OAUDGY
 
@@ -58,7 +59,7 @@ class RecEngine:
 
         return final_playlist_vector
 
-    def  recommend_by_playlist(self, rec_dataset, final_playlist_vector, track_ids, playlist_id, user_top_tracks, class_items, top_genres, top_ratios):
+    def recommend_by_playlist(self, rec_dataset, final_playlist_vector, playlist_id, user_top_tracks, class_items, top_genres, top_ratios):
         
         print("Preparing data...")
         # Prepare data for recommendation
@@ -202,16 +203,16 @@ class RecEngine:
 
         return top_genres_names, top_genres_ratios
 
-    def prepare_data(self, sp, top_genres, rec_dataset, vector, ids, type='track'):
+    def prepare_data(self, sp, top_genres, rec_dataset, vector, id, type='track'):
         # Correct handling for recommendation type
-        # if type == 'playlist':
-        #     print("Analyzing playlist...")
-        #     start_time = time.time()    
-        #     ids = self.sp.analyze_playlist(id, 'rec') # Why?\
-        #     ids = set(ids)
-        #     print("Time taken to analyze Playlist:", time.time() - start_time, "seconds")
-        # else:
-        #     ids = id # Handle for track recommendation
+        if type == 'playlist':
+            print("Analyzing playlist...")
+            start_time = time.time()    
+            ids = self.sp.analyze_playlist(id, 'rec') # Why?\
+            ids = set(ids)
+            print("Time taken to analyze Playlist:", time.time() - start_time, "seconds")
+        else:
+            ids = id # Handle for track recommendation
         # One-hot encode the genre column in both dataframes
         # final_rec_df = rec_dataset[rec_dataset['track_genre'].isin(top_genres)]
         print("OHE Features...")

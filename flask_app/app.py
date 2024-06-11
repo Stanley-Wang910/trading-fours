@@ -285,6 +285,7 @@ def recommend():
             playlist = sp.predict(link, type_id, class_items)
             playlist.to_csv('playlist.csv', index=False)
             track_ids = set(playlist['id'])
+            # track_ids.to_csv('track_ids.csv', index=False)
 
             session['append_counter'] = session.get('append_counter', 0) + 1
             print("Append counter:", session['append_counter'])
@@ -292,7 +293,6 @@ def recommend():
             
             append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
             p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
-            p_vector.to_csv('p_vector.csv', index=False)
             print(top_ratios)
         
         # Get recommendations
@@ -306,7 +306,7 @@ def recommend():
             session['top_tracks'] = user_top_tracks
             
 
-        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, link, user_top_tracks, class_items, top_genres, top_ratios)
+        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, link, user_top_tracks, class_items, top_genres, top_ratios)
 
     elif type_id == 'track':
         # Check if track data exists in session
