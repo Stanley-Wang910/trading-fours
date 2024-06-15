@@ -1,10 +1,2 @@
 artist,name,id,date_added,popularity,duration_ms,danceability,energy,key,loudness,mode,speechiness,acousticness,instrumentalness,liveness,valence,tempo,time_signature,track_genre
-Car Seat Headrest,"Hey, Space Cadet (Beast Monster Thing in Space)",5bYaO9MLMVr301uB9KgGve,2023-09-23 02:28:17+00:00,32,686500,0.197,0.532,2,-5.924,1,0.0354,0.136,0.00807,0.509,0.187,78.011,4,World
-LSD and the Search for God,Starshine,7DBP6FQF3gOHg4DO6Vbl9C,2023-09-21 17:44:02+00:00,36,319400,0.121,0.689,4,-9.092,1,0.0381,0.533,0.956,0.138,0.237,83.682,4,Soundtrack
-Mitski,Last Words of a Shooting Star,7gn3NdQez9Pwbqak4gspz5,2023-09-21 17:41:30+00:00,61,164227,0.391,0.167,2,-19.024,1,0.0362,0.47,0.00097,0.11,0.0965,130.498,3,Folk
-Slowdive,Souvlaki Space Station,03e9mpepwyHY6vfOuTptv8,2023-09-21 17:40:24+00:00,38,359373,0.36,0.618,4,-4.791,0,0.0343,0.00198,0.784,0.137,0.29,137.971,4,Electronic
-Phoebe Bridgers,Chinese Satellite,1scaOnahzG7o8pfwfsL784,2023-09-21 17:36:25+00:00,52,217070,0.301,0.452,10,-9.931,1,0.0452,0.742,0.0219,0.152,0.363,120.04,4,Folk
-Duster,Stars Will Fall,7ew0k5ai5E0TkUnjdu7sm6,2023-09-21 17:35:48+00:00,49,118160,0.432,0.13,9,-13.076,1,0.0282,0.94,0.965,0.106,0.0741,96.41,4,Soundtrack
-Have A Nice Life,A Quick One Before the Eternal Worm Devours Connecticut,34dkZZNQJzEJRqPkywYmEY,2023-09-21 17:35:44+00:00,59,472696,0.365,0.172,9,-19.388,1,0.0336,0.608,0.93,0.305,0.0369,74.53,3,Jazz
-Car Seat Headrest,Famous Prophets (Stars),5LnFURDZ1n3psF1IhjKkfe,2023-09-20 15:39:47+00:00,42,970465,0.476,0.326,9,-9.597,1,0.0296,0.0982,0.228,0.33,0.173,137.963,4,Folk
-Radiohead,Black Star,6UO72VSXEONxdfLyABihs9,2023-09-20 15:39:19+00:00,63,247040,0.289,0.555,7,-7.434,1,0.0402,0.00312,0.0496,0.27,0.306,158.671,4,Alternative
+Snail Mail,Stick,2LBCSjOiVztS73s80lYefT,2023-10-16 15:19:49+00:00,28,313187,0.536,0.536,3,-5.842,1,0.0284,0.04,3.35e-05,0.067,0.325,117.893,3,Anime

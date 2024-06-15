@@ -34,7 +34,7 @@ class SpotifyClient:
 
     def get_user_saved_info(self):
         user_profile = self.sp.current_user()
-        user_playlists = self.sp.current_user_playlists()
+        user_playlists = self.sp.current_user_playlists() # Override Image and Name
         recently_played = self.sp.current_user_recently_played()
         top_artists_short = self.sp.current_user_top_artists(20,0, 'short_term')
         top_artists_med = self.sp.current_user_top_artists(20,0, 'medium_term')

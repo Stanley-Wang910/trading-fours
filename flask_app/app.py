@@ -20,6 +20,7 @@ import mysql.connector
 from dotenv import load_dotenv
 import os
 from sql_work import SQLWork
+from session_store import SessionStore
 
 import random
 from sklearn.metrics.pairwise import cosine_similarity
@@ -36,6 +37,7 @@ CORS(app)
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 sql_work = SQLWork()
+session_store = SessionStore()
 # Initialize Genre Class Model
 gc = GenreClassifier()
 class_items = gc.load_model()
@@ -102,8 +104,6 @@ def auth_callback():
         session['top_tracks'] = short_term_tracks
         session['top_last_cached'] = datetime.now().isoformat()
 
-        
-        
         
         # Redirecting or handling logic here
         return redirect('/')
@@ -271,9 +271,12 @@ def recommend():
     else:
         type_id = 'playlist'
 
+    redis_key = f'{unique_id}:{link}:{type_id}'
+
     if type_id == 'playlist':
         # Check if playlist data exists in session
         playlist_data = get_playlist_data_session(link)
+        # playlist_Data = session_store.get_data(redis_key)
         if playlist_data:
             print('Playlist data exists')
             p_vector, playlist_name, top_genres, top_ratios, previously_recommended = playlist_data
@@ -340,9 +343,17 @@ def recommend():
         # Get recommendations
         recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_id, user_top_tracks, class_items)
 
+    session_store.remove_data(redis_key)
     # Update recommended songs in session
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
-    session['recommended_songs'] = list(updated_recommendations)
+    session_store.set_data(redis_key, list(track_ids), list(updated_recommendations))
+
+    stored_recommendations = session_store.get_data(redis_key)
+    if stored_recommendations:
+        print("Stored recommendations:", stored_recommendations)
+    else:
+        print("Stored recommendations not found")
+    # session['recommended_songs'] = list(updated_recommendations)
 
     session['user_top_tracks'] = user_top_tracks
 
@@ -393,18 +404,19 @@ def test():
     unique_id: str = session.get('unique_id')
     access_token: str = session.get('access_token')
     
+
     # Create Spotify client and RecEngine instance
-    sp = SpotifyClient(Spotify(auth=access_token))
-    re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
+    # sp = SpotifyClient(Spotify(auth=access_token))
+    # re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
 
-    print("OHE Features")
-    start_time = time.time()
-    ohe_rec_dataset = re.ohe_features(rec_dataset)
-    end_time = time.time()
+    # print("OHE Features")
+    # start_time = time.time()
+    # ohe_rec_dataset = re.ohe_features(rec_dataset)
+    # end_time = time.time()
 
-    print("Time taken:", end_time - start_time, "seconds")
-    ohe_rec_dataset.to_csv('ohe_rec_dataset.csv', index=False)
-    return jsonify({'message': 'Test successful'})
+    # print("Time taken:", end_time - start_time, "seconds")
+    # ohe_rec_dataset.to_csv('ohe_rec_dataset.csv', index=False)
+    # return jsonify({'message': 'Test successful'})
     
     # Get playlist ID from user input
     # playlist_id = input("Enter playlist ID: ")

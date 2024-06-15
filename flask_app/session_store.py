@@ -16,7 +16,7 @@ redis_pool = redis.ConnectionPool(
     db=REDIS_DB
 )
 
-class DataStore:
+class SessionStore:
     def __init__(self):
         self.redis = redis.Redis(connection_pool=redis_pool)
 
