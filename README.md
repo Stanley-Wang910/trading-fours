@@ -1,8 +1,8 @@
-![alt text](react_app\public\logot4.png)
+![alt text](react_app/public/logot4.png)
 
 trading fours is your own personalized Spotify recommendation engine.
 
-- Search for a playlist or song / or browse your own library of saved playlists directly on the site, and T4 will recommend alike tracks based on genre & track attributes
+- Search for a playlist or song / or browse your own library of saved playlists directly on the site, and T4 will recommend alike tracks based on genre & track attr\ibutes
 - Its thinking is influenced by what you have been listening to as of late, and will use that data to tailor the songs it recommends to you
 - Behind the scenes, user and song info is being safely handled and stored using MySQL, and the bulk of the recommendations is being done via Python, where playlist / track data is being processed and computed in a ~45 dimensional space against a dataset of over 200,000+ songs (and growing!) to provide the best recommendations.
 
