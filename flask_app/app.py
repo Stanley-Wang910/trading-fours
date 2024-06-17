@@ -96,15 +96,11 @@ def auth_callback():
         print(unique_id, "stored in session")
         session['display_name'] = display_name
 
-        re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
+        re = RecEngine(sp, unique_id, sql_work)
 
-        short_term_artists = re.get_user_top_artists() 
-        short_term_tracks = re.get_user_top_tracks()
-        session['top_artists'] = short_term_artists
-        session['top_tracks'] = short_term_tracks
-        session['top_last_cached'] = datetime.now().isoformat()
-
-        
+        # Re-evaluate if this needs to be recalculated each time
+        user_top_tracks, user_top_artists = check_user_top_data_session(unique_id, re)
+       
         # Redirecting or handling logic here
         return redirect('/')
     else:
@@ -128,6 +124,7 @@ def get_token():
 def clear_session():
 
     session.clear()
+    session_store.clear_all()
     return "Session data cleared"
 
 def refresh_token():
@@ -170,20 +167,43 @@ def refresh_token():
         
         if last_cached is None or datetime.now() - last_cached > recache_threshold:
 
-            re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
+            re = RecEngine(sp, unique_id, sql_work)
 
-            short_term_artists = re.get_user_top_artists()
-            short_term_tracks = re.get_user_top_tracks()
-            session['top_artists'] = short_term_artists
-            session['top_tracks'] = short_term_tracks
+            user_top_tracks, user_top_artists = check_user_top_data_session(unique_id, re)
 
         return True
     else:
         return False
 
 
+
+def check_user_top_data_session(unique_id, re):
+    redis_key_top_tracks = f"{unique_id}_top_tracks"
+    redis_key_top_artists = f"{unique_id}_top_artists"
+    user_top_tracks = session_store.get_data(redis_key_top_tracks)
+    user_top_artists = session_store.get_data(redis_key_top_artists)
+    if user_top_tracks:
+        print("User top tracks found")
+    else:
+        print("User top tracks not found")
+        user_top_tracks = re.get_user_top_tracks()
+        session_store.set_user_top_data(redis_key_top_tracks, user_top_tracks)
+        print("User top tracks saved")
+    if user_top_artists:
+        print("User top artists found")
+    else:
+        print("User top artists not found")
+        user_top_artists = re.get_user_top_artists()
+        session_store.set_user_top_data(redis_key_top_artists, user_top_artists)
+        print("User top artists saved")
+    return user_top_tracks, user_top_artists
+
+
 # Append Data to rec_dataset
 def append_to_dataset(data, choice):
+    session['append_counter'] = session.get('append_counter', 0) + 1
+    print("Append counter:", session['append_counter'])
+
     new_data = data.copy()
     if choice == 'track':
         new_data.drop('release_date', axis=1, inplace=True)  # Remove 'release_date' column if choice is 'track'
@@ -201,9 +221,7 @@ def get_playlist_data_session(link):
         playlist_name = session.get('playlist_name')
         top_genres = session.get('top_genres')
         top_ratios = session.get('top_ratios')
-        previously_recommended = session.get('recommended_songs', [])
-        print("Number of tracks previously recommended:", len(previously_recommended)) 
-        return p_vector, playlist_name, top_genres, top_ratios, previously_recommended
+        return p_vector, playlist_name, top_genres, top_ratios
     return None
 
 def get_track_data_session(link):
@@ -212,9 +230,7 @@ def get_track_data_session(link):
         track_name = session.get('track_name')
         artist_name = session.get('artist_name')
         release_date = session.get('release_date')
-        track_id = session.get('track_id')
-        previously_recommended = session.get('recommended_songs', [])
-        return t_vector, track_name, artist_name, release_date, track_id, previously_recommended
+        return t_vector, track_name, artist_name, release_date
     return None
 
 def save_playlist_data_session(playlist, link, re, sp):
@@ -235,7 +251,6 @@ def save_playlist_data_session(playlist, link, re, sp):
     return p_vector, playlist_name, top_genres, top_ratios
 
 def save_track_data_session(track, link, re, sp):
-    track_id = track['id'].tolist() # Get track ID
     track_name, artist_name, release_date = sp.get_playlist_track_name(link, 'track') # Get track name, artist name, and release date
     t_vector = re.track_vector(track) # Get track vector
     
@@ -245,9 +260,8 @@ def save_track_data_session(track, link, re, sp):
     session['track_name'] = track_name
     session['artist_name'] = artist_name
     session['release_date'] = release_date
-    session['track_id'] = track_id
     session['last_search'] = link
-    return t_vector, track_name, artist_name, release_date, track_id
+    return t_vector, track_name, artist_name, release_date
 
 @app.route('/recommend', methods=['GET'])
 def recommend():
@@ -258,8 +272,9 @@ def recommend():
             return redirect('/auth/login')
 
     sp = SpotifyClient(Spotify(auth=session.get('access_token'))) # Initialize SpotifyClient
-    
     unique_id = session.get('unique_id')
+    re = RecEngine(sp, unique_id, sql_work)
+
     link = request.args.get('link')
     if not link:
         return jsonify({'error': 'No link provided'}), 400 # Cannot process request
@@ -272,90 +287,77 @@ def recommend():
         type_id = 'playlist'
 
     redis_key = f'{unique_id}:{link}:{type_id}'
+    print(redis_key)
+    
+    user_top_tracks, _ = check_user_top_data_session(unique_id, re)
 
     if type_id == 'playlist':
         # Check if playlist data exists in session
         playlist_data = get_playlist_data_session(link)
-        # playlist_Data = session_store.get_data(redis_key)
         if playlist_data:
             print('Playlist data exists')
-            p_vector, playlist_name, top_genres, top_ratios, previously_recommended = playlist_data
-            re = RecEngine(sp, unique_id, sql_work, previously_recommended=previously_recommended)
+            p_vector, playlist_name, top_genres, top_ratios = playlist_data
+            stored_recommendations = session_store.get_data(redis_key)
+            track_ids = stored_recommendations['track_ids']
+            previously_recommended = stored_recommendations['recommended_ids']
+            # re = RecEngine(sp, unique_id, sql_work)
         else:
             print('Saving playlist data to session')
-            previously_recommended = session['recommended_songs'] = []
-            re = RecEngine(sp, unique_id, sql_work, previously_recommended=previously_recommended)
+            previously_recommended = []
+            # re = RecEngine(sp, unique_id, sql_work)
             playlist = sp.predict(link, type_id, class_items)
             playlist.to_csv('playlist.csv', index=False)
             track_ids = set(playlist['id'])
-            # track_ids.to_csv('track_ids.csv', index=False)
 
-            session['append_counter'] = session.get('append_counter', 0) + 1
-            print("Append counter:", session['append_counter'])
-
-            
             append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
             p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
             print(top_ratios)
         
-        # Get recommendations
-        
-        if 'top_tracks' in session:
-            user_top_tracks = session['top_tracks']
-            print("User top tracks found")
-        else:
-            print("User top tracks not found")
-            user_top_tracks = re.get_user_top_tracks()
-            session['top_tracks'] = user_top_tracks
-            
-
-        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, link, user_top_tracks, class_items, top_genres, top_ratios)
+        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, user_top_tracks, class_items, top_genres, top_ratios, previously_recommended)
 
     elif type_id == 'track':
         # Check if track data exists in session
         track_data = get_track_data_session(link)
         if track_data:
             print('Track data exists')
-            t_vector, track_name, artist_name, release_date, track_id, previously_recommended = track_data
-            re = RecEngine(sp, unique_id, sql_work, previously_recommended=previously_recommended)
+            t_vector, track_name, artist_name, release_date= track_data
+            stored_recommendations = session_store.get_data(redis_key)
+            track_ids = stored_recommendations['track_ids']
+            previously_recommended = stored_recommendations['recommended_ids']
+            # re = RecEngine(sp, unique_id, sql_work)
         else:
             print('Saving track data to session')
-            previously_recommended = session['recommended_songs'] = []
-            re = RecEngine(sp, unique_id, sql_work, previously_recommended=previously_recommended) 
+            previously_recommended = []
+            # re = RecEngine(sp, unique_id, sql_work) 
             track = sp.predict(link, type_id, class_items)
-            
-            session['append_counter'] = session.get('append_counter', 0) + 1
-            print("Append counter:", session['append_counter'])
-
+            track_ids = track['id'].tolist() # Get track ID
             
             append_to_dataset(track, type_id) # Append Track to dataset
             
-            t_vector, track_name, artist_name, release_date, track_id = save_track_data_session(track, link, re, sp) # Save Track data to session
-        
-        if 'top_tracks' in session:
-            user_top_tracks = session['top_tracks']
-            print("User top tracks found")
-        else:
-            print("User top tracks not found")
-            user_top_tracks = re.get_user_top_tracks()
-            session['top_tracks'] = user_top_tracks
-            
+            t_vector, track_name, artist_name, release_date = save_track_data_session(track, link, re, sp) # Save Track data to session
+               
         # Get recommendations
-        recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_id, user_top_tracks, class_items)
+        recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_ids, user_top_tracks, class_items, previously_recommended)
 
-    session_store.remove_data(redis_key)
     # Update recommended songs in session
+    print("Length of previously_recommended:", len(previously_recommended))
+    print("Length of recommended_ids:", len(recommended_ids))
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
-    session_store.set_data(redis_key, list(track_ids), list(updated_recommendations))
-
+    print("Length of updated_recommendations:", len(updated_recommendations))
+    session_store.set_prev_rec(redis_key, list(track_ids), list(updated_recommendations))
+    memory_usage = session_store.get_memory_usage(redis_key)
+    print("Memory usage:", memory_usage, "bytes") 
     stored_recommendations = session_store.get_data(redis_key)
     if stored_recommendations:
-        print("Stored recommendations:", stored_recommendations)
+        track_ids = stored_recommendations['track_ids']
+        prev_rec = stored_recommendations['recommended_ids']
+        duplicate_strings = len(set(prev_rec)) != len(prev_rec)
+        prev_rec_df = pd.DataFrame(prev_rec, columns=['prev_recommended_ids'])
+        print("Duplicate strings in recommended_ids:", duplicate_strings)
+        print("Length of track_ids:", len(track_ids))
+        print("Length of recommended_ids:", len(prev_rec))
     else:
         print("Stored recommendations not found")
-    # session['recommended_songs'] = list(updated_recommendations)
-
-    session['user_top_tracks'] = user_top_tracks
 
     if type_id == 'playlist':
         return jsonify({
@@ -404,10 +406,16 @@ def test():
     unique_id: str = session.get('unique_id')
     access_token: str = session.get('access_token')
     
+    # session_store.clear_all()
+    session_store.print_all_data()
+    
+
+    return jsonify({'message': 'Test successful'})
+
 
     # Create Spotify client and RecEngine instance
     # sp = SpotifyClient(Spotify(auth=access_token))
-    # re = RecEngine(sp, unique_id, sql_work, previously_recommended=[])
+    # re = RecEngine(sp, unique_id, sql_work)
 
     # print("OHE Features")
     # start_time = time.time()

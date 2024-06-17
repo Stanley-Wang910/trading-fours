@@ -20,8 +20,11 @@ class SessionStore:
     def __init__(self):
         self.redis = redis.Redis(connection_pool=redis_pool)
 
-    def set_data(self, key, track_ids, recommended_songs):
-        data = {'track_ids': track_ids, 'recommended_songs': recommended_songs}
+    def set_prev_rec(self, key, track_ids, recommended_songs):
+        data = {'track_ids': track_ids, 'recommended_ids': recommended_songs}
+        self.redis.set(key, json.dumps(data))
+    
+    def set_user_top_data(self, key, data):
         self.redis.set(key, json.dumps(data))
 
     def get_data(self, key):
@@ -33,3 +36,16 @@ class SessionStore:
 
     def remove_data(self, key):
         self.redis.delete(key)
+
+    def clear_all(self):
+        self.redis.flushdb()
+
+    def print_all_data(self):
+        for key in self.redis.scan_iter():
+            data_str = self.redis.get(key)
+            if data_str:
+                data = json.loads(data_str)
+                print(f'Key: {key}, Data: {data}')
+
+    def get_memory_usage(self, key):
+        return self.redis.memory_usage(key) 

@@ -1,4 +1,4 @@
-![alt text](logot4.png)
+![alt text](react_app\public\logot4.png)
 
 trading fours is your own personalized Spotify recommendation engine.
 
@@ -10,13 +10,19 @@ trading fours is your own personalized Spotify recommendation engine.
 
 [![YouTube Video Demo](https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/78ccde6e-b337-481d-92a2-ca0e2c796504)](https://youtu.be/vhLH-nkAxKA?si=VowvksWtWva9jXmC)
 
+## Recent Additions
+
+1. Personalized Recommendations by Artist & User
+2. Engine Optimization for Faster Recommendation Turnaround
+3. Pagination Handling for Spotify API to Grab All Tracks in Playlists > 100 tracks
+4. Redis Cloud Session Storage for Higher Memory Limits
+5. Smarter diversification of Recommendations, Tailored to the Taste Profile of the User & Playlist
+
 ## Features Coming Soon
 
-1. Explicit Feedback Recommendation Implementation
-2. Personalized Recommendations By Artist
-3. Recommendations for Users and Friends!
-4. Recommendation Info Visualization
-5. App Hosting
+1. Recommendations for Users and Friends!
+2. Recommendation Info Visualization
+3. App Hosting
 
 ## Contact
 

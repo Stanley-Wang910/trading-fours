@@ -80,8 +80,8 @@ class SpotifyClient:
         Returns:
         - playlist_with_features (pd.DataFrame): A DataFrame containing the playlist tracks and their audio features.
         """
+        print("-> sp:analyze_playlist()")
         if isinstance(input_data, str):
-            print("Getting track IDs from playlist...")
             start_time = time.time()
             # Input is a playlist ID
             playlist_id = input_data
@@ -102,13 +102,14 @@ class SpotifyClient:
                         'explicit': track_item['track']['explicit']
                     }
                     for track_item in playlist_tracks['items']
-                    if track_item['track'] and track_item['track']['id']
+                    if track_item['track'] and track_item['track']['id'] and track_item['track']['type'] == 'track'
                 ])
                 if playlist_tracks['next']:
                     playlist_tracks = self.sp.next(playlist_tracks)
                 else:
                     playlist_tracks = None
 
+            print("Tracks IDs retrieved in {:.2f} seconds.".format(time.time() - start_time))
             # Create a DataFrame from the playlist data
             playlist = pd.DataFrame(playlist_data)
             playlist['date_added'] = pd.to_datetime(playlist['date_added'])
@@ -117,7 +118,7 @@ class SpotifyClient:
 
             # Retrieve the track IDs from the playlist
             track_ids = playlist['id'].tolist()
-            print("Track IDs retrieved in {:.2f} seconds.".format(time.time() - start_time))
+            print("Track organized in {:.2f} seconds.".format(time.time() - start_time))
             
         elif isinstance(input_data, list):
             # Input is a list of track IDs
@@ -141,6 +142,7 @@ class SpotifyClient:
         if type_analyze == 'rec':
             return track_ids
         
+        # Handle Pagination
         def chunks(lst, n):
             for i in range(0, len(lst), n):
                 yield lst[i:i + n]
@@ -191,6 +193,7 @@ class SpotifyClient:
         Returns:
             pandas.DataFrame: A DataFrame containing the audio features of the tracks, along with additional information such as artist, name, popularity, and explicitness.
         """
+        print("-> sp:get_song_features()")
         if not track_ids:
             print("No track provided.")
             return
@@ -290,6 +293,7 @@ class SpotifyClient:
         return top_tracks
 
     def predict(self, data_entry, choice, class_items):
+        print("-> sp:predict()")
         model = class_items['model']
         scaler = class_items['scaler']
         label_encoder = class_items['label_encoder']
@@ -301,7 +305,7 @@ class SpotifyClient:
             release_date = data['release_date']
             data.drop('release_date', axis=1, inplace=True)
         elif (choice == 'playlist'):
-            data = self.analyze_playlist(data_entry) # do this, don't need to do again
+            data = self.analyze_playlist(data_entry)
             
         print("Predicting...")
         start_time = time.time()
