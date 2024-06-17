@@ -619,7 +619,20 @@ class SQLWork:
         finally:
             cursor.close()
             connection.close()
-            
+    
+    def update_user_recommendation_count(self, unique, recommendation_count):
+        connection = self.pool.get_connection()
+        try:
+            cursor = connection.cursor()
+            query = "UPDATE users SET rec_count = rec_count + %s WHERE unique_id = %s"
+            cursor.execute(query, (recommendation_count, unique))
+            connection.commit()
+            print('User recommendation count updated in database')
+        except mysql.connector.Error as e:
+            print(f"Error updating user recommendation count in database: {e}")
+        finally:
+            cursor.close()
+            connection.close()
 
        
     

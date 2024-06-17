@@ -340,8 +340,6 @@ def recommend():
         recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_ids, user_top_tracks, class_items, previously_recommended)
 
     # Update recommended songs in session
-    print("Length of previously_recommended:", len(previously_recommended))
-    print("Length of recommended_ids:", len(recommended_ids))
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
     print("Length of updated_recommendations:", len(updated_recommendations))
     session_store.set_prev_rec(redis_key, list(track_ids), list(updated_recommendations))
@@ -358,6 +356,9 @@ def recommend():
         print("Length of recommended_ids:", len(prev_rec))
     else:
         print("Stored recommendations not found")
+    start_time = time.time()    
+    sql_work.update_user_recommendation_count(unique_id, len(recommended_ids))
+    print("Time taken to update user recommendation count:", time.time() - start_time)
 
     if type_id == 'playlist':
         return jsonify({
