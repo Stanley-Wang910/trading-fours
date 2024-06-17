@@ -1,4 +1,4 @@
-![alt text](react_app/public/logot4.png)
+![alt text](/react_app/public/logot4.png)
 
 trading fours is your own personalized Spotify recommendation engine.
 
