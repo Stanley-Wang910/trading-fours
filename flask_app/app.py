@@ -122,15 +122,17 @@ def get_token():
 
 @app.route('/auth/logout')
 def clear_session():
-
+    unique_id = session.get('unique_id')
     session.clear()
-    session_store.clear_all()
+    session_store.clear_user_cache(unique_id)
+    session_store.remove_user_data(unique_id)
+
     return "Session data cleared"
 
 def refresh_token():
     if 'refresh_token' not in session:
         return False
-
+    print("-> app.py:refresh_token()")
     client_id = os.getenv('SPOTIFY_CLIENT_ID')
     client_secret = os.getenv('SPOTIFY_CLIENT_SECRET')
 
@@ -184,6 +186,7 @@ def check_user_top_data_session(unique_id, re):
     user_top_artists = session_store.get_data(redis_key_top_artists)
     if user_top_tracks:
         print("User top tracks found")
+        ##Add recache function here
     else:
         print("User top tracks not found")
         user_top_tracks = re.get_user_top_tracks()
@@ -266,6 +269,7 @@ def save_track_data_session(track, link, re, sp):
 @app.route('/recommend', methods=['GET'])
 def recommend():
 
+    start_finish_time = time.time()
     # Check if the access token is expired and refresh if necessary
     if is_token_expired():
         if not refresh_token():
@@ -289,7 +293,7 @@ def recommend():
     redis_key = f'{unique_id}:{link}:{type_id}'
     print(redis_key)
     
-    user_top_tracks, _ = check_user_top_data_session(unique_id, re)
+    user_top_tracks, user_top_artists = check_user_top_data_session(unique_id, re)
 
     if type_id == 'playlist':
         # Check if playlist data exists in session
@@ -313,22 +317,20 @@ def recommend():
             p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
             print(top_ratios)
         
-        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, user_top_tracks, class_items, top_genres, top_ratios, previously_recommended)
+        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, user_top_tracks, user_top_artists, class_items, top_genres, top_ratios, previously_recommended)
 
     elif type_id == 'track':
         # Check if track data exists in session
         track_data = get_track_data_session(link)
         if track_data:
             print('Track data exists')
-            t_vector, track_name, artist_name, release_date= track_data
+            t_vector, track_name, artist_name, release_date = track_data
             stored_recommendations = session_store.get_data(redis_key)
             track_ids = stored_recommendations['track_ids']
             previously_recommended = stored_recommendations['recommended_ids']
-            # re = RecEngine(sp, unique_id, sql_work)
         else:
             print('Saving track data to session')
             previously_recommended = []
-            # re = RecEngine(sp, unique_id, sql_work) 
             track = sp.predict(link, type_id, class_items)
             track_ids = track['id'].tolist() # Get track ID
             
@@ -359,7 +361,7 @@ def recommend():
     start_time = time.time()    
     sql_work.update_user_recommendation_count(unique_id, len(recommended_ids))
     print("Time taken to update user recommendation count:", time.time() - start_time)
-
+    print("Time taken to get recommendations:", time.time() - start_finish_time)
     if type_id == 'playlist':
         return jsonify({
             'playlist': playlist_name,
@@ -406,87 +408,86 @@ def save_favorited():
 def test():
     unique_id: str = session.get('unique_id')
     access_token: str = session.get('access_token')
-    
-    # session_store.clear_all()
-    session_store.print_all_data()
-    
-
-    return jsonify({'message': 'Test successful'})
-
 
     # Create Spotify client and RecEngine instance
-    # sp = SpotifyClient(Spotify(auth=access_token))
-    # re = RecEngine(sp, unique_id, sql_work)
+    sp = SpotifyClient(Spotify(auth=access_token))
+    re = RecEngine(sp, unique_id, sql_work)
 
-    # print("OHE Features")
-    # start_time = time.time()
-    # ohe_rec_dataset = re.ohe_features(rec_dataset)
-    # end_time = time.time()
+    session_store.remove_user_data(unique_id)
 
-    # print("Time taken:", end_time - start_time, "seconds")
-    # ohe_rec_dataset.to_csv('ohe_rec_dataset.csv', index=False)
-    # return jsonify({'message': 'Test successful'})
-    
-    # Get playlist ID from user input
+    top_tracks, top_artists = check_user_top_data_session(unique_id, re)
+
+    # session_store.clear_user_cache(unique_id=unique_id)
+
+    return jsonify({'message': 'Test route is working'})    
+    # # Get playlist ID from user input
     # playlist_id = input("Enter playlist ID: ")
     # playlist_id = playlist_id.split("/")[-1].split("?")[0]
 
-    # track = sp.predict(playlist_id, 'track', class_items)
-    # track.to_csv('track.csv')
 
-    # track_vector = re.track_vector(track)
-    # track_genre_column = track_vector.columns[(track_vector.columns.str.startswith('track_genre_')) & (track_vector.iloc[0] == 1)].tolist()
-    # if track_genre_column:
-    #     track_genre = track_genre_column[0].replace('track_genre_', '')
-    # print(track_genre)
-    # playlist_id = input("Enter playlist ID: ")
-    # playlist_id = playlist_id.split("/")[-1].split("?")[0]
-
-    # playlist = sp.predict(playlist_id, 'playlist', class_items)
-    # playlist.to_csv('playlist.csv')
-
-    # return jsonify('hello')
-
+    # start_finish = time.time()
     # # Process playlist
-    # recommend_playlist = sp.predict(playlist_id, 'playlist', class_items)
 
+    # ## NOTE: Done in Recommend Route
+    # playlist = sp.predict(playlist_id, 'playlist', class_items)
+    # track_ids = set(playlist['id'])
 
-    # recommend_p_vector = re.playlist_vector(recommend_playlist)
-    # recommend_top_genres, genre_ratios = re.get_top_genres(recommend_p_vector)
-    # print(recommend_top_genres)
-    # print(genre_ratios)
+    # ## NOTE: Done in Recommend Route
+    # p_vector = re.playlist_vector(playlist)
+    # top_genres, top_ratios = re.get_top_genres(p_vector)
+    # print(top_ratios)
 
+    # ## NOTE: Done in Recommend Route
     # # Get user top artists
-    # # short_term = re.get_user_top_artists() #
-    # short_term = session.get('top_artists')
-    # artist_names = [artist['artist_name'] for artist in short_term]
-    # print(artist_names)
+    # start_time = time.time()
+    # top_tracks, top_artists = check_user_top_data_session(unique_id, re)
+    # print("Time taken to get top artists and tracks from session:", time.time() - start_time)
+
+    # ## NOTE: NOT Done in Recommend Route
+    # top_artist_names = [artist['artist_name'] for artist in top_artists]
+    # # print("Top artists:", top_artist_names)
+
+    # ## NOTE: NOT Done in Recommend Route
     # # Get tracks by top short term artists
-    # tracks_by_artists_df = sql_work.get_tracks_by_artists(artist_names)
+    # start_time = time.time()
+    # tracks_by_artists_df = rec_dataset[rec_dataset['artists'].isin(top_artist_names)]
+    # print("Time taken to get tracks by artists from SQL:", time.time() - start_time)
 
+    # ## NOTE: NOT Done in Recommend Route
     # # Tracks by artists sorted by similarity
-    # top_3_artists = re.find_similar_artists(tracks_by_artists_df, recommend_p_vector, playlist_id, class_items, recommend_top_genres, genre_ratios)
+    # start_time = time.time()
+    # top_3_artists = re.find_similar_artists(tracks_by_artists_df, p_vector, track_ids, class_items, top_genres, top_ratios)
     # print(top_3_artists)
-    # artist_ids = [artist['artist_id'] for artist in short_term if artist['artist_name'] in top_3_artists]
+    # print("Time taken to find similar artists:", time.time() - start_time)
+
+    # artist_ids = [artist['artist_id'] for artist in top_artists if artist['artist_name'] in top_3_artists]
     # # Get related artists
-    # related_artists = re.get_related_artists(artist_ids, short_term)
-    # artist_names = set()
+    # start_time = time.time()
+    # related_artists = re.get_related_artists(artist_ids, top_artists)
+    # print("Time taken to get related artists:", time.time() - start_time)   
+    
+    # top_artist_names = set()
     # for main_artist, related_artist in related_artists.items():
-    #     artist_names.add(main_artist)
-    #     artist_names.update(related_artist.values())
+    #     top_artist_names.add(main_artist)
+    #     top_artist_names.update(related_artist.values())
 
-    # artist_names = list(artist_names)
+    # top_artist_names = list(top_artist_names)
     # # Keep in cache and run randomize each revisit to the route
-    # random_artists = random.sample(artist_names, 6)
-    # print(random_artists)
+    # random_artists = random.sample(top_artist_names, 6)
+    # print('Random related artists:', random_artists)
 
-    # related_artists_df = sql_work.get_tracks_by_artists(random_artists)
-    # related_artists_df.to_csv('related_artists.csv', index=False)
+    # start_time = time.time()
+    # # related_artists_df = sql_work.get_tracks_by_artists(random_artists)
+    # related_artists_df = rec_dataset[rec_dataset['artists'].isin(random_artists)]
+    # print("Time taken to get tracks by related artists:", time.time() - start_time) ## need to get from sql if I have rec_dataset in play?
+    # related_artists_df.to_csv('related_artists_songs.csv', index=False)
 
-    # user_top_tracks = session['top_tracks']
-    # recommended_ids = re.recommend_by_playlist(related_artists_df, recommend_p_vector, playlist_id, user_top_tracks, class_items)
-   
-    # return jsonify(artist_names)
+    # start_time = time.time()
+    # ## Maybe don't use personalized vector in this instance
+    # recommended_ids = re.recommend_by_playlist(related_artists_df, p_vector, track_ids, top_tracks, class_items, top_genres, top_ratios, recommended_ids=[])
+    
+    # print("Time taken to get recommended tracks:", time.time() - start_finish)
+    # return jsonify(top_artist_names)
 
 
 if __name__ == '__main__':

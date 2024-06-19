@@ -109,7 +109,6 @@ class SpotifyClient:
                 else:
                     playlist_tracks = None
 
-            print("Tracks IDs retrieved in {:.2f} seconds.".format(time.time() - start_time))
             # Create a DataFrame from the playlist data
             playlist = pd.DataFrame(playlist_data)
             playlist['date_added'] = pd.to_datetime(playlist['date_added'])
@@ -118,7 +117,7 @@ class SpotifyClient:
 
             # Retrieve the track IDs from the playlist
             track_ids = playlist['id'].tolist()
-            print("Track organized in {:.2f} seconds.".format(time.time() - start_time))
+            print("Playlist tracks received and organized in {:.2f} seconds.".format(time.time() - start_time))
             
         elif isinstance(input_data, list):
             # Input is a list of track IDs
@@ -166,6 +165,7 @@ class SpotifyClient:
 
         playlist_with_features = self.rearrange_columns(playlist_with_features)
         
+        print('<- sp:analyze_playlist()')
         # Return the resulting DataFrame
         return playlist_with_features
 
@@ -344,6 +344,7 @@ class SpotifyClient:
         
         print("Prediction completed in {:.2f} seconds.".format(time.time() - start_time))
         # Return the data DataFrame with predicted genre labels
+        print('<- sp:predict()')
         return data
 
    
