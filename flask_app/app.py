@@ -224,6 +224,7 @@ def get_playlist_data_session(link):
         playlist_name = session.get('playlist_name')
         top_genres = session.get('top_genres')
         top_ratios = session.get('top_ratios')
+        print(top_ratios)
         return p_vector, playlist_name, top_genres, top_ratios
     return None
 
@@ -420,74 +421,6 @@ def test():
     # session_store.clear_user_cache(unique_id=unique_id)
 
     return jsonify({'message': 'Test route is working'})    
-    # # Get playlist ID from user input
-    # playlist_id = input("Enter playlist ID: ")
-    # playlist_id = playlist_id.split("/")[-1].split("?")[0]
-
-
-    # start_finish = time.time()
-    # # Process playlist
-
-    # ## NOTE: Done in Recommend Route
-    # playlist = sp.predict(playlist_id, 'playlist', class_items)
-    # track_ids = set(playlist['id'])
-
-    # ## NOTE: Done in Recommend Route
-    # p_vector = re.playlist_vector(playlist)
-    # top_genres, top_ratios = re.get_top_genres(p_vector)
-    # print(top_ratios)
-
-    # ## NOTE: Done in Recommend Route
-    # # Get user top artists
-    # start_time = time.time()
-    # top_tracks, top_artists = check_user_top_data_session(unique_id, re)
-    # print("Time taken to get top artists and tracks from session:", time.time() - start_time)
-
-    # ## NOTE: NOT Done in Recommend Route
-    # top_artist_names = [artist['artist_name'] for artist in top_artists]
-    # # print("Top artists:", top_artist_names)
-
-    # ## NOTE: NOT Done in Recommend Route
-    # # Get tracks by top short term artists
-    # start_time = time.time()
-    # tracks_by_artists_df = rec_dataset[rec_dataset['artists'].isin(top_artist_names)]
-    # print("Time taken to get tracks by artists from SQL:", time.time() - start_time)
-
-    # ## NOTE: NOT Done in Recommend Route
-    # # Tracks by artists sorted by similarity
-    # start_time = time.time()
-    # top_3_artists = re.find_similar_artists(tracks_by_artists_df, p_vector, track_ids, class_items, top_genres, top_ratios)
-    # print(top_3_artists)
-    # print("Time taken to find similar artists:", time.time() - start_time)
-
-    # artist_ids = [artist['artist_id'] for artist in top_artists if artist['artist_name'] in top_3_artists]
-    # # Get related artists
-    # start_time = time.time()
-    # related_artists = re.get_related_artists(artist_ids, top_artists)
-    # print("Time taken to get related artists:", time.time() - start_time)   
-    
-    # top_artist_names = set()
-    # for main_artist, related_artist in related_artists.items():
-    #     top_artist_names.add(main_artist)
-    #     top_artist_names.update(related_artist.values())
-
-    # top_artist_names = list(top_artist_names)
-    # # Keep in cache and run randomize each revisit to the route
-    # random_artists = random.sample(top_artist_names, 6)
-    # print('Random related artists:', random_artists)
-
-    # start_time = time.time()
-    # # related_artists_df = sql_work.get_tracks_by_artists(random_artists)
-    # related_artists_df = rec_dataset[rec_dataset['artists'].isin(random_artists)]
-    # print("Time taken to get tracks by related artists:", time.time() - start_time) ## need to get from sql if I have rec_dataset in play?
-    # related_artists_df.to_csv('related_artists_songs.csv', index=False)
-
-    # start_time = time.time()
-    # ## Maybe don't use personalized vector in this instance
-    # recommended_ids = re.recommend_by_playlist(related_artists_df, p_vector, track_ids, top_tracks, class_items, top_genres, top_ratios, recommended_ids=[])
-    
-    # print("Time taken to get recommended tracks:", time.time() - start_finish)
-    # return jsonify(top_artist_names)
 
 
 if __name__ == '__main__':

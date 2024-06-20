@@ -11,7 +11,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
   const [showMeteors, setShowMeteors] = useState(false);
   const [containerHeight, setContainerHeight] = useState(575); // Set the starting height
   const [clickedLikes, setClickedLikes] = useState([]);
-
+  const [animate, setAnimate] = useState(false);
   
   // Constants
   const maxHeight = 3000; // Set the maximum height for recommendations container
@@ -52,8 +52,10 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
   // Set the initial number of visible embeds
   useEffect(() => {
     if (recommendations) {
+      setAnimate(true);
       const initialVisibleEmbeds = isPlaylist ? 5 : 5; // Set initial number of visible embeds based on whether it's a playlist or not
       setVisibleEmbeds(initialVisibleEmbeds);
+
     }
   }, [recommendations]);
 
@@ -126,7 +128,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
           </h2>
         )}
         {/* <div className="recommendations-container p-4 bg-gradient-to-r from-gray-800 to-gray-600 shadow-2xl rounded-2xl transform overflow"> */}
-        <div className="recommendations-container p-5 w-full bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative overflow-hidden container-transition" style={{ '--container-height': `${containerHeight}px` }}>
+        <div className={`recommendations-container p-5 w-full bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative overflow-hidden container-transition opacity-0 ${animate ? 'recs-fade-up' : ''}`} style={{ '--container-height': `${containerHeight}px` }}>
         {showMeteors && (
           <Meteors
             number={25}

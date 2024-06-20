@@ -31,9 +31,6 @@ def load_environment_variables():
     )
     rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", cnx)
     rec_dataset = rec_dataset.drop('id', axis=1)
-    # rec_dataset.to_csv('testrecdata.csv', index=False)
-
-
 
     scope ='playlist-read-private user-library-read'
     return client_id, client_secret, redirect_uri, user_id, scope, rec_dataset

@@ -78,7 +78,11 @@ class RecEngine:
         top_artist_names = [artist['artist_name'] for artist in user_top_artists]
         # Prepare data for recommendation
         final_playlist_vector, final_rec_df, recommendations_df, top_artists_tracks, top_artists_tracks_ohe = self.prepare_data(self.sp, rec_dataset, final_playlist_vector, track_ids, recommended_ids, top_artist_names)
-       
+        
+
+        top_ratios = dict(sorted(top_ratios.items(), key=lambda item: item[1], reverse=True))
+        print(top_genres)
+        print(top_ratios)
         weights = self.create_weights(top_genres, top_ratios)
         
         # Apply weights to the top genres
@@ -96,7 +100,9 @@ class RecEngine:
             related_artists_tracks_ohe = self.apply_weights(related_artists_tracks_ohe, weights)
             artist_recs_df = self.calc_cosine_similarity(related_artists_tracks_ohe, final_playlist_vector, related_artists_tracks, weights)
             artist_recs_df = artist_recs_df.sort_values(by='similarity', ascending=False)
+            
             artist_recs_df.to_csv('artist_recs.csv', index=False)
+
         # Calculate cosine similarity between final playlist vector and recommendations
         personalized_vector = self.similar_top_tracks(final_playlist_vector, weights, user_top_tracks, class_items)
 
@@ -113,14 +119,14 @@ class RecEngine:
             genre_songs = recommendations_df[recommendations_df['track_genre'] == genre]
             top_songs = pd.concat([top_songs, genre_songs.nlargest(90 // len(top_genres), 'similarity')])
         
-        top_songs.to_csv('top_songs.csv', index=False)
+        # top_songs.to_csv('top_songs.csv', index=False)
 
         # If no songs are found, return an empty list
         if top_songs.empty:
             return []
         
         # Finalize and update the recommended songs
-        top_recommendations_df = self.finalize_update_recommendations(top_songs, 'playlist', top_ratios)
+        top_recommendations_df = self.finalize_update_recommendations(top_songs, 'playlist', artist_recs_df, top_ratios)
         # When sending in top_songs from related_artists function, make sure to handle the case where there are not enough representation of top 3 genres / change so that it is not limited to the top 3 genres
         return top_recommendations_df
 
@@ -266,7 +272,7 @@ class RecEngine:
         
         if top_artist_names is not None:
             final_artists_tracks_df.fillna(0, inplace=True)
-            final_artists_tracks_df.to_csv('final_artists_tracks_df.csv', index=False)
+            # final_artists_tracks_df.to_csv('final_artists_tracks_df.csv', index=False)
         
         
         print("<- re:prepare_data()")
@@ -298,33 +304,66 @@ class RecEngine:
         weights = recommendations_df['track_genre'].map(weights).fillna(nan_weight)
         recommendations_df['similarity'] *= weights
 
-        print("Calculation Recommendations... :", time.time() - start_time, "seconds")
+        print("Calculating Recommendations... :", time.time() - start_time, "seconds")
         print("<- re:calc_cosine_similarity()")
         return recommendations_df
 
-    def finalize_update_recommendations(self, top_songs, type, top_ratios={}):
+    def finalize_update_recommendations(self, top_songs, type, artist_recs=[], top_ratios={}):
         print('-> re:finalize_update_recommendations()')
-        top_songs = top_songs.drop_duplicates(subset=['track_name', 'artists'], keep='first')        
+        top_songs = top_songs.drop_duplicates(subset=['track_name', 'artists'], keep='first')     
+        if not isinstance(artist_recs, list):      
+            artist_recs = artist_recs.drop_duplicates(subset=['track_name', 'artists'], keep='first')
+            artist_recs = artist_recs[~artist_recs['track_id'].isin(top_songs['track_id'])]
         selected_songs = pd.DataFrame(columns=top_songs.columns)
 
         if type == 'track':
             selected_songs = top_songs.sample(15)
         elif type == 'playlist':
             total_songs = 30 
-
+            artist_rec_interval = 5 # Show once per 5 songs
             total_ratio = sum(top_ratios.values())
             proportions = {genre: ratio / total_ratio for genre, ratio in top_ratios.items()}
             genre_counts = {genre: int(total_songs * proportion) for genre, proportion in proportions.items()}
             print(genre_counts)
             remaining_songs = total_songs - sum(genre_counts.values())  
-
+            
+            start_time = time.time()    
+            # Select songs based on genre counts
             for genre in genre_counts:
                 genre_songs = top_songs[top_songs['track_genre'] == genre].head(genre_counts[genre])
                 selected_songs = pd.concat([selected_songs, genre_songs], ignore_index=True)
-
             if remaining_songs > 0:
                 remaining_songs_df = top_songs[~top_songs['track_id'].isin(selected_songs['track_id'])].head(remaining_songs)
                 selected_songs = pd.concat([selected_songs, remaining_songs_df], ignore_index=True)
+            unique_artists = artist_recs['artists'].unique()
+            used_artists = set()
+            artist_index = 0
+            for i in range(artist_rec_interval - 1, len(selected_songs), artist_rec_interval):
+                if artist_index >= len(unique_artists):
+                    artist_index = 0
+                    used_artists.clear()
+                artist = unique_artists[artist_index]
+                while artist in used_artists and artist_index < len(unique_artists):
+                    artist_index += 1
+                    if artist_index >= len(unique_artists):
+                        artist_index = 0
+                        used_artists.clear()
+                    artist = unique_artists[artist_index]
+                used_artists.add(artist)
+                genre = selected_songs.iloc[i]['track_genre']
+                artist_genre_recs = artist_recs[(artist_recs['artists'] == artist) & (artist_recs['track_genre'] == genre)]
+                if artist_genre_recs.empty:
+                    artist_genre_recs = artist_recs[artist_recs['artists'] == artist].head(1)
+                if not artist_genre_recs.empty:
+                    selected_song = artist_genre_recs.iloc[0]
+                    artist_recs = artist_recs[artist_recs['track_id'] != selected_song['track_id']]
+                    selected_songs = pd.concat([selected_songs.iloc[:i], artist_genre_recs.iloc[:1], selected_songs.iloc[i + 1:]], ignore_index=True)
+                else:
+                    selected_songs = pd.concat([selected_songs.iloc[:i], selected_songs.iloc[i:]], ignore_index=True)
+            
+                artist_index += 1
+
+            print("Combining recommendations... :", time.time() - start_time, "seconds")
 
         recommended_ids = selected_songs['track_id'].tolist()
         
