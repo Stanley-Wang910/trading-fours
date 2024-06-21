@@ -107,11 +107,14 @@ class SQLWork:
                 name = playlist['name']
                 image_url = playlist['images'][0]['url'] if playlist['images'] else None
                 
-                query = f"INSERT INTO playlists (playlist_id, unique_id, name, image_url) " \
-                        f"SELECT %s, %s, %s, %s " \
-                        f"WHERE NOT EXISTS (SELECT 1 FROM playlists WHERE playlist_id = %s AND unique_id = %s);"
-                
-                cursor.execute(query, (playlist_id, unique_id, name, image_url, playlist_id, unique_id))
+                # Check if the playlist already exists in the database
+                query = """
+                    INSERT INTO playlists (playlist_id, unique_id, name, image_url)
+                    VALUES (%s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE name = VALUES(name), image_url = VALUES(image_url)
+                """
+                cursor.execute(query, (playlist_id, unique_id, name, image_url))
+                    
             print('Playlists added to database')    
             connection.commit()
         except mysql.connector.Error as e:
@@ -330,6 +333,7 @@ class SQLWork:
 
     def get_unique_user_playlist(self, unique_id):
         connection = self.pool.get_connection()
+        
         try:
             cursor = connection.cursor()
             query = f"SELECT name, playlist_id, image_url, unique_id FROM playlists WHERE unique_id = '{unique_id}';"    
