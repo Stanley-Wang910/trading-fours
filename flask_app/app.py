@@ -31,6 +31,8 @@ import time
 load_dotenv()
 
 app = Flask(__name__)
+app.config["JSON_SORT_KEYS"] = False # Prevent jsonify from sorting keys in dict - Fix to top_ratios genre reordering
+
 CORS(app)
 
 
@@ -182,22 +184,25 @@ def refresh_token():
 def check_user_top_data_session(unique_id, re):
     redis_key_top_tracks = f"{unique_id}_top_tracks"
     redis_key_top_artists = f"{unique_id}_top_artists"
-    user_top_tracks = session_store.get_data(redis_key_top_tracks)
-    user_top_artists = session_store.get_data(redis_key_top_artists)
+    user_top_tracks = session_store.get_data_cache(redis_key_top_tracks)
+    user_top_artists = session_store.get_data_cache(redis_key_top_artists)
     if user_top_tracks:
         print("User top tracks found")
-        ##Add recache function here
     else:
         print("User top tracks not found")
-        user_top_tracks = re.get_user_top_tracks()
-        session_store.set_user_top_data(redis_key_top_tracks, user_top_tracks)
+        user_top_tracks = session_store.get_data_json(redis_key_top_tracks)
+        if user_top_tracks is None:        
+            user_top_tracks = re.get_user_top_tracks()
+            session_store.set_user_top_data(redis_key_top_tracks, user_top_tracks)
         print("User top tracks saved")
     if user_top_artists:
         print("User top artists found")
     else:
         print("User top artists not found")
-        user_top_artists = re.get_user_top_artists()
-        session_store.set_user_top_data(redis_key_top_artists, user_top_artists)
+        user_top_artists = session_store.get_data_json(redis_key_top_artists)
+        if user_top_artists is None:
+            user_top_artists = re.get_user_top_artists()
+            session_store.set_user_top_data(redis_key_top_artists, user_top_artists)
         print("User top artists saved")
     return user_top_tracks, user_top_artists
 
@@ -224,7 +229,6 @@ def get_playlist_data_session(link):
         playlist_name = session.get('playlist_name')
         top_genres = session.get('top_genres')
         top_ratios = session.get('top_ratios')
-        print(top_ratios)
         return p_vector, playlist_name, top_genres, top_ratios
     return None
 
@@ -242,8 +246,8 @@ def save_playlist_data_session(playlist, link, re, sp):
     playlist_name = sp.get_playlist_track_name(link) # Get playlist name
     top_genres, top_ratios = re.get_top_genres(p_vector) # Get top genres
     playlist_ids = playlist['id'].tolist() # Get playlist track IDs
-    # top_genres = top_genres.tolist() 
-
+    print("top ratios in save_playlist_data_session:", top_ratios)
+    # Save playlist data to database
     # Save playlist data to session
     p_vector_dict = p_vector.to_dict(orient='records')[0]
     sql_work.add_vector_to_db(p_vector_dict, link, 'playlist')
@@ -256,8 +260,7 @@ def save_playlist_data_session(playlist, link, re, sp):
 
 def save_track_data_session(track, link, re, sp):
     track_name, artist_name, release_date = sp.get_playlist_track_name(link, 'track') # Get track name, artist name, and release date
-    t_vector = re.track_vector(track) # Get track vector
-    
+    t_vector = re.track_vector(track) 
     # Save track data to session
     t_vector_dict = t_vector.to_dict(orient='records')[0]
     sql_work.add_vector_to_db(t_vector_dict, link, 'track')
@@ -302,7 +305,9 @@ def recommend():
         if playlist_data:
             print('Playlist data exists')
             p_vector, playlist_name, top_genres, top_ratios = playlist_data
-            stored_recommendations = session_store.get_data(redis_key)
+            stored_recommendations = session_store.get_data_cache(redis_key)
+            if not stored_recommendations:
+                stored_recommendations = session_store.get_data_json(redis_key)
             track_ids = stored_recommendations['track_ids']
             previously_recommended = stored_recommendations['recommended_ids']
             # re = RecEngine(sp, unique_id, sql_work)
@@ -316,7 +321,7 @@ def recommend():
 
             append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
             p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
-            print(top_ratios)
+            print("top ratios in recommend:", top_ratios)
         
         recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, user_top_tracks, user_top_artists, class_items, top_genres, top_ratios, previously_recommended)
 
@@ -326,7 +331,9 @@ def recommend():
         if track_data:
             print('Track data exists')
             t_vector, track_name, artist_name, release_date = track_data
-            stored_recommendations = session_store.get_data(redis_key)
+            stored_recommendations = session_store.get_data_cache(redis_key)
+            if not stored_recommendations:
+                stored_recommendations = session_store.get_data_json(redis_key)
             track_ids = stored_recommendations['track_ids']
             previously_recommended = stored_recommendations['recommended_ids']
         else:
@@ -344,25 +351,26 @@ def recommend():
 
     # Update recommended songs in session
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
-    print("Length of updated_recommendations:", len(updated_recommendations))
     session_store.set_prev_rec(redis_key, list(track_ids), list(updated_recommendations))
-    memory_usage = session_store.get_memory_usage(redis_key)
-    print("Memory usage:", memory_usage, "bytes") 
-    stored_recommendations = session_store.get_data(redis_key)
+    stored_recommendations = session_store.get_data_cache(redis_key)
+    if stored_recommendations is None:
+        stored_recommendations = session_store.get_data_json(redis_key)
+        print("Got recommendations from key")
+
     if stored_recommendations:
         track_ids = stored_recommendations['track_ids']
         prev_rec = stored_recommendations['recommended_ids']
         duplicate_strings = len(set(prev_rec)) != len(prev_rec)
         prev_rec_df = pd.DataFrame(prev_rec, columns=['prev_recommended_ids'])
         print("Duplicate strings in recommended_ids:", duplicate_strings)
-        print("Length of track_ids:", len(track_ids))
         print("Length of recommended_ids:", len(prev_rec))
     else:
         print("Stored recommendations not found")
-    start_time = time.time()    
+    
     sql_work.update_user_recommendation_count(unique_id, len(recommended_ids))
-    print("Time taken to update user recommendation count:", time.time() - start_time)
+
     print("Time taken to get recommendations:", time.time() - start_finish_time)
+
     if type_id == 'playlist':
         return jsonify({
             'playlist': playlist_name,

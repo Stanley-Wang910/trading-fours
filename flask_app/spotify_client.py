@@ -149,11 +149,9 @@ class SpotifyClient:
         audio_features_list = []
         for chunk in chunks(track_ids, 100):
             audio_features_list.extend(self.sp.audio_features(chunk))
-            print("Chunk processed. Current number of audio features:", len(audio_features_list))
 
 
         audio_features_df = pd.DataFrame(audio_features_list)
-        print("Total audio features retrieved:", len(audio_features_df))
 
         # Select specific columns for the audio features DataFrame
         selected_columns = ['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms', 'time_signature']
@@ -161,7 +159,7 @@ class SpotifyClient:
 
         # Merge the playlist DataFrame with the audio features DataFrame
         playlist_with_features = pd.merge(playlist, audio_features_df, on='id', how='inner')
-        print("Length of merged playlist with features:", len(playlist_with_features))
+        print("Playlist Tracks:", len(playlist_with_features))
 
         playlist_with_features = self.rearrange_columns(playlist_with_features)
         

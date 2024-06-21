@@ -22,32 +22,28 @@ class SessionStore:
         self.cache = {}
 
     def set_prev_rec(self, key, track_ids, recommended_songs):
-        start_time = time.time()
         data = {'track_ids': track_ids, 'recommended_ids': recommended_songs}
-        print("Time to set rec ids in redis:", time.time() - start_time)
         self.redis.set(key, json.dumps(data))
         self.cache[key] = data
-        print("Cache size", len(self.cache))
 
     
     def set_user_top_data(self, key, data):
         self.redis.set(key, json.dumps(data))
         self.cache[key] = data
-        print("Cache size", len(self.cache))
 
-    def get_data(self, key):
-        if key in self.cache:
-            print(f'Cache hit for key: {key}')
-            return self.cache[key]
-       
+    def get_data_json(self, key):
         data_str = self.redis.get(key) 
-        print(f'Cache miss for key: {key}')
         if data_str:
             data = json.loads(data_str)
             return data
         
         return None
-
+    def get_data_cache(self, key): 
+        if key in self.cache:
+            print(f'Cache hit for key: {key}')
+            return self.cache[key]
+        print(f'Cache miss for key: {key}')
+        return None
     def remove_user_data(self, unique_id):
         user_key_pattern = f"{unique_id}*"
         cursor = "0"
@@ -76,7 +72,6 @@ class SessionStore:
         # Remove the keys from the in-memory cache
         for key in keys_to_delete:
             self.cache.pop(key)
-        print(f'Cache size after clearing user cache: {len(self.cache)}')
 
     def clear_all(self):
         self.cache.clear()
