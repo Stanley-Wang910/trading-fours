@@ -41,8 +41,8 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY')
 sql_work = SQLWork()
 session_store = SessionStore()
 # Initialize Genre Class Model
-# gc = GenreClassifier()
-# class_items = gc.load_model()
+gc = GenreClassifier()
+class_items = gc.load_model()
 
 # Generate a random state string
 def generate_random_string(length=16):
