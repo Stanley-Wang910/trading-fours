@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import clsx from "clsx";
 
-function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setIsLocalLoading}) {
+function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setIsLocalLoading, setAnimateOut}) {
   // State variables
   const [playlists, setPlaylists] = useState([]); // Holds list of playlists
   const [selectedPlaylist, setSelectedPlaylist] = useState(""); // Holds the selected playlist
@@ -92,18 +92,22 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
   const handlePlaylistSelect = async (id) => {
     setSelectedPlaylist(id);
     setIsOpen(false);
-    setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on seadropdownRef  
-    setIsLoading(true); // Set the global loading state to true : for loading animation
-    onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
-    try {
-      const response = await axios.get(`/recommend?link=${id}`);
-      onRecommendations(response.data || []);
-    } catch (error) {
-      console.error("Error fetching search results", error);
-      onRecommendations([]);
-    }
-    setIsLocalLoading(false); // Set the local loading state to false
-    setIsLoading(false);
+    setAnimateOut(true);
+    setTimeout(async () => {
+      setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on seadropdownRef  
+      setIsLoading(true); // Set the global loading state to true : for loading animation
+      onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
+      try {
+        const response = await axios.get(`/recommend?link=${id}`);
+        onRecommendations(response.data || []);
+      } catch (error) {
+        console.error("Error fetching search results", error);
+        onRecommendations([]);
+      }
+      setIsLocalLoading(false); // Set the local loading state to false
+      setIsLoading(false);
+      setAnimateOut(false);
+    }, 250);
   };
 
   const handleKeyDown = (e) => {

@@ -3,7 +3,7 @@ import axios from "axios";
 import { useMotionTemplate, useMotionValue, motion } from "framer-motion";
 import PlaylistDropdown from "./PlaylistDropdown";
 
-function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
+function SearchBar({ onRecommendations, setIsLoading, onQueryChange, setAnimateOut}) {
   const [query, setQuery] = useState("");
   const [isLocalLoading, setIsLocalLoading] = useState(false);
 
@@ -22,22 +22,28 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
   // Memoized callback for handling form submission
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setIsLocalLoading(true);
-    onQueryChange(query);
+    
+    setAnimateOut(true);
+    setTimeout(async () => {
+      setIsLoading(true);
+      setIsLocalLoading(true);
+      onQueryChange(query);
 
-    try {
-      const response = await axios.get(`/recommend?link=${query}`);
-      onRecommendations(response.data || []);
-      setQuery("");
-    } catch (error) {
-      console.error("Error fetching search results", error);
-      onRecommendations([]);
-      setQuery("");
-    }
+        
+      try {
+        const response = await axios.get(`/recommend?link=${query}`);
+        onRecommendations(response.data || []);
+        setQuery("");
+      } catch (error) {
+        console.error("Error fetching search results", error);
+        onRecommendations([]);
+        setQuery("");
+      }
 
-    setIsLoading(false);
-    setIsLocalLoading(false);
+      setIsLoading(false);
+      setIsLocalLoading(false);
+      setAnimateOut(false);
+    }, 250);
   }, [query, onQueryChange, onRecommendations, setIsLoading]);
 
   
@@ -89,7 +95,7 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
       </motion.div>
     </div>
       <div className="">
-        <PlaylistDropdown onRecommendations={onRecommendations} setIsLoading={setIsLoading} onQueryChange={onQueryChange} setIsLocalLoading={setIsLocalLoading}/>
+        <PlaylistDropdown onRecommendations={onRecommendations} setIsLoading={setIsLoading} onQueryChange={onQueryChange} setIsLocalLoading={setIsLocalLoading} setAnimateOut={setAnimateOut}/>
       </div>
     </div>
   );
