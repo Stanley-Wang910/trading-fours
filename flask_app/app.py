@@ -391,6 +391,7 @@ def recommend():
 def autocomplete_playlist():
     unique_id = session.get('unique_id')
     playlists = sql_work.get_unique_user_playlist(unique_id)
+
     return jsonify(playlists)
 
 
@@ -422,13 +423,19 @@ def test():
     sp = SpotifyClient(Spotify(auth=access_token))
     re = RecEngine(sp, unique_id, sql_work)
 
-    session_store.remove_user_data(unique_id)
+    playlists = sql_work.get_unique_user_playlist(unique_id)
+    for playlist in playlists:
+        owner_id = playlist[4]
+        print(owner_id)
 
-    top_tracks, top_artists = check_user_top_data_session(unique_id, re)
+
+    # session_store.remove_user_data(unique_id)
+
+    # top_tracks, top_artists = check_user_top_data_session(unique_id, re)
 
     # session_store.clear_user_cache(unique_id=unique_id)
 
-    return jsonify({'message': 'Test route is working'})    
+    return jsonify(playlists)    
 
 
 if __name__ == '__main__':

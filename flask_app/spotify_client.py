@@ -34,7 +34,20 @@ class SpotifyClient:
 
     def get_user_saved_info(self):
         user_profile = self.sp.current_user()
-        user_playlists = self.sp.current_user_playlists() # Override Image and Name
+
+        all_playlists = []
+
+        user_playlists = self.sp.current_user_playlists() 
+
+        while user_playlists:
+            all_playlists.extend(user_playlists['items'])
+            if user_playlists['next']:
+                user_playlists = self.sp.next(user_playlists)
+            else:
+                user_playlists = None
+
+
+
         recently_played = self.sp.current_user_recently_played()
         top_artists_short = self.sp.current_user_top_artists(20,0, 'short_term')
         top_artists_med = self.sp.current_user_top_artists(20,0, 'medium_term')
@@ -52,7 +65,7 @@ class SpotifyClient:
             'medium_term': top_tracks_med,
             'long_term': top_tracks_long
         }
-        return user_profile, user_playlists, recently_played, top_artists, top_tracks
+        return user_profile, all_playlists, recently_played, top_artists, top_tracks
     
     def get_id_name(self):
         """

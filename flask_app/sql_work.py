@@ -91,7 +91,7 @@ class SQLWork:
             existing_playlist_ids = [row[0] for row in cursor.fetchall()]
             
             # Get the playlist IDs from the user_playlists items
-            user_playlist_ids = [playlist['id'] for playlist in user_playlists['items']]
+            user_playlist_ids = [playlist['id'] for playlist in user_playlists]
             
             # Delete playlists from the database if they are not found in the user_playlists items
             playlist_ids_to_delete = set(existing_playlist_ids) - set(user_playlist_ids)
@@ -102,18 +102,19 @@ class SQLWork:
                 cursor.execute(delete_query, tuple(playlist_ids_to_delete))
                 print(f"Deleted {cursor.rowcount} playlists from the database")
 
-            for playlist in user_playlists['items']:
+            for playlist in user_playlists:
                 playlist_id = playlist['id']
                 name = playlist['name']
                 image_url = playlist['images'][0]['url'] if playlist['images'] else None
-                
-                # Check if the playlist already exists in the database
+                owner_id = playlist['owner']['id']
+                print(owner_id)
+                # Check if the playlist already exists in the database, if not, insert it, if it does, update it
                 query = """
-                    INSERT INTO playlists (playlist_id, unique_id, name, image_url)
-                    VALUES (%s, %s, %s, %s)
-                    ON DUPLICATE KEY UPDATE name = VALUES(name), image_url = VALUES(image_url)
+                    INSERT INTO playlists (playlist_id, unique_id, name, image_url, owner_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE name = VALUES(name), image_url = VALUES(image_url), owner_id = VALUES(owner_id)
                 """
-                cursor.execute(query, (playlist_id, unique_id, name, image_url))
+                cursor.execute(query, (playlist_id, unique_id, name, image_url, owner_id))
                     
             print('Playlists added to database')    
             connection.commit()
@@ -333,11 +334,17 @@ class SQLWork:
 
     def get_unique_user_playlist(self, unique_id):
         connection = self.pool.get_connection()
-        
+
         try:
             cursor = connection.cursor()
-            query = f"SELECT name, playlist_id, image_url, unique_id FROM playlists WHERE unique_id = '{unique_id}';"    
-            cursor.execute(query)
+            query = """
+                SELECT name, playlist_id, image_url, unique_id, owner_id
+                FROM playlists 
+                WHERE unique_id = %s
+                ORDER BY CASE WHEN owner_id = %s THEN 0 ELSE 1 END;
+
+                """    
+            cursor.execute(query, (unique_id, unique_id))
             results = cursor.fetchall()
             return results
         finally:
