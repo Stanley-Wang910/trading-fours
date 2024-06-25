@@ -98,16 +98,16 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
   const handleShuffle = async () => {
     setIsLoading(true);
     
-    try {
+      try {
+        
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/recommend?link=${query}`, { withCredentials: true });
+        onRecommendations(response.data || []);
       
-      const response = await axios.get(`/recommend?link=${query}`);
-      onRecommendations(response.data || []);
-    
-      
-    } catch (error) {
-      console.error("Error fetching search results", error);
-      onRecommendations([]);
-    }
+        
+      } catch (error) {
+        console.error("Error fetching search results", error);
+        onRecommendations([]);
+      }
 
     setIsLoading(false);
   };

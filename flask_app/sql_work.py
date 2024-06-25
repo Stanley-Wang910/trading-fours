@@ -2,34 +2,46 @@ import os
 import mysql.connector.pooling
 import pandas as pd
 import json
+import time
+import mysql.connector
 
 class SQLWork:
     def __init__(self):
         self.MYSQL_HOST = os.getenv("MYSQL_HOST")
         self.MYSQL_USER = os.getenv("MYSQL_USER")
         self.MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
-        self.MYSQL_DB = os.getenv("MYSQL_DB")
+        self.MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
         self.pool = None
+        self.connect_sql()
 
     # Connect to MySQL database
     def connect_sql(self):
+        print("-> connect_sql()")
         self.pool = mysql.connector.pooling.MySQLConnectionPool(
             pool_name="pool",
             pool_size=5,
             host=self.MYSQL_HOST,
             user=self.MYSQL_USER,
             passwd=self.MYSQL_PASSWORD,
-            database=self.MYSQL_DB
+            database=self.MYSQL_DATABASE
         )
             
     def get_dataset(self):
-        connection = self.pool.get_connection()
-        try:
-            rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", connection)
-            rec_dataset = rec_dataset.drop('id', axis=1)
-            return rec_dataset
-        finally:
-            connection.close()
+        print("-> get_dataset()")
+        retries = 5 
+        while retries > 0:
+            try: 
+                connection = self.pool.get_connection()
+
+                rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", connection)
+                rec_dataset = rec_dataset.drop('id', axis=1)
+                return rec_dataset
+            except mysql.connector.Error as e:
+                print(f"Error getting dataset from database: {e}")
+                retries -= 1
+                time.sleep(5)
+            finally:
+                connection.close()
         
     def get_user_data(self, sp):
 
@@ -106,12 +118,16 @@ class SQLWork:
                 playlist_id = playlist['id']
                 name = playlist['name']
                 image_url = playlist['images'][0]['url'] if playlist['images'] else None
-                
-                query = f"INSERT INTO playlists (playlist_id, unique_id, name, image_url) " \
-                        f"SELECT %s, %s, %s, %s " \
-                        f"WHERE NOT EXISTS (SELECT 1 FROM playlists WHERE playlist_id = %s AND unique_id = %s);"
-                
-                cursor.execute(query, (playlist_id, unique_id, name, image_url, playlist_id, unique_id))
+                owner_id = playlist['owner']['id']
+                # print(owner_id)
+                # Check if the playlist already exists in the database, if not, insert it, if it does, update it
+                query = """
+                    INSERT INTO playlists (playlist_id, unique_id, name, image_url, owner_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE name = VALUES(name), image_url = VALUES(image_url), owner_id = VALUES(owner_id)
+                """
+                cursor.execute(query, (playlist_id, unique_id, name, image_url, owner_id))
+                    
             print('Playlists added to database')    
             connection.commit()
         except mysql.connector.Error as e:

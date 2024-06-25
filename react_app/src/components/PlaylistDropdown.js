@@ -5,7 +5,7 @@ import clsx from "clsx";
 function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setIsLocalLoading}) {
   // State variables
   const [playlists, setPlaylists] = useState([]); // Holds list of playlists
-  const [selectedPlaylist, setSelectedPlaylist] = useState(""); // Holds the selected playlist
+  const [, setSelectedPlaylist] = useState(""); // Holds the selected playlist
   const [isOpen, setIsOpen] = useState(false); // Determines if the dropdown is open
   const [hoveredPlaylist, setHoveredPlaylist] = useState(null); // State for if playlist is hovered
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 }); // Caculates the mouse position
@@ -20,7 +20,7 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
-        const response = await axios.get("/search");
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/search`, { withCredentials: true });
         setPlaylists(response.data || []);
       } catch (error) {
         console.error("Error fetching playlists", error);
@@ -82,20 +82,82 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
   const handlePlaylistSelect = async (id) => {
     setSelectedPlaylist(id);
     setIsOpen(false);
-    setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on seadropdownRef  
-    setIsLoading(true); // Set the global loading state to true : for loading animation
-    onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
-    try {
-      const response = await axios.get(`/recommend?link=${id}`);
-      onRecommendations(response.data || []);
-    } catch (error) {
-      console.error("Error fetching search results", error);
-      onRecommendations([]);
-    }
-    setIsLocalLoading(false); // Set the local loading state to false
-    setIsLoading(false);
+    setAnimateOut(true);
+    setTimeout(async () => {
+      setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on seadropdownRef  
+      setIsLoading(true); // Set the global loading state to true : for loading animation
+      onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/recommend?link=${id}`, { withCredentials: true });
+        onRecommendations(response.data || []);
+      } catch (error) {
+        console.error("Error fetching search results", error);
+        onRecommendations([]);
+      }
+      setIsLocalLoading(false); // Set the local loading state to false
+      setIsLoading(false);
+      setAnimateOut(false);
+    }, 250);
   };
-  
+
+  const handleKeyDown = (e) => {
+    if (!isOpen) return;
+
+    setIsKeyNavigating(true);
+    setHasMouseMoved(false);
+    setKeyImagePreview(true);
+    setShowImagePreview(false);
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHoveredPlaylist(null); // Clear the hovered playlist when navigating with keys
+        setFocusedIndex((prevIndex) => {
+          const newIndex = (prevIndex + 1) % filteredPlaylists.length;
+          if (itemsRef.current[newIndex]) {
+            const item = itemsRef.current[newIndex];
+            const rect = item.getBoundingClientRect();
+            const newTop = rect.top + window.scrollY; 
+            const newLeft = rect.left;
+            setFocusedItemPos({ top: newTop, left: newLeft });
+            item.scrollIntoView({ block: "nearest" });
+          }
+          return newIndex;
+        });
+        break;
+      case "ArrowUp":
+        e.preventDefault()
+        setHoveredPlaylist(null)
+        setFocusedIndex((prevIndex) => {
+          const newIndex = (prevIndex - 1 + filteredPlaylists.length) % filteredPlaylists.length;
+          if (itemsRef.current[newIndex]) {
+            const item = itemsRef.current[newIndex];
+            const rect = item.getBoundingClientRect();
+            const newTop = rect.top + window.scrollY; 
+            const newLeft = rect.left;
+            setFocusedItemPos({ top: newTop, left: newLeft });
+            item.scrollIntoView({ block: "nearest" });
+            console.log("item position", { top: newTop, left: newLeft });
+
+          }
+          return newIndex;
+        })
+        break;
+      case "Enter":
+        e.preventDefault()
+        if (focusedIndex >= 0) {
+          handlePlaylistSelect(filteredPlaylists[focusedIndex][1]);
+
+        }
+        break;
+      default:
+        break;
+    }
+
+    setIsKeyNavigating(false); // Reset setIsKeyNavigating(false);
+  }
+
+
  const filteredPlaylists = playlists.filter((playlist) =>
     playlist[0].toLowerCase().includes(searchQuery.toLowerCase())
   );

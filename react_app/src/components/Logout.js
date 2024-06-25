@@ -1,11 +1,19 @@
 import React from "react";
+import axios from "axios";
 
 function Logout({ setToken, setRecommendations }) {
   const handleLogout = async () => {
     try {
-      await fetch("/auth/logout");
-      setToken("");
-      setRecommendations([]);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/logout`, {withCredentials: true});
+        console.log("Logout response:", response);
+
+        if (response.status === 200) {
+          console.log("Logged out");
+          setToken("");
+          setRecommendations([]);
+      } else {
+        console.error("Logout failed", response);
+      }
     } catch (error) {
       console.error("Error logging out", error);
     }

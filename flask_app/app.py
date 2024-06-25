@@ -31,7 +31,9 @@ import time
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+app.config["JSON_SORT_KEYS"] = False # Prevent jsonify from sorting keys in dict - Fix to top_ratios genre reordering
+
+CORS(app, supports_credentials=True, origins="http://localhost:3000")
 
 
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
@@ -39,8 +41,8 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY')
 sql_work = SQLWork()
 session_store = SessionStore()
 # Initialize Genre Class Model
-gc = GenreClassifier()
-class_items = gc.load_model()
+# gc = GenreClassifier()
+# class_items = gc.load_model()
 
 # Generate a random state string
 def generate_random_string(length=16):
@@ -119,15 +121,17 @@ def get_token():
         return jsonify({'access_token': access_token, 
                         'refresh_token': refresh_token,
                         'token_expires': token_expires})
+    else:
+        return jsonify({'error': 'No token available'})
 
 @app.route('/auth/logout')
-def clear_session():
+def logout():
     unique_id = session.get('unique_id')
     session.clear()
     session_store.clear_user_cache(unique_id)
     session_store.remove_user_data(unique_id)
 
-    return "Session data cleared"
+    return jsonify({access_token: None, refresh_token: None, token_expires: None})
 
 def refresh_token():
     if 'refresh_token' not in session:
@@ -214,13 +218,19 @@ def append_to_dataset(data, choice):
         new_data.drop('date_added', axis=1, inplace=True)  # Remo   ve 'date_added' column if choice is 'playlist'
     new_data.rename(columns={'artist': 'artists', 'name': 'track_name', 'id': 'track_id'}, inplace=True)  # Rename columns
     append_counter = session['append_counter']
+    start_time = time.time()
     append = sql_work.append_tracks(new_data, append_counter)
+    print("Appended tracks in %s seconds", (time.time() - start_time))
     if append:
         session['append_counter'] = 0 
 
 def get_playlist_data_session(link):
     if session.get('last_search') == link and 'playlist_name' in session:
-        p_vector = sql_work.get_vector_from_db(link, 'playlist')
+        start_time = time.time()
+        # p_vector = sql_work.get_vector_from_db(link, 'playlist')
+        redis_key_playlist = f"{link}_playlist"
+        p_vector = session_store.get_data_cache(redis_key_playlist)
+        print("Grabbed playlist vector in %s seconds", (time.time() - start_time))
         playlist_name = session.get('playlist_name')
         top_genres = session.get('top_genres')
         top_ratios = session.get('top_ratios')
@@ -246,7 +256,9 @@ def save_playlist_data_session(playlist, link, re, sp):
 
     # Save playlist data to session
     p_vector_dict = p_vector.to_dict(orient='records')[0]
-    sql_work.add_vector_to_db(p_vector_dict, link, 'playlist')
+    # sql_work.add_vector_to_db(p_vector_dict, link, 'playlist')
+    redis_key_playlist = f"{link}_playlist"
+    session_store.set_vector(redis_key_playlist, p_vector)
     session['playlist_name'] = playlist_name 
     session['top_genres'] = top_genres 
     session['top_ratios'] = top_ratios
@@ -314,7 +326,7 @@ def recommend():
             playlist.to_csv('playlist.csv', index=False)
             track_ids = set(playlist['id'])
 
-            append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
+            # append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
             p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
             print(top_ratios)
         
@@ -335,7 +347,7 @@ def recommend():
             track = sp.predict(link, type_id, class_items)
             track_ids = track['id'].tolist() # Get track ID
             
-            append_to_dataset(track, type_id) # Append Track to dataset
+            # append_to_dataset(track, type_id) # Append Track to dataset
             
             t_vector, track_name, artist_name, release_date = save_track_data_session(track, link, re, sp) # Save Track data to session
                
@@ -390,6 +402,10 @@ def autocomplete_playlist():
 def get_user_data():
     unique_id = session.get('unique_id')
     display_name = session.get('display_name')
+    access_token = session.get('access_token')
+    sp = SpotifyClient(Spotify(auth=access_token))
+    re = RecEngine(sp, unique_id, sql_work)
+    check_user_top_data_session(unique_id, re)
     return jsonify({'unique_id': unique_id, 'display_name': display_name})
 
 @app.route('/favorited', methods=['POST'])
@@ -414,17 +430,22 @@ def test():
     sp = SpotifyClient(Spotify(auth=access_token))
     re = RecEngine(sp, unique_id, sql_work)
 
+    session.clear()
+    session_store.clear_user_cache(unique_id)
     session_store.remove_user_data(unique_id)
+    # return user_top_tracks, user_top_artists
 
-    top_tracks, top_artists = check_user_top_data_session(unique_id, re)
+    # session_store.remove_user_data(unique_id)
+
+    # top_tracks, top_artists = check_user_top_data_session(unique_id, re)
 
     # session_store.clear_user_cache(unique_id=unique_id)
 
-    return jsonify({'message': 'Test route is working'})    
+    return jsonify("Logged out")    
 
 
 if __name__ == '__main__':
     global rec_dataset
     sql_work.connect_sql()
     rec_dataset = sql_work.get_dataset()
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

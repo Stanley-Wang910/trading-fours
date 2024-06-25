@@ -27,19 +27,30 @@ class SessionStore:
         print("Time to set rec ids in redis:", time.time() - start_time)
         self.redis.set(key, json.dumps(data))
         self.cache[key] = data
-        print("Cache size", len(self.cache))
 
-    
+    def set_vector(self, key, vector):
+        self.redis.set(key, json.dumps(vector))
+        self.cache[key] = vector
+
+        cached_data = self.get_data_cache(key) 
+        if cached_data is not None and cached_data == data:
+            print("Data is cached")
+        else:
+            print("Data is not cached")
+
+
     def set_user_top_data(self, key, data):
         self.redis.set(key, json.dumps(data))
         self.cache[key] = data
         print("Cache size", len(self.cache))
 
-    def get_data(self, key):
-        if key in self.cache:
-            print(f'Cache hit for key: {key}')
-            return self.cache[key]
-       
+        cached_data = self.get_data_cache(key) 
+        if cached_data is not None and cached_data == data:
+            print("Data is cached")
+        else:
+            print("Data is not cached")
+
+    def get_data_json(self, key):
         data_str = self.redis.get(key) 
         print(f'Cache miss for key: {key}')
         if data_str:
@@ -47,23 +58,32 @@ class SessionStore:
             return data
         
         return None
+    def get_data_cache(self, key): 
+        if key in self.cache:
+            print(f'Cache hit for key: {key}')
+            return self.cache[key]
+        print(f'Cache miss for key: {key}')
+        return None
 
     def remove_user_data(self, unique_id):
         user_key_pattern = f"{unique_id}*"
         cursor = "0"
-        while cursor != 0:
+        total_deleted = 0  # To count the number of keys deleted
+
+        while cursor != b"0":
             cursor, keys = self.redis.scan(cursor=cursor, match=user_key_pattern)
             if keys:
                 with self.redis.pipeline() as pipe:
                     for key in keys:
                         pipe.delete(key)
                     pipe.execute()
-        print('Count of keys associated with user deleted', len(keys))
-        
+                total_deleted += len(keys)  # Update the count of deleted keys
+
+        print('Count of keys associated with user deleted', total_deleted)
         
 
     def clear_user_cache(self, unique_id):
-        print("Cache", self.cache)
+        # print("Cache", self.cache)
         user_key_pattern = f"{unique_id}*"
         cursor = "0"
         keys_to_delete = []

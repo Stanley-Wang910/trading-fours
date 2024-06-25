@@ -6,6 +6,8 @@ module.exports = function (app) {
     createProxyMiddleware({
       target: "http://localhost:5000",
       changeOrigin: true,
+      logLevel: 'debug', // Add logging for troubleshooting
+
     }),
   );
 
@@ -14,6 +16,8 @@ module.exports = function (app) {
     createProxyMiddleware({
       target: "http://localhost:5000",
       changeOrigin: true,
+      logLevel: 'debug', // Add logging for troubleshooting
+
     }),
   );
 

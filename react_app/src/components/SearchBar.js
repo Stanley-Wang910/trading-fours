@@ -22,19 +22,23 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
   // Memoized callback for handling form submission
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setIsLocalLoading(true);
-    onQueryChange(query);
+    
+    setAnimateOut(true);
+    setTimeout(async () => {
+      setIsLoading(true);
+      setIsLocalLoading(true);
+      onQueryChange(query);
 
-    try {
-      const response = await axios.get(`/recommend?link=${query}`);
-      onRecommendations(response.data || []);
-      setQuery("");
-    } catch (error) {
-      console.error("Error fetching search results", error);
-      onRecommendations([]);
-      setQuery("");
-    }
+        
+      try {
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/recommend?link=${query}`, { withCredentials: true });
+        onRecommendations(response.data || []);
+        setQuery("");
+      } catch (error) {
+        console.error("Error fetching search results", error);
+        onRecommendations([]);
+        setQuery("");
+      }
 
     setIsLoading(false);
     setIsLocalLoading(false);
