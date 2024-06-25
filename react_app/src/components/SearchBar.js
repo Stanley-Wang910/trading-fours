@@ -22,12 +22,9 @@ function SearchBar({ onRecommendations, setIsLoading, onQueryChange}) {
   // Memoized callback for handling form submission
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    
-    setAnimateOut(true);
-    setTimeout(async () => {
-      setIsLoading(true);
-      setIsLocalLoading(true);
-      onQueryChange(query);
+    setIsLoading(true);
+    setIsLocalLoading(true);
+    onQueryChange(query);
 
         
       try {
