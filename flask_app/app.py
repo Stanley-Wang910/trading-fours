@@ -448,4 +448,4 @@ if __name__ == '__main__':
     global rec_dataset
     sql_work.connect_sql()
     rec_dataset = sql_work.get_dataset()
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)

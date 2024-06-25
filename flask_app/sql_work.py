@@ -1,18 +1,23 @@
 import os
+from dotenv import load_dotenv
 import mysql.connector.pooling
 import pandas as pd
 import json
 import time
 import mysql.connector
 
+load_dotenv()
+
 class SQLWork:
     def __init__(self):
         self.MYSQL_HOST = os.getenv("MYSQL_HOST")
         self.MYSQL_USER = os.getenv("MYSQL_USER")
+        print(self.MYSQL_USER)
+        print(self.MYSQL_HOST)  
         self.MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
         self.MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
         self.pool = None
-        self.connect_sql()
+        # self.connect_sql()
 
     # Connect to MySQL database
     def connect_sql(self):

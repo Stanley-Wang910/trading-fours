@@ -1,28 +1,28 @@
-version: '3.8'
+# version: '3.8'
 
-services:
-  backend:
-    build: ./flask_app
-    ports:
-      - "5000:5000"
-    environment:
-    - MYSQL_HOST=${MYSQL_HOST}
-    - MYSQL_PORT=${MYSQL_PORT}
-    - MYSQL_DATABASE=${MYSQL_DATABASE}
-    - MYSQL_USER=${MYSQL_USER}
-    - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-    - REDIS_HOST=${REDIS_HOST}
-    - REDIS_PORT=${REDIS_PORT}
-    - REDIS_PASSWORD=${REDIS_PASSWORD}
-    - REDIS_DB=${REDIS_DB}
-    - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
-    - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
-    - SPOTIFY_USER_ID=${SPOTIFY_USER_ID}
-    - SPOTIFY_REDIRECT_URI=${SPOTIFY_REDIRECT_URI}
-    - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
-  frontend:
-    build: ./react_app
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
+# services:
+#   backend:
+#     build: ./flask_app
+#     ports:
+#       - "5000:5000"
+#     environment:
+#     - MYSQL_HOST=${MYSQL_HOST}
+#     - MYSQL_PORT=${MYSQL_PORT}
+#     - MYSQL_DATABASE=${MYSQL_DATABASE}
+#     - MYSQL_USER=${MYSQL_USER}
+#     - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+#     - REDIS_HOST=${REDIS_HOST}
+#     - REDIS_PORT=${REDIS_PORT}
+#     - REDIS_PASSWORD=${REDIS_PASSWORD}
+#     - REDIS_DB=${REDIS_DB}
+#     - SPOTIFY_CLIENT_ID=${SPOTIFY_CLIENT_ID}
+#     - SPOTIFY_CLIENT_SECRET=${SPOTIFY_CLIENT_SECRET}
+#     - SPOTIFY_USER_ID=${SPOTIFY_USER_ID}
+#     - SPOTIFY_REDIRECT_URI=${SPOTIFY_REDIRECT_URI}
+#     - FLASK_SECRET_KEY=${FLASK_SECRET_KEY}
+#   frontend:
+#     build: ./react_app
+#     ports:
+#       - "3000:3000"
+#     depends_on:
+#       - backend
