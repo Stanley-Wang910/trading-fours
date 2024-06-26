@@ -22,7 +22,8 @@ function App() {
   const [query, setQuery] = useState("");
   const [recommendationPosition, setRecommendationPosition] = useState("center");
   const [showInfoContainer, setShowInfoContainer] = useState(false);
-  
+  const [animateOut, setAnimateOut] = useState(false); // For animating out the recommendation containter  
+
 
   const [favoritedTracks, setFavoritedTracks] = useState([]);
 
@@ -33,6 +34,7 @@ function App() {
   useEffect(() => {
     async function getToken() {
       try {
+        console.log("Fetching token...");
         const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/token`, { withCredentials: true });
         if (response.status === 200) {
           console.log("Fetched token:", response.data.access_token);
@@ -124,12 +126,12 @@ function App() {
             <Navbar LogoutComponent={<Logout setToken={setToken} setRecommendations={setRecommendations} />} />
           </div>
           <Greeting />
-          <div className="main-container flex flex-col max-w-2xl w-full mx-auto p-4">
+          <div className="main-container flex flex-col w-full mx-auto p-4 px-10">
             <div className="flex flex-col items-center">
               <div className="search-container mt-16 mb-4 w-full max-w-lg z-20">
-                <SearchBar onRecommendations={handleRecommendations} setIsLoading={setIsLoading} onQueryChange={handleQueryChange} />
+                <SearchBar onRecommendations={handleRecommendations} setIsLoading={setIsLoading} onQueryChange={handleQueryChange} setAnimateOut={setAnimateOut} />
               </div>
-              <div className="recommendations-container w-full max-w-2xljustify-center items-center z-10">
+              <div className="recommendations-container w-full justify-center items-center z-10">
                 {isLoading ? (
                   <div className="loader">
                     <div className="bar1"></div>
@@ -150,6 +152,8 @@ function App() {
                       position={recommendationPosition}
                       onTogglePosition={handleTogglePosition}
                       setFavoritedTracks={setFavoritedTracks}
+                      animateOut={animateOut}
+                      setAnimateOut={setAnimateOut}
                     />
                     {showInfoContainer && (
                       <div

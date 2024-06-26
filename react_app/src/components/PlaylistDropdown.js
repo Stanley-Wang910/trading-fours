@@ -2,21 +2,29 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import clsx from "clsx";
 
-function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setIsLocalLoading}) {
+function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setIsLocalLoading, setAnimateOut}) {
   // State variables
   const [playlists, setPlaylists] = useState([]); // Holds list of playlists
-  const [, setSelectedPlaylist] = useState(""); // Holds the selected playlist
+  const [selectedPlaylist, setSelectedPlaylist] = useState(""); // Holds the selected playlist
   const [isOpen, setIsOpen] = useState(false); // Determines if the dropdown is open
   const [hoveredPlaylist, setHoveredPlaylist] = useState(null); // State for if playlist is hovered
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 }); // Caculates the mouse position
   const imageRef = useRef(null); // Reference for image preview, used to handle when display
   const [searchQuery, setSearchQuery] = useState(""); // Holds the search playlists query
   const [showImagePreview, setShowImagePreview] = useState(false); // Determines if the image preview is shown
-  
+  const [keyImagePreview, setKeyImagePreview] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(0); // Holds the index of the focused playlist
+  const [isKeyNavigating, setIsKeyNavigating] = useState(false);
+  const [hasMouseMoved, setHasMouseMoved] = useState(true); // Determines if the mouse has moved post key navigation
+  const [focusedItemPos, setFocusedItemPos] = useState({ top: 0, left: 0 });
+
   // Refs
   const dropdownRef = useRef(null); // Reference for the dropdown
   const searchInputRef = useRef(null); // Reference for the search input
   const listRef = useRef(null); // Reference dropdownRef // Effecgt hook to fetch playlists 
+  const itemsRef = useRef([]); // Reference for the items in the list
+
+
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
@@ -55,6 +63,8 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
 
     const handleMouseMove = (event) => {
       setMousePosition({ x: event.pageX, y: event.pageY });
+      setHasMouseMoved(true); // Set to true when mouse moves
+
     };
 
     const handleClickOutside = (event) => {
@@ -161,6 +171,20 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
  const filteredPlaylists = playlists.filter((playlist) =>
     playlist[0].toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+    } else {
+      window.removeEventListener("keydown", handleKeyDown);
+
+    }
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, handleKeyDown, filteredPlaylists.length]);
+
    
   return (
     <div ref={dropdownRef} className="relative w-full max-w-md">
@@ -221,41 +245,76 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
                 ref={searchInputRef}
               />
           </li>
-          {filteredPlaylists.map((playlist) => {
+          {filteredPlaylists.map((playlist, index) => {
             if (!playlist || playlist.length < 2) return null;
             const [name, id] = playlist;
             return (
               <li 
                 key={id} 
-                className="px-3 py-2 cursor-pointer text-gray-300 text-sm hover:bg-gray-600 border-b border-gray-500" 
+                className={clsx(
+                  "px-3 py-2 cursor-pointer text-gray-300 text-sm  border-b border-gray-500" ,
+                  { "bg-gray-600": focusedIndex === index }
+                )}
                 onClick={() => handlePlaylistSelect(id)}
                 onMouseEnter={() => {
-                  setHoveredPlaylist(playlist)
-                  setShowImagePreview(true)
+                  if (!isKeyNavigating && hasMouseMoved) {
+                    setHoveredPlaylist(playlist)
+                    setShowImagePreview(true)
+                    setKeyImagePreview(false)
+                    setFocusedIndex(index)
+                  }
+
                 }}
                 onMouseLeave={() => {
                   setHoveredPlaylist(null)
                   setShowImagePreview(false)
                 }}
+                ref={(element) => (itemsRef.current[index] = element)}
               >
                 {name}
               </li>
             );
           })}
         </ul>
-        {isOpen && hoveredPlaylist && showImagePreview && (
+        {isOpen && hoveredPlaylist && showImagePreview && hoveredPlaylist[2] && (
           <div
             ref={imageRef}
-            className="fixed z-50 p-2 "
+            className="fixed z-50 p-2 transition-transform duration-300 ease-out"
             style={{
               transform: `translate(${mousePosition.x-700}px, ${mousePosition.y - 302}px)`, // Adjust position without affecting the scale
               width: "120px"
               // height: "200px",
             }}
           >
-            <img src={hoveredPlaylist[2]} alt={hoveredPlaylist[0]} className="w-full translate-x-[-20px] translate-y-[-170px] lg:translate-x-[-400px] lg:translate-y-[-170px] rounded shadow-lg pointer-events-none" />
+            <img 
+              src={hoveredPlaylist[2]} 
+              alt={hoveredPlaylist[0]} 
+              className="w-full translate-x-[-20px] translate-y-[-170px] lg:translate-x-[-400px] lg:translate-y-[-170px] rounded shadow-lg pointer-events-none" />
           </div>
         )}
+
+        {isOpen && focusedIndex >= 0 && !showImagePreview && keyImagePreview && filteredPlaylists[focusedIndex] && (() => {
+          const {top, left } = focusedItemPos;
+          return (
+          <div
+          className="fixed z-50 p-2 transition-transform duration-300 "
+          style={{
+            transform: `translate(${left - window.innerWidth * 0.95}px, ${top-window.innerHeight * 0.5}px)`, // Adjust position to the left of the focused item
+
+            width: "120px",
+          
+
+          }}
+          >
+            <img
+              src={filteredPlaylists[focusedIndex][2]}
+              alt={filteredPlaylists[focusedIndex][0]}
+              className="w-full rounded lg:translate-x-[335%]  shadow-lg pointer-events-none"
+            />
+          </div>
+        );
+      })()}
+
       </div>
     );
   }

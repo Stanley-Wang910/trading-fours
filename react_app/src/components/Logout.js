@@ -1,24 +1,28 @@
 import React from "react";
-import axios from "axios";
 
 function Logout({ setToken, setRecommendations }) {
   const handleLogout = async () => {
+    console.log("Logout button clicked");
     try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/logout`, {withCredentials: true});
-        console.log("Logout response:", response);
-
-        if (response.status === 200) {
-          console.log("Logged out");
-          setToken("");
-          setRecommendations([]);
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/auth/logout`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+  
+      console.log("Response received:", response);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Logout successful:", data);
+        setToken("");
+        setRecommendations([]);
       } else {
-        console.error("Logout failed", response);
+        console.error("Logout failed:", response.statusText);
       }
     } catch (error) {
-      console.error("Error logging out", error);
+      console.error("Error logging out:", error);
     }
   };
-
+  
   return (
     <button
       className="logout absolute top-4 right-2 px-1 py-[4px] font-bold text-[14px] text-gray-400"

@@ -4,4 +4,4 @@ __pycache__/
 myenv/
 .cache
 .flask_session/
-*.csv
+flask_app/src/*.csv
