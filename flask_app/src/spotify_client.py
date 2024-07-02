@@ -1,5 +1,6 @@
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.decomposition import PCA
 import spotipy
 import requests
 from spotipy.oauth2 import SpotifyClientCredentials
@@ -308,44 +309,47 @@ class SpotifyClient:
         model = class_items['model']
         scaler = class_items['scaler']
         label_encoder = class_items['label_encoder']
-        X_train = class_items['X_train']
-        # Check if model and label encoder are loaded
-        #Get song features or analyze playlist based on int_choice
+        feature_set = class_items['feature_set']
+
+        # Get song features or analyze playlist based on  choice
         if (choice == 'track'):
             data = self.get_song_features([data_entry])
             release_date = data['release_date']
             data.drop('release_date', axis=1, inplace=True)
         elif (choice == 'playlist'):
             data = self.analyze_playlist(data_entry)
+        else:
+            raise ValueError("Invalid choice. Expected 'track' or 'playlist'.")
             
         print("Predicting...")
+
         start_time = time.time()
         # Create a DataFrame from the data
         data_df = pd.DataFrame(data)
         
         # One-hot encode categorical features
-        categorical_features = ['key', 'mode', 'time_signature']
-        data_df = pd.get_dummies(data, columns=categorical_features)
+        data_df = pd.get_dummies(data_df, columns=['key'], prefix='key')
         
         # Add missing columns to the data DataFrame
-        for col in X_train.columns:
+        for col in feature_set:
             if col not in data.columns:
                 data_df[col] = 0
         
-        # Reorder the columns to match the training data
-        data_df = data_df[X_train.columns]
+        # Reorder the columns to match the order of the featureset
+        data_df = data_df.reindex(columns=feature_set, fill_value=0)
+
+        columns_to_scale = ['popularity', 'duration_ms', 'danceability', 'energy', 'loudness', 
+                            'speechiness', 'acousticness', 'instrumentalness', 'liveness', 
+                            'valence', 'tempo']
         
-        # Scale the data using the scaler
-        data_scaled = scaler.transform(data_df)
-        
+        data_df[columns_to_scale] = scaler.transform(data_df[columns_to_scale])
+            
         # Predict the genre labels using the model
-        predictions_encoded = model.predict(data_scaled)
+        predictions_encoded = model.predict(data_df)
         
         # Decode the predicted labels using the label encoder
         predictions_decoded = label_encoder.inverse_transform(predictions_encoded)
         
-        
-            
         # Add the predicted genre labels to the data DataFrame
         data['track_genre'] = predictions_decoded
 

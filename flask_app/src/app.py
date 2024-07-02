@@ -59,7 +59,7 @@ def auth_login():
         'response_type': 'code',
         'client_id': os.getenv('SPOTIFY_CLIENT_ID'),
         'scope': scope,
-        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production
+        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
         'state': state
     }
     url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
@@ -90,7 +90,7 @@ def auth_callback():
     auth_data = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production
+        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
     }
     response = requests.post('https://accounts.spotify.com/api/token', data=auth_data, headers=auth_header)
     print(f"Token exchange response: {response.status_code}, {response.text}")
@@ -432,22 +432,26 @@ def test():
     sp = SpotifyClient(Spotify(auth=access_token))
     re = RecEngine(sp, unique_id, sql_work)
 
-    session.clear()
-    session_store.clear_user_cache(unique_id)
-    session_store.remove_user_data(unique_id)
-    # return user_top_tracks, user_top_artists
 
-    # session_store.remove_user_data(unique_id)
+    while True:
+        link = input("Enter a playlist link: ")
+        if not link:
+            break
+        link = link.split('/')[-1].split('?')[0]
 
-    # top_tracks, top_artists = check_user_top_data_session(unique_id, re)
+        playlist = sp.predict(link, 'playlist', class_items)
+        top_genres = playlist['track_genre'].value_counts().head(3).index.tolist()
+        print("Top three genres:", top_genres)
+        playlist.to_csv('playlist.csv')
 
-    # session_store.clear_user_cache(unique_id=unique_id)
+    
 
-    return jsonify("Logged out")    
+    return jsonify("Logged out")
 
 
 if __name__ == '__main__':
     global rec_dataset
     sql_work.connect_sql()
     rec_dataset = sql_work.get_dataset()
+    rec_dataset.to_csv('rec_dataset.csv')
     app.run(debug=True, port=5000)

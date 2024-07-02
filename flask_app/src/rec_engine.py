@@ -184,7 +184,7 @@ class RecEngine:
         print('-> re:ohe_features()')
         start_time = time.time()
 
-        all_genres = pd.read_csv('data/datasets/genre_counts.csv')
+        all_genres = pd.read_csv('../data/datasets/genre_counts.csv')
         df = pd.get_dummies(df, columns=['track_genre', 'mode', 'key'])  # One-hot encode the genre column
     
         ohe_columns = [col for col in df.columns if 'track_genre' in col or 'mode' in col or 'key' in col]
