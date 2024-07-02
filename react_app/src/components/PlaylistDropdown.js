@@ -28,7 +28,7 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
-        const response = await axios.get("/search");
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/search`, { withCredentials: true });
         setPlaylists(response.data || []);
       } catch (error) {
         console.error("Error fetching playlists", error);
@@ -98,7 +98,7 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
       setIsLoading(true); // Set the global loading state to true : for loading animation
       onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
       try {
-        const response = await axios.get(`/recommend?link=${id}`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/recommend?link=${id}`, { withCredentials: true });
         onRecommendations(response.data || []);
       } catch (error) {
         console.error("Error fetching search results", error);

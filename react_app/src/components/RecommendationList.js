@@ -100,7 +100,7 @@ function RecommendationsList({ recommendations, onRecommendations, setIsLoading,
     
       try {
         
-        const response = await axios.get(`/recommend?link=${query}`);
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/recommend?link=${query}`, { withCredentials: true });
         onRecommendations(response.data || []);
       
         

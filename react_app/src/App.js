@@ -24,6 +24,7 @@ function App() {
   const [showInfoContainer, setShowInfoContainer] = useState(false);
   const [animateOut, setAnimateOut] = useState(false); // For animating out the recommendation containter  
 
+
   const [favoritedTracks, setFavoritedTracks] = useState([]);
 
   // Ref variables
@@ -32,9 +33,18 @@ function App() {
   // Fetch the token
   useEffect(() => {
     async function getToken() {
-      const response = await fetch("/auth/token");
-      const json = await response.json();
-      setToken(json.access_token);
+      try {
+        console.log("Fetching token...");
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/auth/token`, { withCredentials: true });
+        if (response.status === 200) {
+          console.log("Fetched token:", response.data.access_token);
+          setToken(response.data.access_token);
+        } else {
+          console.error("Failed to fetch token:", response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching token:", error);
+      }
     }
 
     getToken();
