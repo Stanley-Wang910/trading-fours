@@ -178,19 +178,13 @@ class GenreClassifier:
     #     print(f"Mean Cross-Validation Score: {cv_scores.mean()}")
 
 
-    def load_model(model_choice=1):
-        model_filenames = {
-            # 0: 'data/models/GenreClassModel/lr_model.joblib',  # Filename for logistic regression model
-            1: '../data/models/GenreClassModel/xgboost_model.joblib',  # Filename for random forest model
-        }
-        # Access these from bash script
+    def load_model(self):
+        model_filename = '../data/models/GenreClassModel/xgboost_model.joblib'  # Filename for xg_boost
+        
         scaler_filename = '../data/models/GenreClassModel/scaler.joblib'  # Filename for scaler
         encoder_filename = '../data/models/GenreClassModel/label_encoder.joblib'  # Filename for label encoder
         features_filename = '../data/models/GenreClassModel/feature_set.joblib'  # Filename for features
-        if model_choice not in model_filenames:
-            raise Exception(f"Invalid model choice. Available choices are: {list(model_filenames.keys())}")
 
-        model_filename = model_filenames[model_choice]
         xgboost_model = joblib.load(model_filename)  # Load the selected model
         #print(f"Model loaded from {model_filename}.")
         xgboost_model.verbose = 0

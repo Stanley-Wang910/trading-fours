@@ -59,7 +59,7 @@ def auth_login():
         'response_type': 'code',
         'client_id': os.getenv('SPOTIFY_CLIENT_ID'),
         'scope': scope,
-        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
         'state': state
     }
     url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
@@ -90,7 +90,7 @@ def auth_callback():
     auth_data = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
     }
     response = requests.post('https://accounts.spotify.com/api/token', data=auth_data, headers=auth_header)
     print(f"Token exchange response: {response.status_code}, {response.text}")
@@ -453,5 +453,4 @@ if __name__ == '__main__':
     global rec_dataset
     sql_work.connect_sql()
     rec_dataset = sql_work.get_dataset()
-    rec_dataset.to_csv('rec_dataset.csv')
     app.run(debug=True, port=5000)
