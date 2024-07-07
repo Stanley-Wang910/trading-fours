@@ -124,7 +124,7 @@ class SQLWork:
                 name = playlist['name']
                 image_url = playlist['images'][0]['url'] if playlist['images'] else None
                 owner_id = playlist['owner']['id']
-                print(owner_id)
+                # print(owner_id)
                 # Check if the playlist already exists in the database, if not, insert it, if it does, update it
                 query = """
                     INSERT INTO playlists (playlist_id, unique_id, name, image_url, owner_id)

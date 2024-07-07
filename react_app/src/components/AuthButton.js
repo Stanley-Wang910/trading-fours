@@ -1,6 +1,7 @@
 import React from "react";
 
-function Logout({ setToken, setRecommendations }) {
+
+function AuthButton ({ token, setToken, setRecommendations }) {
   const handleLogout = async () => {
     console.log("Logout button clicked");
     try {
@@ -25,11 +26,11 @@ function Logout({ setToken, setRecommendations }) {
   
   return (
     <button
-      className="logout absolute top-4 right-2 px-1 py-[4px] font-bold text-[14px] text-gray-400"
-      onClick={handleLogout}>
-      Logout  
+      className="authButton absolute top-4 right-2 px-1 py-[4px] font-bold text-[14px] text-gray-400"
+      onClick={token ? handleLogout: () => window.location.href = `${process.env.REACT_APP_BACKEND_URL}/auth/login`}>
+      {token ? "Logout" : "Login"}
     </button>
   );
 }
 
-export default Logout;
+export default AuthButton;

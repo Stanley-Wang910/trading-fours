@@ -1,6 +1,8 @@
 const defaultTheme = require("tailwindcss/defaultTheme");
 const colors = require("tailwindcss/colors");
-const { default: flattenColorPalette } = require("tailwindcss/lib/util/flattenColorPalette");
+const {
+  default: flattenColorPalette,
+} = require("tailwindcss/lib/util/flattenColorPalette");
 /** @type {import('tailwindcss').Config} */
 
 module.exports = {
@@ -11,7 +13,7 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        'merriweather': ['Merriweather', 'serif']
+        merriweather: ["Merriweather", "serif"],
       },
       keyframes: {
         meteor: {
@@ -33,22 +35,23 @@ module.exports = {
       },
 
       colors: {
-        'custom_dark': '#1C2128',
-        'custom-blue-grad': '#000732',
-        'custom-blue': '#010D3D',
-        'custom-purple': '#6f42c1',
-        'custom-green': '#1ED760',
-        'custom-brown': '#cc8e15',
+        custom_dark: "#1C2128",
+        "custom-blue-grad": "#000732",
+        "custom-blue": "#010D3D",
+        "custom-purple": "#6f42c1",
+        "custom-green": "#1ED760",
+        "custom-brown": "#cc8e15",
       },
       backgroundImage: {
-        'custom-gradient': 'linear-gradient(to right, var(--custom-blue), var(--custom-purple))',
+        "custom-gradient":
+          "linear-gradient(to right, var(--custom-blue), var(--custom-purple))",
       },
     },
   },
   variants: {
     extend: {},
   },
-  plugins: [addVariablesForColors]
+  plugins: [addVariablesForColors],
 };
 
 function addVariablesForColors({ addBase, theme }) {
