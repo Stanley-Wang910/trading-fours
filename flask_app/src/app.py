@@ -378,7 +378,7 @@ def recommend():
     else:
         print("Stored recommendations not found")
     start_time = time.time()    
-    sql_work.update_user_recommendation_count(unique_id, len(recommended_ids))
+    session_store.update_total_recs(len(recommended_ids))
     print("Time taken to update user recommendation count:", time.time() - start_time)
     print("Time taken to get recommendations:", time.time() - start_finish_time)
     if type_id == 'playlist':
@@ -423,30 +423,42 @@ def save_favorited():
     else:
         return jsonify({'message': 'No favorited tracks provided'})
 
+@app.route('/total-recommendations', methods=['GET'])
+def get_total_recommendations():
+    total_recommendations = session_store.get_total_recs()
+    print("Total recommendations:", total_recommendations)
+    return jsonify(total_recommendations)
+
 @app.route('/test') ### Keep for testing new features
 def test():
-    unique_id: str = session.get('unique_id')
-    access_token: str = session.get('access_token')
+    # unique_id: str = session.get('unique_id')
+    # access_token: str = session.get('access_token')
 
-    # Create Spotify client and RecEngine instance
-    sp = SpotifyClient(Spotify(auth=access_token))
-    re = RecEngine(sp, unique_id, sql_work)
+    # # Create Spotify client and RecEngine instance
+    # sp = SpotifyClient(Spotify(auth=access_token))
+    # re = RecEngine(sp, unique_id, sql_work)
 
 
-    while True:
-        link = input("Enter a playlist link: ")
-        if not link:
-            break
-        link = link.split('/')[-1].split('?')[0]
+    # while True:
+    #     link = input("Enter a playlist link: ")
+    #     if not link:
+    #         break
+    #     link = link.split('/')[-1].split('?')[0]
 
-        playlist = sp.predict(link, 'playlist', class_items)
-        top_genres = playlist['track_genre'].value_counts().head(3).index.tolist()
-        print("Top three genres:", top_genres)
-        playlist.to_csv('playlist.csv')
+    #     playlist = sp.predict(link, 'playlist', class_items)
+    #     top_genres = playlist['track_genre'].value_counts().head(3).index.tolist()
+    #     print("Top three genres:", top_genres)
+    #     playlist.to_csv('playlist.csv')
+
+    session_store.update_total_recs(30)
+
+    total_recs = session_store.get_total_recs()
+
 
     
 
-    return jsonify("Logged out")
+    return jsonify(total_recs)
+
 
 
 if __name__ == '__main__':

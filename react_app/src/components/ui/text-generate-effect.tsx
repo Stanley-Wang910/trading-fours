@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { motion, stagger, useAnimate } from "framer-motion";
 import { cn } from "../../utils/cn.ts";
 
@@ -8,19 +8,20 @@ export const TextGenerateEffect = ({
   highlightColor = "bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent font-semibold",
   highlightText = "",
   delay = 500, // Add a delay prop with default value
+  onComplete,
 }: {
   words: string;
   className?: string;
   highlightColor?: string;
   highlightText?: string;
   delay?: number; // Define the delay prop type
+  onComplete?: () => void; // Add this new prop type
 }) => {
   const [scope, animate] = useAnimate();
   const linesArray = words.split("\n");
   const wordsArray = linesArray.map(line => line.split(" "));
 
-  useEffect(() => {
-    const animateText = async () => {
+    const animateText = useCallback(async () => {
       for (let i = 0; i < wordsArray.length; i++) {
         await animate(
           `div[data-line="${i}"] span`,
@@ -28,11 +29,17 @@ export const TextGenerateEffect = ({
           { duration: 0.75, delay: stagger(0.075) }
         );
       }
-    };
-
-    const timeoutId = setTimeout(animateText, delay); // Add delay before starting the animation
-    return () => clearTimeout(timeoutId); // Cleanup the timeout if the component unmounts
-  }, [animate, wordsArray, delay]);
+      if (onComplete) {
+        onComplete();
+      }
+    }, [animate, wordsArray, onComplete]);
+  
+    useEffect(() => {
+      const timeoutId = setTimeout(animateText, delay); // Add delay before starting the animation
+      return () => clearTimeout(timeoutId); // Cleanup the timeout if the component unmounts
+    }, [animate, wordsArray, delay]);
+    
+    
 
   const renderWords = (line: string[], lineIdx: number) => {
     return (

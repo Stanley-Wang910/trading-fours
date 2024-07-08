@@ -51,6 +51,21 @@ class SessionStore:
         else:
             print("Data is not cached")
 
+    def update_total_recs(self, num_recs: int):
+        key = 'total_recs'
+        self.redis.incrby(key, json.dumps(num_recs))
+
+    def get_total_recs(self):
+        key = 'total_recs'
+        total_recs = self.redis.get(key)
+        print("Total recs", int(total_recs.decode('utf-8')))        
+        if total_recs:
+            return int(total_recs.decode('utf-8'))
+        return 0
+
+
+
+
     def get_data(self, key): 
         start_time = time.time()
         if key in self.cache:

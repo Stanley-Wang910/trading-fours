@@ -6,6 +6,10 @@ const Footer = () => {
 
   const handleScrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    window.open(
+      "https://posidovega.com/jazz-lingo#:~:text=of%20the%20tune.-,Trading%204s,-(or%208s%2C%202s",
+      "_blank"
+    );
   };
 
   return (
