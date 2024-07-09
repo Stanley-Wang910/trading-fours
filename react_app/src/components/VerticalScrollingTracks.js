@@ -17,16 +17,6 @@ export const VerticalScrollingTracks = ({
   }, []);
 
   const [start, setStart] = useState(false);
-  // const [isLoading, setIsLoading] = useState(true);
-  // const [trackIds, setTrackIds] = useState([]);
-  // const [fetchError, setFetchError] = useState(false);
-
-  // useEffect(() => {
-  //   if (!isLoading && (fetchError || trackIds.length === 0)) {
-  //     console.log("No recommendations found, setting default track ids");
-  //     setTrackIds(DEFAULT_TRACK_IDS);
-  //   }
-  // }, [isLoading, fetchError, trackIds]);
 
   function addAnimation() {
     if (containerRef.current && scrollerRef.current) {
@@ -73,7 +63,7 @@ export const VerticalScrollingTracks = ({
     <div
       ref={containerRef}
       className={cn(
-        "scroller relative z-20 max-h-[60vh] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_20%,white_80%,transparent)]",
+        "scroller relative z-20 h-[60vh] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_20%,white_80%,transparent)]",
         className
       )}
     >

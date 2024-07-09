@@ -5,6 +5,7 @@ import {
   motion,
   useMotionValue,
   useMotionTemplate,
+  AnimatePresence,
   useAnimation,
 } from "framer-motion";
 import GlossyContainer from "./GlossyContainer.js";
@@ -51,7 +52,7 @@ const AnimatedCounter = ({ value, isCountVisible }) => {
 
   if (!isCountVisible) return null;
 
-  return <span>{currentValue.toLocaleString()}</span>;
+  return <span ref={counterRef}>{currentValue.toLocaleString()}</span>;
 };
 
 const useScrollAnimation = () => {
@@ -114,11 +115,98 @@ export default function HomePage() {
   const mouseY = useMotionValue(0);
   const [isMouseOver, setIsMouseOver] = useState(false);
   const [isTotalRecsHovered, setIsTotalRecsHovered] = useState(false);
+  const [isMoreInfoHovered, setIsMoreInfoHovered] = useState(false);
+  const [isSwapped, setIsSwapped] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
   const totalRecRef = useRef(null);
 
   const [scrollTotalRecsRef, isTotalRecsVisible] = useScrollAnimation();
+  const [scrollMoreInfoRef, isMoreInfoVisible] = useScrollAnimation();
   const [trackIds, setTrackIds] = useState(DEFAULT_TRACK_IDS);
   const [isRandomLoading, setIsRandomLoading] = useState(true);
+
+  const handleContainerClick = () => {
+    if (!isAnimating) {
+      setIsAnimating(true);
+      setIsSwapped(!isSwapped);
+      setTimeout(() => setIsAnimating(false), 500);
+    }
+  };
+
+  const getBackgroundPosition = () => {
+    if (isSwapped) {
+      return {
+        x: isMoreInfoHovered ? "31%" : "30%",
+        y: isMoreInfoHovered ? "-45%" : "-50%",
+        scale: 1,
+        zIndex: 20,
+        opacity: isAnimating ? 0.5 : 1,
+        // rotate: isAnimating ? 3 : 0,
+      };
+    }
+
+    return {
+      x:
+        isTotalRecsHovered && !isMoreInfoHovered
+          ? "40%"
+          : isMoreInfoHovered && isTotalRecsHovered
+            ? "43%"
+            : isTotalRecsVisible
+              ? isMoreInfoVisible
+                ? "33%"
+                : "30%"
+              : "25%",
+      y:
+        isTotalRecsHovered && !isMoreInfoHovered
+          ? "-37%"
+          : isMoreInfoHovered && isTotalRecsHovered
+            ? "-10%"
+            : isMoreInfoVisible
+              ? "-42%"
+              : "-50%",
+
+      scale: isTotalRecsHovered ? 0.98 : isMoreInfoVisible ? 0.98 : 1,
+      zIndex: 10,
+      opacity: isAnimating ? 0.5 : 1,
+    };
+  };
+
+  const getForegroundPosition = () => {
+    if (isSwapped) {
+      return {
+        x:
+          isMoreInfoHovered && !isTotalRecsHovered
+            ? "40%"
+            : isMoreInfoHovered && isTotalRecsHovered
+              ? "43%"
+              : isTotalRecsVisible
+                ? isMoreInfoVisible
+                  ? "33%"
+                  : "30%"
+                : "25%",
+        y:
+          isMoreInfoHovered && !isTotalRecsHovered
+            ? "-37%"
+            : isMoreInfoHovered && isTotalRecsHovered
+              ? "-10%"
+              : isMoreInfoVisible
+                ? "-42%"
+                : "-50%",
+        scale: isMoreInfoHovered ? 0.98 : 1,
+        zIndex: 10,
+        opacity: isAnimating ? 0.5 : 1,
+      };
+    }
+
+    return {
+      x: isTotalRecsHovered ? "31%" : isTotalRecsVisible ? "30%" : "25%",
+      y: isTotalRecsHovered ? "-45%" : "-50%",
+
+      scale: 1,
+      zIndex: 20,
+      opacity: isAnimating ? 0.5 : 1,
+    };
+  };
 
   useEffect(() => {
     const getRandomRecs = async () => {
@@ -175,8 +263,7 @@ export default function HomePage() {
         const [total, hourly] = response.data;
         setTotalRecs(total);
         setHourlyIncrease(hourly);
-        // console.log(totalRecs, hourlyIncrease);
-        console.log("Total recommendations fetched:", response.data);
+        // console.log("Total recommendations fetched:", response.data);
       } catch (error) {
         console.error("Error fetching total recommendations", error);
       }
@@ -194,7 +281,7 @@ export default function HomePage() {
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className="h-[60vh] w-full bg-slate-800 relative flex flex-col items-center justify-center overflow-hidden"
+        className="h-[60vh] w-full bg-slate-800 relative flex flex-col items-center justify-center overflow-visible"
       >
         {/* Dot background div with enhanced mask */}
         <div className="absolute inset-0">
@@ -275,87 +362,139 @@ export default function HomePage() {
             meant to inspire your streamlined discovery of good music.
           </div>
         </div>
-        <div
-          className={`absolute right-[10%] translate-x-[-10%] top-0 bottom-0 lg:w-[25vw] sm:w-[30vw] sm:translate-x-[20%] transition-all duration-1000 ease-in-out
-                      ${isScrollVisible ? "opacity-100" : "opacity-0"}`}
-        >
-          {" "}
-          {!isRandomLoading && (
-            <VerticalScrollingTracks
-              trackIds={trackIds}
-              direction="up"
-              speed="very-slow"
-              pauseOnHover={true}
-            />
-          )}
+        <div className="flex flex-col">
+          <div
+            className={`group absolute right-[10%] translate-x-[-10%] top-0 lg:w-[25vw] sm:w-[30vw] sm:translate-x-[20%] transition-all duration-1000 ease-in-out 
+                        ${isScrollVisible ? "opacity-100" : "opacity-0"}`}
+          >
+            {!isRandomLoading && (
+              <VerticalScrollingTracks
+                trackIds={trackIds}
+                direction="up"
+                speed="very-slow"
+                pauseOnHover={true}
+              />
+            )}
+            <div className="bg-gradient-to-br w-full from-gray-300 to-slate-400 bg-clip-text text-transparent text-sm montserrat-reg absolute bottom-0 translate-x-3/4 right-1/2 translate-y-[8vh] opacity-0 group-hover:opacity-100 group-hover:translate-y-[6vh] transition-all duration-300">
+              <div className="font-regular">Some of Today's Discoveries</div>
+            </div>
+          </div>
         </div>
       </div>
       <div ref={scrollTotalRecsRef} className="h-1 w-full mt-[35vh] absolute" />
+      <div ref={scrollMoreInfoRef} className="h-1 w-full mt-[45vh] absolute" />
       <div className="relative">
         <div className="flex flex-col items-start">
           <div className="sm:-translate-x-14 lg:translate-x-0">
-            <motion.div
-              ref={totalRecRef}
-              className={``}
-              initial={{ scale: 1, opacity: 0, y: "-50%" }}
+            <motion.div // Background Glossy Container
+              className="absolute cursor-pointer"
+              initial={{ scale: 1.0, opacity: 0, y: "-50%" }}
               animate={{
-                scale: isTotalRecsHovered ? 0.98 : 1,
-                x: isTotalRecsHovered
-                  ? "31%"
-                  : isTotalRecsVisible
-                    ? "30%"
-                    : "25%",
-                y: isTotalRecsHovered ? "-49%" : "-50%",
+                ...getBackgroundPosition(),
                 opacity: isTotalRecsVisible ? 1 : 0,
               }}
-              transition={{
-                scale: { duration: 0.5, ease: "easeInOut" },
-                x: { duration: 0.5, ease: "easeInOut" }, // Different durations for x based on isTotalRecsHovered
-                opacity: { duration: 0.5, ease: "easeInOut" },
-                y: { duration: 0.5, ease: "easeInOut" },
+              transition={
+                isAnimating
+                  ? { duration: 0.5, ease: [0.68, -0.55, 0.27, 1.55] }
+                  : { duration: 0.5, ease: [0.22, 0.68, 0.31, 1.0] }
+              }
+              onClick={handleContainerClick}
+              onHoverStart={() => {
+                if (!isSwapped) {
+                  setIsTotalRecsHovered(true);
+                }
+                setIsMoreInfoHovered(true);
               }}
-              onHoverStart={() => setIsTotalRecsHovered(true)}
-              onHoverEnd={() => setIsTotalRecsHovered(false)}
+              onHoverEnd={() => {
+                if (!isSwapped) {
+                  setIsTotalRecsHovered(false);
+                }
+                setIsMoreInfoHovered(false);
+              }}
+            >
+              <GlossyContainer className="" />
+            </motion.div>
+            <motion.div
+              // ref={totalRecRef}
+              className={`relative cursor-pointer`}
+              initial={{ scale: 1, opacity: 0, y: "-50%" }}
+              animate={{
+                ...getForegroundPosition(),
+
+                opacity: isTotalRecsVisible ? 1 : 0,
+              }}
+              transition={
+                isAnimating
+                  ? { duration: 0.5, ease: [0.68, -0.55, 0.27, 1.55] }
+                  : { duration: 0.5, ease: [0.22, 0.68, 0.31, 1.0] }
+              }
+              onClick={handleContainerClick}
+              onHoverStart={() => {
+                if (isSwapped) {
+                  setIsMoreInfoHovered(true);
+                }
+                setIsTotalRecsHovered(true);
+              }}
+              onHoverEnd={() => {
+                if (isSwapped) {
+                  setIsMoreInfoHovered(false);
+                }
+                setIsTotalRecsHovered(false);
+              }}
             >
               <GlossyContainer className="">
                 <div className="text-sm montserrat-reg text-slate-300  py-3 px-3 ">
                   <motion.div
                     animate={{
-                      color: isTotalRecsHovered
-                        ? "rgb(148 163 184)"
-                        : "rgb(203 213 225)",
+                      color:
+                        isTotalRecsHovered && !isSwapped
+                          ? "rgb(148 163 184)"
+                          : "rgb(203 213 225)",
                     }} // Using Tailwind colors: amber-400 and slate-400
                     transition={{ duration: 0.3 }}
+                    onMouseEnter={() => {
+                      console.log("hovered on new songs");
+                    }}
+                    onMouseLeave={() => {
+                      console.log("hovered off new songs");
+                    }}
                   >
                     New Songs Discovered
                   </motion.div>
                 </div>
                 <motion.div
-                  className={`text-5xl px-4 lato-regular  transition-colors duration-300 
+                  className={`text-5xl pl-4 lato-regular  inline-flex transition-colors duration-300 
                   }`}
                   initial={{ scale: 1, opacity: 0, color: "rgb(148 163 184)" }}
                   animate={{
-                    scale: isTotalRecsHovered ? 1.08 : 1,
-                    opacity: isTotalRecsVisible ? 1 : 0,
-                    x: isTotalRecsHovered ? -3 : 0,
-                    y: isTotalRecsHovered ? -3 : 0,
-                    color: isTotalRecsHovered
-                      ? "rgb(203,213,225)" //slate-300
-                      : "rgb(148 163 184)", //slate-400
+                    scale: isTotalRecsHovered && !isSwapped ? 1.08 : 1,
+                    opacity: isTotalRecsVisible && !isSwapped ? 1 : 0,
+                    x: isTotalRecsHovered && !isSwapped ? -18 : 0,
+                    y: isTotalRecsHovered && !isSwapped ? -3 : 0,
+                    color:
+                      isTotalRecsHovered && !isSwapped
+                        ? "rgb(203,213,225)" //slate-300
+                        : "rgb(148 163 184)", //slate-400
 
                     // fill: isTotalRecsHovered
                     //   ? "rgba(125,20,205)"
                     //   : "rgba(203,213,225)", // slate-300
                   }}
                   transition={{
-                    scale: { duration: 0.75, ease: "easeInOut" },
-                    x: { duration: 0.75, ease: "easeInOut" },
-                    y: { duration: 0.75, ease: "easeInOut" },
+                    scale: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
+                    x: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
+                    y: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
                     opacity: { duration: 0.5, ease: "easeInOut" },
                     color: { duration: 0.3, ease: "easeInOut" }, // Change if needed
                   }}
                   style={{
                     willChange: "transform",
+                  }}
+                  onMouseEnter={() => {
+                    console.log("hovered on Total Recs Counter");
+                  }}
+                  onMouseLeave={() => {
+                    console.log("hovered off Total Recs Counter");
                   }}
                 >
                   <AnimatedCounter
@@ -370,11 +509,18 @@ export default function HomePage() {
                 >
                   <motion.div
                     animate={{
-                      color: isTotalRecsHovered
-                        ? "rgb(251, 191, 36, 0.8)"
-                        : "#64748b",
+                      color:
+                        isTotalRecsHovered && !isSwapped
+                          ? "rgb(251, 191, 36, 0.8)"
+                          : "#64748b",
                     }} // Using Tailwind colors: amber-400 and slate-400
                     transition={{ duration: 0.3, ease: "easeInOut" }}
+                    onMouseEnter={() => {
+                      console.log("hovered on Counter");
+                    }}
+                    onMouseLeave={() => {
+                      console.log("hovered off Counter");
+                    }}
                   >
                     ↑{" "}
                     <AnimatedCounter
@@ -388,7 +534,7 @@ export default function HomePage() {
             </motion.div>
           </div>
 
-          <div className="mt-4 text-white">Hello</div>
+          {/* <div className="mt-4 text-white">Hello</div> */}
         </div>
       </div>
     </div>
