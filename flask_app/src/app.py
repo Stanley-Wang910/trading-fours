@@ -363,7 +363,8 @@ def recommend():
     # Update recommended songs in session
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
     print("Length of updated_recommendations:", len(updated_recommendations))
-    session_store.set_prev_rec(redis_key, list(track_ids), list(updated_recommendations))
+    session_store.set_prev_rec(redis_key, list(track_ids), list(updated_recommendations)) # Update prev rec for user
+    session_store.set_random_recs(list(updated_recommendations)) # Update random recs app wide
     memory_usage = session_store.get_memory_usage(redis_key)
     print("Memory usage:", memory_usage, "bytes") 
     stored_recommendations = session_store.get_data(redis_key)
@@ -425,9 +426,16 @@ def save_favorited():
 
 @app.route('/total-recommendations', methods=['GET'])
 def get_total_recommendations():
-    total_recommendations = session_store.get_total_recs()
-    print("Total recommendations:", total_recommendations)
-    return jsonify(total_recommendations)
+    total_recommendations, hourly_recs = session_store.get_total_recs()
+    print("Total recommendations:", total_recommendations, "Hourly recommendations:", hourly_recs)
+    return jsonify([total_recommendations, hourly_recs])
+
+@app.route('/random-recommendations', methods=['GET'])
+def get_random_recommendations():
+    random_recs = session_store.get_random_recs()
+    return jsonify(random_recs)
+
+
 
 @app.route('/test') ### Keep for testing new features
 def test():
@@ -450,14 +458,27 @@ def test():
     #     print("Top three genres:", top_genres)
     #     playlist.to_csv('playlist.csv')
 
-    session_store.update_total_recs(30)
+    # session_store.update_total_recs(30)
+    # session_store.set_total_recs(7534)
+    action = input("Enter: 1. Delete keys, 2. Get Random Recommendations")
 
-    total_recs = session_store.get_total_recs()
+    if (action == '1'): 
+        session_store.delete_keys()
 
 
-    
+        if session_store.redis.exists(session_store._get_sample_taken_key()):
+            return jsonify({'message': 'Sample already taken, no random recs saved'})
+        return jsonify(' Sample not taken, random recs saved') 
 
-    return jsonify(total_recs)
+    elif (action == '2'):
+        total_recs, hourly_recs = session_store.get_total_recs()
+
+        print("Total recommendations:", total_recs, "Hourly recommendations:", hourly_recs)
+
+        random_recs = session_store.get_random_recs()
+
+
+    return jsonify(random_recs)
 
 
 

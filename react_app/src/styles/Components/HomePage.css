@@ -17,7 +17,7 @@ left: 0;
 }
 
 .hover-effect-link::before {
-background-color: #CC8E15;
+background-color: rgb(251, 191, 36);
 height: 1.25px;
 bottom: 0;
 transform-origin: 100% 50%;
@@ -29,12 +29,14 @@ transition: transform .3s cubic-bezier(0.76, 0, 0.24, 1);
 content: attr(data-replace);
 height: 100%;
 top: 0;
+
 display: flex;
 align-items: center;
 transform-origin: 100% 50%;
 transform: translate3d(200%, 0, 0);
 transition: transform .3s cubic-bezier(0.76, 0, 0.24, 1);
-color: #CC8E15;
+color: rgb(251, 191, 36);
+
 }
 
 .hover-effect-link:hover::before {
@@ -44,6 +46,7 @@ transform: scaleX(1);
 
 .hover-effect-link:hover::after {
 transform: translate3d(0, 0, 0);
+
 }
 
 .hover-effect-link span {
@@ -55,7 +58,7 @@ transition: transform .3s cubic-bezier(0.76, 0, 0.24, 1);
 .hover-effect-link:hover span {
 transform: translate3d(-200%, 0, 0);
 }
-
+/* 
 .carousel-fade-top {
   position: absolute;
   top: 0;
@@ -78,4 +81,4 @@ transform: translate3d(-200%, 0, 0);
 
 .embed {
   transition: opacity 0.5s ease-in-out;
-}
+} */

@@ -4,6 +4,8 @@ import redis
 import time
 import pickle
 import pandas as pd
+from datetime import datetime, timedelta
+import random
 # Load Redis environment variables
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT')
@@ -23,13 +25,79 @@ class SessionStore:
         self.redis = redis.Redis(connection_pool=redis_pool)
         self.cache = {}
 
+    def _get_date_key(self):
+        return datetime.now().strftime("%Y-%m-%d")
+
+    def _get_random_recs_key(self):
+        return f'random_recs:{self._get_date_key()}'
+
+    def _get_sample_taken_key(self):
+        return f'sample_taken:{self._get_date_key()}'
+
+
     def set_prev_rec(self, key, track_ids, recommended_songs):
         start_time = time.time()
         data = {'track_ids': track_ids, 'recommended_ids': recommended_songs}
-        print("Time to set rec ids in redis:", time.time() - start_time)
         self.redis.set(key, json.dumps(data))
         self.cache[key] = data
+        print("Time to set rec ids in redis:", time.time() - start_time)
 
+
+    def set_random_recs(self, recommended_songs):
+        if self.redis.exists(self._get_sample_taken_key()):
+            print('Sample already taken, no random recs saved')
+            return
+
+        pipe = self.redis.pipeline()
+        pipe.rpush(self._get_random_recs_key(), *recommended_songs)
+        pipe.expire(self._get_random_recs_key(), 86400) # 1 day
+        pipe.expire(self._get_sample_taken_key(), 86400) # 1 day
+        pipe.execute()
+
+    def get_random_recs(self):
+        random_rec_key = self._get_random_recs_key()
+        sample_taken_key = self._get_sample_taken_key()
+
+        list_length = self.redis.llen(random_rec_key)
+        print("List length", list_length)
+
+        if list_length == 10 and self.redis.exists(sample_taken_key):  
+            print("Returning existing daily sample")
+            return [item.decode('utf-8') for item in self.redis.lrange(random_rec_key, 0, -1)]
+
+
+        if list_length < 50 and not self.redis.exists(sample_taken_key):
+            print("Not enough items for a sample")
+            return None
+
+
+        # 10 Random indices
+        random_indicies = random.sample(range(list_length), 10)
+        pipe = self.redis.pipeline()
+        for index in random_indicies:
+            pipe.lindex(random_rec_key, index)
+        
+        sample = [item.decode('utf-8') for item in pipe.execute() if item is not None]
+
+        if not sample:
+            print("Sample empty")
+            return None
+        
+
+         
+        pipe = self.redis.pipeline()
+        pipe.delete(random_rec_key)
+        pipe.rpush(random_rec_key, *sample)
+        pipe.set(sample_taken_key, 1)
+        pipe.expire(sample_taken_key, 86400) # 1 day
+        pipe.expire(random_rec_key, 86400) # 1 day
+        pipe.execute()
+    
+        print("Sample taken and replaced original data")
+        return sample
+        
+
+    
     def set_vector(self, key, vector, ttl=3600):
         if isinstance(vector, pd.DataFrame):
             serialized_vector = pickle.dumps(vector)
@@ -53,18 +121,29 @@ class SessionStore:
 
     def update_total_recs(self, num_recs: int):
         key = 'total_recs'
-        self.redis.incrby(key, json.dumps(num_recs))
+        hourly_key = f'hourly_recs:{datetime.now().strftime("%Y-%m-%d:%H")}'
+        print("Hourly key", hourly_key)
+
+        pipeline = self.redis.pipeline()
+        pipeline.incrby(key, num_recs)
+        pipeline.incrby(hourly_key, num_recs)
+        pipeline.expire(hourly_key, 3600)
+        pipeline.execute()
+        # self.redis.incrby(key, json.dumps(num_recs))
+    
+    
 
     def get_total_recs(self):
         key = 'total_recs'
         total_recs = self.redis.get(key)
-        print("Total recs", int(total_recs.decode('utf-8')))        
-        if total_recs:
-            return int(total_recs.decode('utf-8'))
-        return 0
-
-
-
+        # print("Total recs", int(total_recs.decode('utf-8')))  
+        current_hour = datetime.now().strftime("%Y-%m-%d:%H")
+        key = f'hourly_recs:{current_hour}'
+        hourly_recs = self.redis.get(key)
+        decoded_total_recs = int(total_recs.decode('utf-8')) if total_recs else 0
+        decoded_hourly_recs = int(hourly_recs.decode('utf-8')) if hourly_recs else 0
+        return decoded_total_recs, decoded_hourly_recs
+      
 
     def get_data(self, key): 
         start_time = time.time()
@@ -156,3 +235,14 @@ class SessionStore:
 
     def get_memory_usage(self, key):
         return self.redis.memory_usage(key) 
+
+
+### For Testing
+    def set_total_recs(self, num_recs: int): # For Testing
+        key = 'total_recs'
+        self.redis.set(key, json.dumps(num_recs))
+
+    def delete_keys(self):
+        key1 = f'sample_taken:{self._get_date_key()}'
+        key2 = f'random_recs:{self._get_date_key()}'    
+        self.redis.delete(key1, key2)

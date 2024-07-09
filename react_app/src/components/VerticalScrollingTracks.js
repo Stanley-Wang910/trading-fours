@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import axios from "axios";
 import { motion } from "framer-motion";
 import { cn } from "../utils/cn.ts";
 
@@ -11,11 +12,21 @@ export const VerticalScrollingTracks = ({
 }) => {
   const containerRef = useRef(null);
   const scrollerRef = useRef(null);
-  const [start, setStart] = useState(false);
-
   useEffect(() => {
     addAnimation();
   }, []);
+
+  const [start, setStart] = useState(false);
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [trackIds, setTrackIds] = useState([]);
+  // const [fetchError, setFetchError] = useState(false);
+
+  // useEffect(() => {
+  //   if (!isLoading && (fetchError || trackIds.length === 0)) {
+  //     console.log("No recommendations found, setting default track ids");
+  //     setTrackIds(DEFAULT_TRACK_IDS);
+  //   }
+  // }, [isLoading, fetchError, trackIds]);
 
   function addAnimation() {
     if (containerRef.current && scrollerRef.current) {
@@ -53,7 +64,7 @@ export const VerticalScrollingTracks = ({
       } else if (speed === "normal") {
         containerRef.current.style.setProperty("--animation-duration", "40s");
       } else {
-        containerRef.current.style.setProperty("--animation-duration", "150s");
+        containerRef.current.style.setProperty("--animation-duration", "80s");
       }
     }
   };

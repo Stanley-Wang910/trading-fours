@@ -12,6 +12,13 @@ module.exports = {
 
   darkMode: false, // or 'media' or 'class'
   theme: {
+    screens: {
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+    },
     extend: {
       fontFamily: {
         merriweather: ["Merriweather", "serif"],
@@ -32,7 +39,7 @@ module.exports = {
         },
         scroll: {
           to: {
-            transform: "translateY(calc(-50% - 1rem))",
+            transform: "translateY(calc(-50% - 0.5rem))",
           },
         },
       },
@@ -40,7 +47,7 @@ module.exports = {
         "meteor-effect": "meteor 5s linear infinite",
         fadeIn: "fadeIn 1s ease-in-out forwards",
         scroll:
-          "scroll var(--animation-duration, 80s) var(--animation-direction, forwards) linear infinite",
+          "scroll var(--animation-duration, 40s) var(--animation-direction, forwards) linear infinite",
       },
 
       colors: {
