@@ -484,7 +484,7 @@ export default function HomePage() {
                     scale: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
                     x: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
                     y: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
-                    opacity: { duration: 0.5, ease: "easeInOut" },
+                    opacity: { duration: 0.3, ease: "easeInOut" },
                     color: { duration: 0.3, ease: "easeInOut" }, // Change if needed
                   }}
                   style={{
