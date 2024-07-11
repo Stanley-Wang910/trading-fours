@@ -63,7 +63,7 @@ export const VerticalScrollingTracks = ({
     <div
       ref={containerRef}
       className={cn(
-        "scroller relative z-20 h-[60vh] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_20%,white_80%,transparent)]",
+        "scroller relative z-20 h-[57vh] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,white_20%,white_80%,transparent)]",
         className
       )}
     >

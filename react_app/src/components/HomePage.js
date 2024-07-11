@@ -1,15 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { TextGenerateEffect } from "./ui/text-generate-effect.tsx";
-import {
-  motion,
-  useMotionValue,
-  useMotionTemplate,
-  AnimatePresence,
-  useAnimation,
-} from "framer-motion";
+import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
 import GlossyContainer from "./GlossyContainer.js";
 import VerticalScrollingTracks from "./VerticalScrollingTracks.js";
+import AnimatedDivider from "./AnimatedDivider.js";
+import VideoEmbed from "./VideoEmbed.js";
 import "../styles/Components/HomePage.css";
 
 const AnimatedCounter = ({ value, isCountVisible }) => {
@@ -86,7 +82,7 @@ const useScrollAnimation = () => {
   return [ref, isVisible];
 };
 
-export default function HomePage() {
+export default function HomePage(handleAuth) {
   const DEFAULT_TRACK_IDS = [
     "2IwL0fwckPbO9sau1EHslH", // Live from kitchen
     "5gcYcp5Tg5u4SO8zVa4nSS", // Pol
@@ -108,8 +104,7 @@ export default function HomePage() {
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [totalRecs, setTotalRecs] = useState(0);
   const [hourlyIncrease, setHourlyIncrease] = useState(0);
-  // const [isCountVisible, setIsCountVisible] = useState(false);
-  const [isScrollVisible, setIsScrollVisible] = useState(false);
+
   const [isTextGenComplete, setIsTextGenComplete] = useState(false);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -122,6 +117,8 @@ export default function HomePage() {
 
   const [scrollTotalRecsRef, isTotalRecsVisible] = useScrollAnimation();
   const [scrollMoreInfoRef, isMoreInfoVisible] = useScrollAnimation();
+  const [scrollVideoEmbedRef, isVideoEmbedVisible] = useScrollAnimation();
+  const [scrollDiv2Ref, isDiv2Visible] = useScrollAnimation();
   const [trackIds, setTrackIds] = useState(DEFAULT_TRACK_IDS);
   const [isRandomLoading, setIsRandomLoading] = useState(true);
 
@@ -137,7 +134,7 @@ export default function HomePage() {
     if (isSwapped) {
       return {
         x: isMoreInfoHovered ? "31%" : "30%",
-        y: isMoreInfoHovered ? "-45%" : "-50%",
+        y: isMoreInfoHovered ? "5%" : "0%",
         scale: 1,
         zIndex: 20,
         opacity: isAnimating ? 0.5 : 1,
@@ -153,17 +150,17 @@ export default function HomePage() {
             ? "43%"
             : isTotalRecsVisible
               ? isMoreInfoVisible
-                ? "33%"
+                ? "32.5%" // Starting State
                 : "30%"
-              : "25%",
+              : "23%",
       y:
         isTotalRecsHovered && !isMoreInfoHovered
-          ? "-37%"
+          ? "13%"
           : isMoreInfoHovered && isTotalRecsHovered
-            ? "-10%"
+            ? "40%"
             : isMoreInfoVisible
-              ? "-42%"
-              : "-50%",
+              ? "7.5%" // Starting State
+              : "0%",
 
       scale: isTotalRecsHovered ? 0.98 : isMoreInfoVisible ? 0.98 : 1,
       zIndex: 10,
@@ -181,26 +178,26 @@ export default function HomePage() {
               ? "43%"
               : isTotalRecsVisible
                 ? isMoreInfoVisible
-                  ? "33%"
+                  ? "32.5%"
                   : "30%"
-                : "25%",
+                : "23%",
         y:
           isMoreInfoHovered && !isTotalRecsHovered
-            ? "-37%"
+            ? "13%"
             : isMoreInfoHovered && isTotalRecsHovered
-              ? "-10%"
+              ? "40%"
               : isMoreInfoVisible
-                ? "-42%"
-                : "-50%",
-        scale: isMoreInfoHovered ? 0.98 : 1,
+                ? "7.5%"
+                : "0%",
+        scale: isMoreInfoHovered ? 0.98 : 0.98,
         zIndex: 10,
         opacity: isAnimating ? 0.5 : 1,
       };
     }
 
     return {
-      x: isTotalRecsHovered ? "31%" : isTotalRecsVisible ? "30%" : "25%",
-      y: isTotalRecsHovered ? "-45%" : "-50%",
+      x: isTotalRecsHovered ? "31%" : isTotalRecsVisible ? "30%" : "23%",
+      y: isTotalRecsHovered ? "5%" : "0%",
 
       scale: 1,
       zIndex: 20,
@@ -250,7 +247,7 @@ export default function HomePage() {
   const handleTextGenComplete = useCallback(() => {
     setIsTextGenComplete(true);
     setIsDescVisible(true);
-    setIsScrollVisible(true);
+    // setIsScrollVisible(true);
   }, []);
 
   useEffect(() => {
@@ -313,7 +310,7 @@ export default function HomePage() {
         {/* Additional gradient overlay for smoother transition */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-900/10 to-gray-900"></div>
 
-        <div className="w-full justify-start -translate-y-[10%] translate-x-[10%]  montserrat-reg text-3xl relative">
+        <div className="w-full justify-start translate-y-[10%] translate-x-[10%]  montserrat-reg text-3xl relative">
           <TextGenerateEffect
             words={"Built, by design,\nFor the way\nYou listen."}
             highlightText="Built, For You"
@@ -321,7 +318,7 @@ export default function HomePage() {
           />
           <div
             className={`
-            text-sm mt-4 
+            text-sm mt-2 
             sm:w-[35vw]
             bg-gradient-to-br from-gray-400 to-gray-200 
             bg-clip-text text-transparent 
@@ -358,14 +355,38 @@ export default function HomePage() {
                 GitHub
               </div>
             </div>
-            , solo-dev project, created with Spotify magic, <br />
-            meant to inspire your streamlined discovery of good music.
+            , solo-dev Spotify recommender, <br />
+            meant to inspire your streamlined discovery of good music. <br />
+            <div className="mt-2 pl-4 inline-flex">
+              <ul className="list-decimal list-inside marker:text-amber-400">
+                <li>
+                  Connect your{" "}
+                  <div className="relative inline-block">
+                    <button
+                      href="https://github.com/Stanley-Wang910/spotify-rec-engine"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover-effect-link"
+                      data-replace="Spotify"
+                      onClick={() =>
+                        (window.location.href = `${process.env.REACT_APP_BACKEND_URL}/auth/login`)
+                      }
+                    >
+                      <span>Spotify</span>
+                    </button>
+                  </div>
+                  .
+                </li>
+                <li>Enter a playlist or song.</li>
+                <li>Discover a new sound.</li>
+              </ul>
+            </div>
           </div>
         </div>
         <div className="flex flex-col">
           <div
             className={`group absolute right-[10%] translate-x-[-10%] top-0 lg:w-[25vw] sm:w-[30vw] sm:translate-x-[20%] transition-all duration-1000 ease-in-out 
-                        ${isScrollVisible ? "opacity-100" : "opacity-0"}`}
+                        ${isTextGenComplete ? "opacity-100" : "opacity-0"}`}
           >
             {!isRandomLoading && (
               <VerticalScrollingTracks
@@ -381,14 +402,29 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Scroll Animations Refs */}
       <div ref={scrollTotalRecsRef} className="h-1 w-full mt-[35vh] absolute" />
-      <div ref={scrollMoreInfoRef} className="h-1 w-full mt-[45vh] absolute" />
+      <div ref={scrollMoreInfoRef} className="h-1 w-full mt-[40vh] absolute" />
+      <div
+        ref={scrollVideoEmbedRef}
+        className="h-1 w-full mt-[55vh] absolute"
+      />
+      <div ref={scrollDiv2Ref} className="h-1 w-full mt-[50vh] absolute" />
       <div className="relative">
+        <AnimatedDivider
+          direction="left"
+          isVisible={isTextGenComplete}
+          className=""
+          width="50vw"
+          xOffset="8vw"
+          yOffset={-20}
+        />
         <div className="flex flex-col items-start">
-          <div className="sm:-translate-x-14 lg:translate-x-0">
+          <div className="sm:-translate-x-8 lg:translate-x-0">
             <motion.div // Background Glossy Container
-              className="absolute cursor-pointer"
-              initial={{ scale: 1.0, opacity: 0, y: "-50%" }}
+              className={`absolute ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
+              initial={{ scale: 1.0, opacity: 0 }}
               animate={{
                 ...getBackgroundPosition(),
                 opacity: isTotalRecsVisible ? 1 : 0,
@@ -416,8 +452,8 @@ export default function HomePage() {
             </motion.div>
             <motion.div
               // ref={totalRecRef}
-              className={`relative cursor-pointer`}
-              initial={{ scale: 1, opacity: 0, y: "-50%" }}
+              className={`relative ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
+              initial={{ scale: 1, opacity: 0 }}
               animate={{
                 ...getForegroundPosition(),
 
@@ -535,6 +571,23 @@ export default function HomePage() {
           </div>
 
           {/* <div className="mt-4 text-white">Hello</div> */}
+        </div>
+        <div className="relative">
+          <AnimatedDivider
+            direction="right"
+            isVisible={isDiv2Visible}
+            className="absolute"
+            width="45vw"
+            xOffset="51vw"
+            yOffset={60}
+          />
+
+          <VideoEmbed
+            isVisible={isVideoEmbedVisible}
+            id="tzjeOJVYI7o"
+            title="Demo"
+            className="rounded-lg w-full max-w-[40vw] mx-auto  inline-flex my-auto "
+          />
         </div>
       </div>
     </div>

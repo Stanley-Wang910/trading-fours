@@ -62,9 +62,6 @@ const GlossyContainer = ({ children }) => {
       ref={containerRef}
       className="relative sm:w-[45vw] lg:w-[30vw] h-[15vh] "
       style={{
-        // boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
-        // backdropFilter: "blur(5px)",
-        // "--border-color": "rgba(128, 128, 128, 0.2)",
         transformStyle: "preserve-3d",
         transition: "transform 0.2s ease-out",
         willChange: "transform",
@@ -73,7 +70,7 @@ const GlossyContainer = ({ children }) => {
       <div
         className="absolute inset-0 rounded-lg overflow-hidden bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-slate-800 via-gray-900 to-slate-900"
         style={{
-          boxShadow: "0 4px 30px rgba(0, 0, 0, 0.1)",
+          boxShadow: "5px 5px 10px rgba(0, 0, 0, 0.1)",
           backdropFilter: "blur(5px)",
           WebkitBackdropFilter: "blur(5px)",
         }}
