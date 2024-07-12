@@ -9,6 +9,7 @@ const AnimatedDivider = ({
   xOffset = 0,
   yOffset = 0,
   color = "rgb(71, 85, 105)",
+  delay = 1,
   ...props
 }) => {
   const gradientDir = direction === "left" ? "to right" : "to left";
@@ -17,7 +18,7 @@ const AnimatedDivider = ({
       className={`h-[2.5px] w-full rounded-full  ${className}`}
       initial={{ scaleX: 0 }}
       animate={isVisible ? { scaleX: 1 } : { scaleX: 0 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
+      transition={{ duration: 0.5, ease: "easeInOut", delay: delay }}
       style={{
         width,
         transformOrigin: direction,

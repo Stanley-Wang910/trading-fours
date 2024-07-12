@@ -1,88 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
+import Lottie from "lottie-react";
+import ScrollPromptAni from "../animations/ScrollPromptAni.json";
 import { TextGenerateEffect } from "./ui/text-generate-effect.tsx";
 import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
 import GlossyContainer from "./GlossyContainer.js";
 import VerticalScrollingTracks from "./VerticalScrollingTracks.js";
 import AnimatedDivider from "./AnimatedDivider.js";
 import VideoEmbed from "./VideoEmbed.js";
+import { HoverBorderGradient } from "./ui/hover-border-gradient.tsx";
+import AnimatedCounter from "./AnimatedCounter.js";
+import useScrollAnimation from "./ScrollAnimation.js";
+import useDelayAnimation from "./DelayAnimation.js";
+
 import "../styles/Components/HomePage.css";
 
-const AnimatedCounter = ({ value, isCountVisible }) => {
-  const counterRef = useRef(null);
-  const [currentValue, setCurrentValue] = useState(0);
-  const [isFirstRender, setIsFirstRender] = useState(true);
-
-  useEffect(() => {
-    if (!isCountVisible) return;
-
-    const animateValue = (start, end, duration) => {
-      start = Number(start);
-      end = Number(end);
-      // const start = parseInt(start.replace(/,/g, ""), 10);
-      // const end = parseInt(end.replace(/,/g, ""), 10);
-      let startTimestamp = null;
-      const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const animatedValue = Math.floor(progress * (end - start) + start);
-        if (counterRef.current) {
-          counterRef.current.textContent = animatedValue.toLocaleString();
-        }
-        setCurrentValue(animatedValue);
-        if (progress < 1) {
-          window.requestAnimationFrame(step);
-        }
-      };
-      window.requestAnimationFrame(step);
-    };
-
-    if (isFirstRender) {
-      animateValue(Math.max(0, value - 100), value, 200);
-      setIsFirstRender(false);
-      console.log("First render");
-    } else {
-      animateValue(currentValue, value, 200);
-    }
-  }, [value, isFirstRender, currentValue, isCountVisible]);
-
-  if (!isCountVisible) return null;
-
-  return <span ref={counterRef}>{currentValue.toLocaleString()}</span>;
-};
-
-const useScrollAnimation = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      {
-        threshold: 0,
-      }
-    );
-
-    if (ref.current) {
-      observer.observe(ref.current);
-    }
-
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current);
-      }
-    };
-  }, []);
-
-  return [ref, isVisible];
-};
-
-export default function HomePage(handleAuth) {
+export default function HomePage() {
   const DEFAULT_TRACK_IDS = [
     "2IwL0fwckPbO9sau1EHslH", // Live from kitchen
     "5gcYcp5Tg5u4SO8zVa4nSS", // Pol
@@ -100,27 +33,31 @@ export default function HomePage(handleAuth) {
     // "1",
     // "1",
   ];
-  const [isDescVisible, setIsDescVisible] = useState(false);
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const [trackIds, setTrackIds] = useState(DEFAULT_TRACK_IDS);
   const [totalRecs, setTotalRecs] = useState(0);
   const [hourlyIncrease, setHourlyIncrease] = useState(0);
 
   const [isTextGenComplete, setIsTextGenComplete] = useState(false);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
+  const [isDescVisible, setIsDescVisible] = useState(false);
+  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+  const [isRandomLoading, setIsRandomLoading] = useState(true);
+
   const [isMouseOver, setIsMouseOver] = useState(false);
+
+  const [scrollDiv1Ref, isDiv1Visible] = useScrollAnimation();
+  const isTotalRecsVisible = useDelayAnimation(isDiv1Visible, 1000);
+  const isMoreInfoVisible = useDelayAnimation(isTotalRecsVisible, 500);
+
+  const [scrollDiv2Ref, isDiv2Visible] = useScrollAnimation();
+  const isVideoEmbedVisible = useDelayAnimation(isDiv2Visible, 1250);
+
   const [isTotalRecsHovered, setIsTotalRecsHovered] = useState(false);
   const [isMoreInfoHovered, setIsMoreInfoHovered] = useState(false);
   const [isSwapped, setIsSwapped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const totalRecRef = useRef(null);
 
-  const [scrollTotalRecsRef, isTotalRecsVisible] = useScrollAnimation();
-  const [scrollMoreInfoRef, isMoreInfoVisible] = useScrollAnimation();
-  const [scrollVideoEmbedRef, isVideoEmbedVisible] = useScrollAnimation();
-  const [scrollDiv2Ref, isDiv2Visible] = useScrollAnimation();
-  const [trackIds, setTrackIds] = useState(DEFAULT_TRACK_IDS);
-  const [isRandomLoading, setIsRandomLoading] = useState(true);
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
   const handleContainerClick = () => {
     if (!isAnimating) {
@@ -152,7 +89,7 @@ export default function HomePage(handleAuth) {
               ? isMoreInfoVisible
                 ? "32.5%" // Starting State
                 : "30%"
-              : "23%",
+              : "28%",
       y:
         isTotalRecsHovered && !isMoreInfoHovered
           ? "13%"
@@ -180,7 +117,7 @@ export default function HomePage(handleAuth) {
                 ? isMoreInfoVisible
                   ? "32.5%"
                   : "30%"
-                : "23%",
+                : "28%",
         y:
           isMoreInfoHovered && !isTotalRecsHovered
             ? "13%"
@@ -196,7 +133,7 @@ export default function HomePage(handleAuth) {
     }
 
     return {
-      x: isTotalRecsHovered ? "31%" : isTotalRecsVisible ? "30%" : "23%",
+      x: isTotalRecsHovered ? "31%" : isTotalRecsVisible ? "30%" : "28%",
       y: isTotalRecsHovered ? "5%" : "0%",
 
       scale: 1,
@@ -344,20 +281,35 @@ export default function HomePage(handleAuth) {
                 className={`
                 absolute top-3/4 transform -translate-y-8
                 ml-2 px-2 py-0.5 bg-gray-700 text-slate-300 text-xs font-slim rounded-lg shadow-md
-                whitespace-nowrap z-10 transition-all duration-300 ease-in-out
+                whitespace-nowrap z-10 transition-all duration-300 ease-in-out flex items-center
                 ${
                   isTooltipVisible
-                    ? "opacity-100 translate-x-2"
+                    ? "opacity-100 translate-x-0"
                     : "opacity-0 pointer-events-none translate-x-12"
                 }
               `}
               >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 15 15"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mr-1"
+                >
+                  <path
+                    d="M7.49933 0.25C3.49635 0.25 0.25 3.49593 0.25 7.50024C0.25 10.703 2.32715 13.4206 5.2081 14.3797C5.57084 14.446 5.70302 14.2222 5.70302 14.0299C5.70302 13.8576 5.69679 13.4019 5.69323 12.797C3.67661 13.235 3.25112 11.825 3.25112 11.825C2.92132 10.9874 2.44599 10.7644 2.44599 10.7644C1.78773 10.3149 2.49584 10.3238 2.49584 10.3238C3.22353 10.375 3.60629 11.0711 3.60629 11.0711C4.25298 12.1788 5.30335 11.8588 5.71638 11.6732C5.78225 11.205 5.96962 10.8854 6.17658 10.7043C4.56675 10.5209 2.87415 9.89918 2.87415 7.12104C2.87415 6.32925 3.15677 5.68257 3.62053 5.17563C3.54576 4.99226 3.29697 4.25521 3.69174 3.25691C3.69174 3.25691 4.30015 3.06196 5.68522 3.99973C6.26337 3.83906 6.8838 3.75895 7.50022 3.75583C8.1162 3.75895 8.73619 3.83906 9.31523 3.99973C10.6994 3.06196 11.3069 3.25691 11.3069 3.25691C11.7026 4.25521 11.4538 4.99226 11.3795 5.17563C11.8441 5.68257 12.1245 6.32925 12.1245 7.12104C12.1245 9.9063 10.4292 10.5192 8.81452 10.6985C9.07444 10.9224 9.30633 11.3648 9.30633 12.0413C9.30633 13.0102 9.29742 13.7922 9.29742 14.0299C9.29742 14.2239 9.42828 14.4496 9.79591 14.3788C12.6746 13.4179 14.75 10.7025 14.75 7.50024C14.75 3.49593 11.5036 0.25 7.49933 0.25Z"
+                    fill="currentColor"
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                  ></path>
+                </svg>
                 GitHub
               </div>
             </div>
             , solo-dev Spotify recommender, <br />
             meant to inspire your streamlined discovery of good music. <br />
-            <div className="mt-2 pl-4 inline-flex">
+            {/* <div className="mt-2 pl-4 inline-flex">
               <ul className="list-decimal list-inside marker:text-amber-400">
                 <li>
                   Connect your{" "}
@@ -381,11 +333,30 @@ export default function HomePage(handleAuth) {
                 <li>Discover a new sound.</li>
               </ul>
             </div>
+            <div className="absolute mt-4 translate-x-[0vw]">
+              <HoverBorderGradient
+                containerClassName="rounded-xl"
+                as="button"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() =>
+                  (window.location.href = `${process.env.REACT_APP_BACKEND_URL}/auth/login`)
+                }
+                className="bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-800/70 via-gray-900/70 to-slate-900/80 text-sm text-gray-300 flex items-center space-x-2"
+              >
+                <span className="montserrat-reg">
+                  <div className="font-semibold">Try Now!</div>
+                </span>
+              </HoverBorderGradient>
+            </div> */}
           </div>
+
+          {/* <ScrollPrompt /> */}
         </div>
+
         <div className="flex flex-col">
           <div
-            className={`group absolute right-[10%] translate-x-[-10%] top-0 lg:w-[25vw] sm:w-[30vw] sm:translate-x-[20%] transition-all duration-1000 ease-in-out 
+            className={`group absolute right-[15%]  top-0 lg:w-[25vw] sm:w-[30vw] sm:translate-x-[20%] transition-all duration-1000 ease-in-out 
                         ${isTextGenComplete ? "opacity-100" : "opacity-0"}`}
           >
             {!isRandomLoading && (
@@ -396,27 +367,44 @@ export default function HomePage(handleAuth) {
                 pauseOnHover={true}
               />
             )}
-            <div className="bg-gradient-to-br w-full from-gray-300 to-slate-400 bg-clip-text text-transparent text-sm montserrat-reg absolute bottom-0 translate-x-3/4 right-1/2 translate-y-[8vh] opacity-0 group-hover:opacity-100 group-hover:translate-y-[6vh] transition-all duration-300">
-              <div className="font-regular">Some of Today's Discoveries</div>
+            <div
+              className={`bg-gradient-to-br w-full from-gray-300 to-slate-400 bg-clip-text text-transparent text-sm montserrat-reg absolute bottom-0 translate-x-3/4 right-1/2 translate-y-[5vh] opacity-100 transition-all duration-1000 ease-out 
+            ${isTextGenComplete ? "translate-x-3/4" : "translate-x-1/2 "}`}
+            >
+              <div className="font-semibold">Some of Today's Discoveries</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Scroll Animations Refs */}
-      <div ref={scrollTotalRecsRef} className="h-1 w-full mt-[35vh] absolute" />
-      <div ref={scrollMoreInfoRef} className="h-1 w-full mt-[40vh] absolute" />
-      <div
-        ref={scrollVideoEmbedRef}
-        className="h-1 w-full mt-[55vh] absolute"
-      />
-      <div ref={scrollDiv2Ref} className="h-1 w-full mt-[50vh] absolute" />
+      <div ref={scrollDiv1Ref} className="h-1 w-full mt-[40vh] absolute" />
+      <div ref={scrollDiv2Ref} className="h-1 w-full mt-[60vh] absolute" />
+      {/* <div ref={scrollVideoEmbedRef} className="h-1 w-full mt-[vh] absolute" /> */}
+
       <div className="relative">
+        {/* <Lottie
+          animationData={ScrollPromptAni}
+          className="w-[2vw] absolute translate-x-[5vw] translate-y-[-10vh]"
+        /> */}
+        <div className="mb-6 translate-x-[10vw] montserrat-reg w-full text-lg flex-col flex">
+          <span className="font-bold">
+            <TextGenerateEffect
+              className=""
+              words={"A Look Inside"}
+              isVisible={isDiv1Visible}
+              highlightText="Inside"
+              highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
+              delay={0}
+              // onComplete={handleTextGenComplete}
+            />
+          </span>
+        </div>
         <AnimatedDivider
           direction="left"
-          isVisible={isTextGenComplete}
+          isVisible={isDiv1Visible}
           className=""
-          width="50vw"
+          width="35vw"
           xOffset="8vw"
           yOffset={-20}
         />
@@ -572,24 +560,89 @@ export default function HomePage(handleAuth) {
 
           {/* <div className="mt-4 text-white">Hello</div> */}
         </div>
-        <div className="relative">
-          <AnimatedDivider
-            direction="right"
-            isVisible={isDiv2Visible}
-            className="absolute"
-            width="45vw"
-            xOffset="51vw"
-            yOffset={60}
-          />
+        <div className="mb-6 just montserrat-reg w-full text-lg flex-col flex translate-x-[78vw] translate-y-5">
+          <span className="font-bold">
+            <TextGenerateEffect
+              className=""
+              words={"Watch the Showcase"}
+              isVisible={isDiv2Visible}
+              highlightText="Showcase"
+              highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
+              delay={0}
+              // onComplete={handleTextGenComplete}
+            />
+          </span>
+        </div>
+        <AnimatedDivider
+          direction="right"
+          isVisible={isDiv2Visible}
+          className="absolute"
+          width="45vw"
+          xOffset="48vw"
+          yOffset={0}
+        />
 
-          <VideoEmbed
-            isVisible={isVideoEmbedVisible}
-            id="tzjeOJVYI7o"
-            title="Demo"
-            className="rounded-lg w-full max-w-[40vw] mx-auto  inline-flex my-auto "
-          />
+        <VideoEmbed
+          isVisible={isVideoEmbedVisible}
+          id="tzjeOJVYI7o"
+          title="Demo"
+          className="rounded-lg mt-4 w-full max-w-[40vw] mx-auto inline-flex my-auto "
+        />
+        <div className="mb-6 translate-x-[10vw] montserrat-reg w-full text-lg flex-col flex">
+          <span className="font-bold">
+            <TextGenerateEffect
+              className=""
+              words={"A Look Inside"}
+              isVisible={isDiv1Visible}
+              highlightText="Inside"
+              highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
+              delay={0}
+              // onComplete={handleTextGenComplete}
+            />
+          </span>
+        </div>
+        <AnimatedDivider
+          direction="left"
+          isVisible={isDiv1Visible}
+          className=""
+          width="35vw"
+          xOffset="8vw"
+          yOffset={-20}
+        />
+        {/* <div className="flex flex-col items-start"> */}
+        <div className="sm:-translate-x-8 lg:translate-x-0">
+          <motion.div // Background Glossy Container
+            className={`absolute ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
+            initial={{ scale: 1.0, opacity: 0 }}
+            animate={{
+              ...getBackgroundPosition(),
+              opacity: isTotalRecsVisible ? 1 : 0,
+            }}
+            transition={
+              isAnimating
+                ? { duration: 0.5, ease: [0.68, -0.55, 0.27, 1.55] }
+                : { duration: 0.5, ease: [0.22, 0.68, 0.31, 1.0] }
+            }
+            onClick={handleContainerClick}
+            onHoverStart={() => {
+              if (!isSwapped) {
+                setIsTotalRecsHovered(true);
+              }
+              setIsMoreInfoHovered(true);
+            }}
+            onHoverEnd={() => {
+              if (!isSwapped) {
+                setIsTotalRecsHovered(false);
+              }
+              setIsMoreInfoHovered(false);
+            }}
+          >
+            <GlossyContainer className="" />
+          </motion.div>
         </div>
       </div>
+      {/* <div className="relative"> */}
+      {/* </div> */}
     </div>
   );
 }

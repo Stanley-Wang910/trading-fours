@@ -6,16 +6,16 @@ const VideoEmbed = ({ isVisible, id, title, className = "" }) => {
   return (
     <motion.div
       className={`aspect-[16/9] ${className}`}
-      initial={{ opacity: 0, y: "10vh" }}
+      initial={{ opacity: 0, y: "0vh" }}
       animate={{
         opacity: isVisible ? (isHovering ? 1 : 0.75) : 0,
-        x: isVisible ? "55vw" : "57vw",
+        x: isVisible ? (isHovering ? "51vw" : "52vw") : "55vw",
         scale: isHovering ? 1 : 0.98,
         boxShadow: isHovering
           ? "10px 10px 20px rgba(0, 0, 0, 0.5)"
           : "5px 5px 10px rgba(0, 0, 0, 0.5)",
       }}
-      transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
+      transition={{ duration: 0.5, ease: [0.22, 0.68, 0.31, 1.0] }}
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
       style={{

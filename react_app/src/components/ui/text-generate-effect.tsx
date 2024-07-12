@@ -4,17 +4,21 @@ import { cn } from "../../utils/cn.ts";
 
 export const TextGenerateEffect = ({
   words,
+  isVisible = true,
   className,
   highlightColor = "bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent font-semibold",
   highlightText = "",
   delay = 500, // Add a delay prop with default value
+  gradient = 'bg-gradient-to-br from-gray-200 to-gray-400',
   onComplete,
 }: {
   words: string;
+  isVisible?: boolean;
   className?: string;
   highlightColor?: string;
   highlightText?: string;
   delay?: number; // Define the delay prop type
+  gradient?: string;
   onComplete?: () => void; // Add this new prop type
 }) => {
   const [scope, animate] = useAnimate();
@@ -22,22 +26,24 @@ export const TextGenerateEffect = ({
   const wordsArray = linesArray.map(line => line.split(" "));
 
     const animateText = useCallback(async () => {
-      for (let i = 0; i < wordsArray.length; i++) {
-        await animate(
-          `div[data-line="${i}"] span`,
-          { opacity: 1 },
-          { duration: 0.75, delay: stagger(0.075) }
-        );
+      if (isVisible) {
+        for (let i = 0; i < wordsArray.length; i++) {
+          await animate(
+            `div[data-line="${i}"] span`,
+            { opacity: 1 },
+            { duration: 0.75, delay: stagger(0.075) }
+          );
+        }
+        if (onComplete) {
+          onComplete();
+        }
       }
-      if (onComplete) {
-        onComplete();
-      }
-    }, [animate, wordsArray, onComplete]);
+    }, [animate, wordsArray, onComplete, isVisible]);
   
     useEffect(() => {
       const timeoutId = setTimeout(animateText, delay); // Add delay before starting the animation
       return () => clearTimeout(timeoutId); // Cleanup the timeout if the component unmounts
-    }, [animate, wordsArray, delay]);
+    }, [animate, wordsArray, delay, isVisible]);
     
     
 
@@ -50,7 +56,7 @@ export const TextGenerateEffect = ({
             <motion.span
               key={word + idx}
               className={cn(
-                "opacity-0 bg-gradient-to-br from-gray-200 to-gray-400 bg-clip-text text-transparent",
+                `opacity-0 ${gradient} bg-clip-text text-transparent`,
                 isHighlighted && highlightColor
               )}
             >
