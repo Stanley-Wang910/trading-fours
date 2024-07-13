@@ -12,6 +12,8 @@ import { HoverBorderGradient } from "./ui/hover-border-gradient.tsx";
 import AnimatedCounter from "./AnimatedCounter.js";
 import useScrollAnimation from "./ScrollAnimation.js";
 import useDelayAnimation from "./DelayAnimation.js";
+import SearchBar from "./SearchBar.js";
+import RecommendationsList from "./RecommendationList.js";
 
 import "../styles/Components/HomePage.css";
 
@@ -51,10 +53,15 @@ export default function HomePage() {
   const [scrollDiv2Ref, isDiv2Visible] = useScrollAnimation();
   const isVideoEmbedVisible = useDelayAnimation(isDiv2Visible, 1250);
 
+  const [scrollDemoRef, isDemoVisible] = useScrollAnimation();
+  const isGradientVisible = useDelayAnimation(isDemoVisible, 0);
+
   const [isTotalRecsHovered, setIsTotalRecsHovered] = useState(false);
   const [isMoreInfoHovered, setIsMoreInfoHovered] = useState(false);
   const [isSwapped, setIsSwapped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const [isDemoContainerHovered, setIsDemoContainerHovered] = useState(false);
 
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -66,6 +73,17 @@ export default function HomePage() {
       setTimeout(() => setIsAnimating(false), 500);
     }
   };
+
+  const mockRecommendations = {
+    playlist: "Demo Playlist",
+    top_genres: ["Pop", "Rock", "Electronic"],
+    recommended_ids: [
+      "3BdHMOIA9B0bN53jbE5nWe", // Live from kitchen
+      "5WbfFTuIldjL9x7W6y5l7R", // Pol
+      "5DRnssBoVo8e7uAQZkNT8O",
+    ],
+  };
+  const noop = () => {};
 
   const getBackgroundPosition = () => {
     if (isSwapped) {
@@ -255,7 +273,7 @@ export default function HomePage() {
           />
           <div
             className={`
-            text-sm mt-2 
+            text-sm mt-6 
             sm:w-[35vw]
             bg-gradient-to-br from-gray-400 to-gray-200 
             bg-clip-text text-transparent 
@@ -332,8 +350,8 @@ export default function HomePage() {
                 <li>Enter a playlist or song.</li>
                 <li>Discover a new sound.</li>
               </ul>
-            </div>
-            <div className="absolute mt-4 translate-x-[0vw]">
+            </div> */}
+            <div className="absolute mt-6 translate-x-[0vw]">
               <HoverBorderGradient
                 containerClassName="rounded-xl"
                 as="button"
@@ -345,10 +363,10 @@ export default function HomePage() {
                 className="bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-800/70 via-gray-900/70 to-slate-900/80 text-sm text-gray-300 flex items-center space-x-2"
               >
                 <span className="montserrat-reg">
-                  <div className="font-semibold">Try Now!</div>
+                  <div className="font-semibold">Sign Up!</div>
                 </span>
               </HoverBorderGradient>
-            </div> */}
+            </div>
           </div>
 
           {/* <ScrollPrompt /> */}
@@ -378,17 +396,21 @@ export default function HomePage() {
       </div>
 
       {/* Scroll Animations Refs */}
-      <div ref={scrollDiv1Ref} className="h-1 w-full mt-[40vh] absolute" />
-      <div ref={scrollDiv2Ref} className="h-1 w-full mt-[60vh] absolute" />
-      {/* <div ref={scrollVideoEmbedRef} className="h-1 w-full mt-[vh] absolute" /> */}
+      <div ref={scrollDiv1Ref} className="h-1 w-full mt-[35vh] absolute" />
+      <div ref={scrollDiv2Ref} className="h-1 w-full mt-[50vh] absolute" />
+      <div ref={scrollDemoRef} className="h-1 w-full mt-[80vh] absolute" />
 
-      <div className="relative">
+      <div className="relative mt-[10vh]">
         {/* <Lottie
           animationData={ScrollPromptAni}
           className="w-[2vw] absolute translate-x-[5vw] translate-y-[-10vh]"
         /> */}
         <div className="mb-6 translate-x-[10vw] montserrat-reg w-full text-lg flex-col flex">
-          <span className="font-bold">
+          <span className="bg-gradient-to-r from-gray-300 to-gray-200 bg-clip-text text-transparent font-bold">
+            {/* A Look{" "}
+            <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent font-bold">
+              Inside
+            </span> */}
             <TextGenerateEffect
               className=""
               words={"A Look Inside"}
@@ -396,7 +418,6 @@ export default function HomePage() {
               highlightText="Inside"
               highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
               delay={0}
-              // onComplete={handleTextGenComplete}
             />
           </span>
         </div>
@@ -404,14 +425,14 @@ export default function HomePage() {
           direction="left"
           isVisible={isDiv1Visible}
           className=""
-          width="35vw"
+          width="90vw"
           xOffset="8vw"
           yOffset={-20}
         />
-        <div className="flex flex-col items-start">
+        <div className="flex flex-col ">
           <div className="sm:-translate-x-8 lg:translate-x-0">
             <motion.div // Background Glossy Container
-              className={`absolute ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
+              className={`absolute z-30 inline-flex ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
               initial={{ scale: 1.0, opacity: 0 }}
               animate={{
                 ...getBackgroundPosition(),
@@ -436,11 +457,11 @@ export default function HomePage() {
                 setIsMoreInfoHovered(false);
               }}
             >
-              <GlossyContainer className="" />
+              <GlossyContainer gradientColor="from-slate-700/50  to-slate-900" />
             </motion.div>
             <motion.div
               // ref={totalRecRef}
-              className={`relative ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
+              className={`relative z-30 inline-flex ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
               initial={{ scale: 1, opacity: 0 }}
               animate={{
                 ...getForegroundPosition(),
@@ -466,7 +487,7 @@ export default function HomePage() {
                 setIsTotalRecsHovered(false);
               }}
             >
-              <GlossyContainer className="">
+              <GlossyContainer gradientColor="from-slate-700/50 to-slate-900">
                 <div className="text-sm montserrat-reg text-slate-300  py-3 px-3 ">
                   <motion.div
                     animate={{
@@ -487,29 +508,30 @@ export default function HomePage() {
                   </motion.div>
                 </div>
                 <motion.div
-                  className={`text-5xl pl-4 lato-regular  inline-flex transition-colors duration-300 
+                  className={`text-5xl pl-4 lato-regular  inline-flex 
                   }`}
-                  initial={{ scale: 1, opacity: 0, color: "rgb(148 163 184)" }}
                   animate={{
                     scale: isTotalRecsHovered && !isSwapped ? 1.08 : 1,
                     opacity: isTotalRecsVisible && !isSwapped ? 1 : 0,
-                    x: isTotalRecsHovered && !isSwapped ? -18 : 0,
+                    x: isTotalRecsHovered && !isSwapped ? -10 : 0,
                     y: isTotalRecsHovered && !isSwapped ? -3 : 0,
                     color:
                       isTotalRecsHovered && !isSwapped
                         ? "rgb(203,213,225)" //slate-300
                         : "rgb(148 163 184)", //slate-400
 
+                    //
                     // fill: isTotalRecsHovered
                     //   ? "rgba(125,20,205)"
                     //   : "rgba(203,213,225)", // slate-300
                   }}
                   transition={{
+                    color: { duration: 0.3, ease: "easeInOut" }, // Change if needed
+
                     scale: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
                     x: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
                     y: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
                     opacity: { duration: 0.3, ease: "easeInOut" },
-                    color: { duration: 0.3, ease: "easeInOut" }, // Change if needed
                   }}
                   style={{
                     willChange: "transform",
@@ -556,93 +578,147 @@ export default function HomePage() {
                 </div>
               </GlossyContainer>
             </motion.div>
+
+            <div className="mt-[8vh]">
+              <div
+                className={` mb-6 just montserrat-reg w-full text-lg flex-col flex translate-x-[10vw] translate-y-5`}
+              >
+                <span className="bg-gradient-to-r from-gray-300 to-gray-200 bg-clip-text text-transparent font-bold">
+                  {/* Watch the{" "}
+                  <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent font-bold">
+                    Showcase
+                  </span> */}
+                  <TextGenerateEffect
+                    className=""
+                    words={"Watch the Showcase"}
+                    isVisible={isDiv2Visible}
+                    highlightText="Showcase"
+                    highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
+                    delay={0}
+                  />
+                </span>
+              </div>
+              <AnimatedDivider
+                direction="left"
+                isVisible={isDiv2Visible}
+                className="absolute"
+                width="38vw"
+                xOffset="8vw"
+                yOffset={0}
+              />
+
+              <VideoEmbed
+                isVisible={isVideoEmbedVisible}
+                id="tzjeOJVYI7o"
+                title="Demo"
+                className="rounded-lg mt-4 w-full max-w-[35vw] mx-auto inline-flex my-auto "
+              />
+            </div>
           </div>
 
           {/* <div className="mt-4 text-white">Hello</div> */}
-        </div>
-        <div className="mb-6 just montserrat-reg w-full text-lg flex-col flex translate-x-[78vw] translate-y-5">
-          <span className="font-bold">
-            <TextGenerateEffect
-              className=""
-              words={"Watch the Showcase"}
-              isVisible={isDiv2Visible}
-              highlightText="Showcase"
-              highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
-              delay={0}
-              // onComplete={handleTextGenComplete}
-            />
-          </span>
-        </div>
-        <AnimatedDivider
-          direction="right"
-          isVisible={isDiv2Visible}
-          className="absolute"
-          width="45vw"
-          xOffset="48vw"
-          yOffset={0}
-        />
 
-        <VideoEmbed
-          isVisible={isVideoEmbedVisible}
-          id="tzjeOJVYI7o"
-          title="Demo"
-          className="rounded-lg mt-4 w-full max-w-[40vw] mx-auto inline-flex my-auto "
-        />
-        <div className="mb-6 translate-x-[10vw] montserrat-reg w-full text-lg flex-col flex">
-          <span className="font-bold">
-            <TextGenerateEffect
-              className=""
-              words={"A Look Inside"}
-              isVisible={isDiv1Visible}
-              highlightText="Inside"
-              highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
-              delay={0}
-              // onComplete={handleTextGenComplete}
-            />
-          </span>
-        </div>
-        <AnimatedDivider
-          direction="left"
-          isVisible={isDiv1Visible}
-          className=""
-          width="35vw"
-          xOffset="8vw"
-          yOffset={-20}
-        />
-        {/* <div className="flex flex-col items-start"> */}
-        <div className="sm:-translate-x-8 lg:translate-x-0">
-          <motion.div // Background Glossy Container
-            className={`absolute ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
-            initial={{ scale: 1.0, opacity: 0 }}
+          {/* <div className="sm:-translate-x-8 absolute z-20 "> */}
+          <motion.div
+            className={`  absolute z-20 inline-flex }`}
+            initial={{ scale: 1.0, x: "56vw", opacity: 0 }}
             animate={{
-              ...getBackgroundPosition(),
-              opacity: isTotalRecsVisible ? 1 : 0,
+              x: isDemoVisible ? "54vw" : "56vw",
+              opacity: isDemoVisible ? 1 : 0,
             }}
-            transition={
-              isAnimating
-                ? { duration: 0.5, ease: [0.68, -0.55, 0.27, 1.55] }
-                : { duration: 0.5, ease: [0.22, 0.68, 0.31, 1.0] }
-            }
-            onClick={handleContainerClick}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             onHoverStart={() => {
-              if (!isSwapped) {
-                setIsTotalRecsHovered(true);
-              }
-              setIsMoreInfoHovered(true);
+              setIsDemoContainerHovered(true);
             }}
             onHoverEnd={() => {
-              if (!isSwapped) {
-                setIsTotalRecsHovered(false);
-              }
-              setIsMoreInfoHovered(false);
+              setIsDemoContainerHovered(false);
             }}
           >
-            <GlossyContainer className="" />
+            <GlossyContainer
+              className="relative lg:w-[40vw] h-[70vh] opacity-[100%]"
+              degree={2}
+              radius="550"
+              brightness="0.15"
+              gradientPoint="ellipse_at_top_right"
+              gradientColor="from-slate-800/60 via-slate-900/60 to-slate-800/20"
+              shadow={false}
+            >
+              <div className="text-[1.4em] lato-regular font-bold  mt-12 px-12  ">
+                <span className=" bg-gradient-to-b from-gray-200 to-gray-400 bg-clip-text text-transparent ">
+                  <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent">
+                    Infinite
+                  </span>{" "}
+                  possibilities for where the music takes{" "}
+                  <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent">
+                    you
+                  </span>
+                  .
+                </span>
+                <span className="  mt-4 text-sm text-gray-400 leading-snug block">
+                  Enter any playlist or track — a unique improvisation of a
+                  sound or vibe you want to capture — and receive a brand new
+                  take on it.
+                </span>
+              </div>
+              <motion.div
+                className="mt-10 pointer-events-auto w-[33vw]  "
+                animate={{
+                  scale: isDemoContainerHovered ? 1 : 0.95,
+                  x: isDemoContainerHovered ? "12%" : "5%",
+                  y: isDemoContainerHovered ? "30%" : "10%",
+                }}
+                transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
+              >
+                <SearchBar demo={true} />
+              </motion.div>
+              <motion.div
+                className="absolute pointer-events-auto mt-2"
+                animate={{
+                  x: isDemoContainerHovered ? "8%" : "15%",
+                  y: isDemoContainerHovered ? "2%" : "5%",
+                  scale: isDemoContainerHovered ? 1 : 1,
+                  opacity: isDemoContainerHovered ? 1 : 0.9,
+                }}
+                transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
+              >
+                <RecommendationsList
+                  recommendations={mockRecommendations}
+                  onRecommendations={noop}
+                  setIsLoading={noop}
+                  query="demo query"
+                  position=""
+                  onTogglePosition={noop}
+                  setFavoritedTracks={noop}
+                  animateOut={false}
+                  setAnimateOut={noop}
+                  demo={true}
+                />
+              </motion.div>
+            </GlossyContainer>
           </motion.div>
+          {/* </div> */}
+          <div
+            className={`${isGradientVisible ? "fade-in-gradient" : "opacity-0"} gradient-background absolute translate-x-[52vw] translate-y-[10vh] w-full h-full flex z-10 transition-opacity duration-700 ease-in`}
+          >
+            <svg
+              className="blur-[75px] "
+              width="700"
+              height="700"
+              viewBox="0 0 500 500"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle
+                className="animate-colorChange3"
+                cx="150"
+                cy="150"
+                r="125"
+                fill="#B071FF"
+              />
+            </svg>
+          </div>
         </div>
       </div>
-      {/* <div className="relative"> */}
-      {/* </div> */}
     </div>
   );
 }

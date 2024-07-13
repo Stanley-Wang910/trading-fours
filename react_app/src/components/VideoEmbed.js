@@ -8,8 +8,8 @@ const VideoEmbed = ({ isVisible, id, title, className = "" }) => {
       className={`aspect-[16/9] ${className}`}
       initial={{ opacity: 0, y: "0vh" }}
       animate={{
-        opacity: isVisible ? (isHovering ? 1 : 0.75) : 0,
-        x: isVisible ? (isHovering ? "51vw" : "52vw") : "55vw",
+        opacity: isVisible ? (isHovering ? 1 : 0.9) : 0,
+        x: isVisible ? "9vw" : "6vw",
         scale: isHovering ? 1 : 0.98,
         boxShadow: isHovering
           ? "10px 10px 20px rgba(0, 0, 0, 0.5)"

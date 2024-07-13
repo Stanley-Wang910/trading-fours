@@ -2,6 +2,7 @@
     --color1: #1E3A8A;
     --color2: #7054bdaf;
     --color3: rgba(75, 102, 176, 0.549); 
+    --color4: rgba(251, 191, 36, 0.5);
     
   }
   
@@ -14,6 +15,10 @@
     50% { fill: var(--color3); }
   }
   
+  @keyframes colorChange3 {
+    0%, 100% { fill: var(--color2); }
+    50% { fill: var(--color4); }
+  }
   
   .animate-colorChange1 {
     animation: colorChange1 10s infinite linear;
@@ -23,6 +28,9 @@
     animation: colorChange2 10s infinite linear;
   }
   
+  .animate-colorChange3 {
+    animation: colorChange3 10s infinite linear;
+  }
   
   .fade-in-gradient {
     animation: fadeInGradient 1s ease-in-out;
