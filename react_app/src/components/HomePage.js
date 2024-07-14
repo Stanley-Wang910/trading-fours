@@ -47,11 +47,11 @@ export default function HomePage() {
   const [isMouseOver, setIsMouseOver] = useState(false);
 
   const [scrollDiv1Ref, isDiv1Visible] = useScrollAnimation();
-  const isTotalRecsVisible = useDelayAnimation(isDiv1Visible, 1000);
+  const isTotalRecsVisible = useDelayAnimation(isDiv1Visible, 300);
   const isMoreInfoVisible = useDelayAnimation(isTotalRecsVisible, 500);
 
   const [scrollDiv2Ref, isDiv2Visible] = useScrollAnimation();
-  const isVideoEmbedVisible = useDelayAnimation(isDiv2Visible, 1250);
+  const isVideoEmbedVisible = useDelayAnimation(isDiv2Visible, 500);
 
   const [scrollDemoRef, isDemoVisible] = useScrollAnimation();
   const isGradientVisible = useDelayAnimation(isDemoVisible, 0);
@@ -405,22 +405,26 @@ export default function HomePage() {
           animationData={ScrollPromptAni}
           className="w-[2vw] absolute translate-x-[5vw] translate-y-[-10vh]"
         /> */}
-        <div className="mb-6 translate-x-[10vw] montserrat-reg w-full text-lg flex-col flex">
+        <motion.div
+          className="mb-6 translate-x-[10vw] montserrat-reg w-full text-lg flex-col flex"
+          animate={{ opacity: isDiv1Visible ? 1 : 0 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+        >
           <span className="bg-gradient-to-r from-gray-300 to-gray-200 bg-clip-text text-transparent font-bold">
-            {/* A Look{" "}
+            A Look{" "}
             <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent font-bold">
               Inside
-            </span> */}
-            <TextGenerateEffect
+            </span>
+            {/* <TextGenerateEffect
               className=""
               words={"A Look Inside"}
               isVisible={isDiv1Visible}
               highlightText="Inside"
               highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
               delay={0}
-            />
+            /> */}
           </span>
-        </div>
+        </motion.div>
         <AnimatedDivider
           direction="left"
           isVisible={isDiv1Visible}
@@ -580,24 +584,18 @@ export default function HomePage() {
             </motion.div>
 
             <div className="mt-[8vh]">
-              <div
-                className={` mb-6 just montserrat-reg w-full text-lg flex-col flex translate-x-[10vw] translate-y-5`}
+              <motion.div
+                className="mb-6 just montserrat-reg w-full text-lg flex-col flex translate-x-[10vw] translate-y-5"
+                animate={{ opacity: isDiv2Visible ? 1 : 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
               >
                 <span className="bg-gradient-to-r from-gray-300 to-gray-200 bg-clip-text text-transparent font-bold">
-                  {/* Watch the{" "}
+                  Watch the{" "}
                   <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent font-bold">
                     Showcase
-                  </span> */}
-                  <TextGenerateEffect
-                    className=""
-                    words={"Watch the Showcase"}
-                    isVisible={isDiv2Visible}
-                    highlightText="Showcase"
-                    highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
-                    delay={0}
-                  />
+                  </span>
                 </span>
-              </div>
+              </motion.div>
               <AnimatedDivider
                 direction="left"
                 isVisible={isDiv2Visible}
@@ -620,7 +618,7 @@ export default function HomePage() {
 
           {/* <div className="sm:-translate-x-8 absolute z-20 "> */}
           <motion.div
-            className={`  absolute z-20 inline-flex }`}
+            className={`absolute z-20 inline-flex ${isDemoVisible ? "cursor-events-auto" : "cursor-events-none invisible user-select-none"}`}
             initial={{ scale: 1.0, x: "56vw", opacity: 0 }}
             animate={{
               x: isDemoVisible ? "54vw" : "56vw",

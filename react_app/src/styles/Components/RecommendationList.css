@@ -81,12 +81,15 @@
     opacity: 0;
     transform: translateY(-300%) scale(1);
     /* transform: translateX(-400%); */
-    transition: opacity 2s, transform 1.75s;
+    transition: none;
   
   }
+
   
   .embed.active {
     opacity: 80%;
     transform: translateY(0);
-    animation: popEffect 0.3s ease-out 1.75s; 
+    /* animation: popEffect 0.3s ease-out 1.75s;  */
+    transition: opacity 2s, transform 1.75s;
+
   }

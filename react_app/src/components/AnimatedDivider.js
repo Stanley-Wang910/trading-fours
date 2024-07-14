@@ -9,7 +9,7 @@ const AnimatedDivider = ({
   xOffset = 0,
   yOffset = 0,
   color = "rgb(71, 85, 105)",
-  delay = 1,
+  delay = 0,
   ...props
 }) => {
   const gradientDir = direction === "left" ? "to right" : "to left";
