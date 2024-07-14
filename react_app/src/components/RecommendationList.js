@@ -23,14 +23,71 @@ function RecommendationsList({
   const [clickedLikes, setClickedLikes] = useState([]);
   const [animate, setAnimate] = useState(false);
 
+  const scrollContainerRef = useRef(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+
   // Constants
   const maxHeight = 3000; // Set the maximum height for recommendations container
   const extendRec = 500;
   // Memoized callbakc to handle loading more embeds
   const handleLoadMore = useCallback(() => {
-    setVisibleEmbeds((prev) => prev + 5);
-    setContainerHeight((prev) => prev + extendRec, maxHeight);
-  }, [maxHeight]);
+    const newVisibleEmbeds = visibleEmbeds + 5;
+    setVisibleEmbeds(newVisibleEmbeds);
+    setContainerHeight((prev) => Math.min(prev + extendRec, maxHeight));
+
+    setTimeout(() => {
+      const scrollContainer = scrollContainerRef.current;
+      if (scrollContainer) {
+        const newScrollPosition = (newVisibleEmbeds - 5) * 132;
+        scrollContainer.scrollTo({
+          top: newScrollPosition,
+          behavior: "smooth",
+        });
+        setScrollPosition(newScrollPosition);
+      }
+    }, 500);
+  }, [visibleEmbeds]);
+
+  // Handler for loading embeds
+
+  const handleLoad = useCallback((index) => {
+    // Mark the embed as active
+    const embedElements =
+      scrollContainerRef.current?.querySelectorAll(".embed");
+    if (embedElements?.[index]) {
+      embedElements[index].classList.add("active");
+    }
+
+    // Update the loaded state
+    setLoaded((prev) => {
+      if (!prev.includes(index)) {
+        return [...prev, index];
+      }
+      return prev;
+    });
+  }, []);
+
+  // Handler for shuffling recommendations
+  const handleShuffle = useCallback(async () => {
+    setAnimateOut(true);
+    setTimeout(async () => {
+      setIsLoading(true);
+
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${query}`,
+          { withCredentials: true }
+        );
+        onRecommendations(response.data || []);
+      } catch (error) {
+        console.error("Error fetching search results", error);
+        onRecommendations([]);
+      }
+
+      setIsLoading(false);
+      setAnimateOut(false);
+    }, 250);
+  }, [query, setAnimateOut, setIsLoading, onRecommendations]);
 
   // Handler for clicking like
   const handleClickLike = (index) => {
@@ -86,49 +143,21 @@ function RecommendationsList({
     return null; // If no recommendations or empty array, return null
   }
 
-  // Handler for loading embeds
-  const handleLoad = (index) => {
-    const embedElements = document.querySelectorAll(".embed");
-    if (embedElements[index]) {
-      embedElements[index].classList.add("active");
-    }
-
-    // Set a timeout to mark the embed as loaded after 1 second
-    setTimeout(() => {
-      setLoaded((prev) => [...prev, index]);
-    }, 100); // For animation timing
-  };
-
-  // Handler for shuffling recommendations
-  const handleShuffle = async () => {
-    setAnimateOut(true);
-    setTimeout(async () => {
-      setIsLoading(true);
-
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${query}`,
-          { withCredentials: true }
-        );
-        onRecommendations(response.data || []);
-      } catch (error) {
-        console.error("Error fetching search results", error);
-        onRecommendations([]);
-      }
-
-      setIsLoading(false);
-      setAnimateOut(false);
-    }, 250);
-  };
+  if (!recommendations || recommendations.length === 0) {
+    return null;
+  }
 
   return (
-    <div className={`relative ${demo ? "w-[35vw] z-0" : ""}`}>
-      <div
+    <div
+      className={`mt-[5vh] relative ${demo ? "w-[35vw] z-0" : ""} h-[80vh] overflow-hidden`}
+    >
+      {/* <div
         className={`mx-auto p-4 transition-transform duration-500 ${position === "left" ? "-translate-x-full" : ""}`}
-      >
-        <div className="flex">
+      > */}
+      <div className="flex justify-center h-full">
+        <div className="w-[35vw] lg:ml-[10vh] flex-shrink-0">
           {!demo && (
-            <div className="mr-4 w-1/4">
+            <div className="mr-4 sticky top-0">
               {isPlaylist &&
               recommendations.top_genres &&
               recommendations.playlist ? (
@@ -159,18 +188,26 @@ function RecommendationsList({
               )}
             </div>
           )}
-          {/* <div className="recommendations-container p-4 bg-gradient-to-r from-gray-800 to-gray-600 shadow-2xl rounded-2xl transform overflow"> */}
+        </div>
+
+        <div
+          className={`lg:ml-[10vh] w-3/4 max-w-screen-sm flex flex-col h-full`}
+        >
           <div
-            className={` recommendations-container p-5 w-full max-w-screen-sm bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative overflow-hidden container-transition opacity-0 ${animate ? "recs-fade-up" : ""} ${animateOut ? "recs-fade-out" : ""}`}
-            style={{ "--container-height": `${containerHeight}px` }}
+            ref={scrollContainerRef}
+            className={`recommendations-container p-5 bg-gradient-to-tr from-slate-900 via-slate-800 to-blue-900 shadow-2xl rounded-2xl relative overflow-y-auto flex-grow container-transition opacity-0 ${animate ? "recs-fade-up" : ""} ${animateOut ? "recs-fade-out" : ""}`}
+            // style={{ "--container-height": `${containerHeight}px` }}
+            onScroll={(e) => setScrollPosition(e.target.scrollTop)}
           >
-            {showMeteors && !demo && (
-              <Meteors
-                number={25}
-                className="absolute inset-0 -translate-y-[4px]"
-                style={{ zIndex: -1 }}
-              />
-            )}
+            <div className="absolute inset-0 ">
+              {showMeteors && !demo && (
+                <Meteors
+                  number={25}
+                  className="absolute inset-0 -translate-y-[4px]"
+                  style={{ zIndex: -1 }}
+                />
+              )}
+            </div>
             <ul className="meteor space-y-5 z-10 relative">
               {recommendationsArray.slice(0, visibleEmbeds).map((id, index) => (
                 <li
@@ -222,30 +259,31 @@ function RecommendationsList({
                 </li>
               ))}
             </ul>
-            <div className="flex justify-between mt-4 px-1 py-1 ">
-              {visibleEmbeds < recommendationsArray.length && (
-                <button
-                  className="z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
-                  onClick={handleLoadMore}
-                >
-                  <img src="/plus.png" alt="Arrow" width={20} height={20} />
-                </button>
-              )}
+          </div>
+          <div className="flex justify-between mt-4 px-1 py-1 bg-slate-900 rounded-b-2xl">
+            {visibleEmbeds < recommendationsArray.length && (
               <button
                 className="z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
-                onClick={handleShuffle}
+                onClick={handleLoadMore}
               >
-                <img
-                  src="/arrow.png"
-                  alt="Arrow"
-                  style={{ transform: "scaleX(0.9)" }}
-                  width={20}
-                  height={20}
-                />
+                <img src="/plus.png" alt="Arrow" width={20} height={20} />
               </button>
-            </div>
+            )}
+            <button
+              className="z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
+              onClick={handleShuffle}
+            >
+              <img
+                src="/arrow.png"
+                alt="Arrow"
+                style={{ transform: "scaleX(0.9)" }}
+                width={20}
+                height={20}
+              />
+            </button>
           </div>
-          {!demo && (
+        </div>
+        {/* {!demo && (
             <div className="absolute top-1/2 right-[-15px] transform -translate-y-1/2">
               <div className="relative inline-block">
                 <div className="buttonDiv cursor-pointer text-gray-200 shadow-xl font-bold">
@@ -267,10 +305,11 @@ function RecommendationsList({
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          )} */}
       </div>
     </div>
+
+    // </div>
   );
 }
 

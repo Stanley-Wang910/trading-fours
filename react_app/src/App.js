@@ -188,7 +188,7 @@ function App() {
           </>
         )}
       </div>
-      <div className="mt-[12vh]">
+      <div className={`${token ? "mt-[22vh]" : "mt-[12vh]"} `}>
         <Footer />
       </div>
     </div>
