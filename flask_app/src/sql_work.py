@@ -5,6 +5,7 @@ import pandas as pd
 import json
 import time
 import mysql.connector
+from contextlib import contextmanager   
 
 load_dotenv()
 
@@ -16,13 +17,7 @@ class SQLWork:
         print(self.MYSQL_HOST)  
         self.MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
         self.MYSQL_DATABASE = os.getenv("MYSQL_DATABASE")
-        self.pool = None
-        # self.connect_sql()
-
-    # Connect to MySQL database
-    def connect_sql(self):
-        print("-> connect_sql()")
-        self.pool = mysql.connector.pooling.MySQLConnectionPool(
+        self.pool =  mysql.connector.pooling.MySQLConnectionPool(
             pool_name="pool",
             pool_size=5,
             host=self.MYSQL_HOST,
@@ -30,6 +25,36 @@ class SQLWork:
             passwd=self.MYSQL_PASSWORD,
             database=self.MYSQL_DATABASE
         )
+        # self.connect_sql()
+
+    # Connect to MySQL database
+    # def connect_sql(self):
+    #     print("-> connect_sql()")
+    #     self.pool = mysql.connector.pooling.MySQLConnectionPool(
+    #         pool_name="pool",
+    #         pool_size=5,
+    #         host=self.MYSQL_HOST,
+    #         user=self.MYSQL_USER,
+    #         passwd=self.MYSQL_PASSWORD,
+    #         database=self.MYSQL_DATABASE
+    #     )
+
+    @contextmanager
+    def get_cursor(self):
+        connection = self.pool.get_connection()
+        cursor = connection.cursor(dictionary=True)
+        try:
+            yield cursor
+            connection.commit()
+        except mysql.connector.Error as e:
+            print(f"Database error: {e}")
+            connection.rollback()
+        finally:
+            cursor.close()
+            connection.close()
+
+
+
             
     def get_dataset(self):
         print("-> get_dataset()")
@@ -50,7 +75,11 @@ class SQLWork:
         
     def get_user_data(self, sp):
 
+        start_time = time.time()
+
         user_profile, user_playlists, recently_played, top_artists, top_tracks = sp.get_user_saved_info()
+        
+        print("Getting user data from sp... :", time.time() - start_time, "s")
         
         unique_id = user_profile['id']
         
@@ -58,15 +87,33 @@ class SQLWork:
         
         email = user_profile['email']   
 
+        start_time = time.time()
         self.user_profile_db(unique_id, display_name, email)
 
-        self.user_recently_played_db(unique_id, recently_played)
+        print("Saving user profile to database... :", time.time() - start_time, "s")
+        
+
+        # self.user_recently_played_db(unique_id, recently_played)
+
+ 
+
+        start_time = time.time()
 
         self.user_playlists_db(unique_id, user_playlists)
+        print("Saving user playlists to database...", time.time() - start_time, "s")
+        start_time = time.time()
         
         self.user_top_artists_db(unique_id, top_artists)
 
+        print("Saving user top artists to database... :", time.time() - start_time, "s")
+
+        start_time = time.time()
+
         self.user_top_tracks_db(unique_id, top_tracks)
+
+        print("Saving user top tracks to database... :", time.time() - start_time, "s")
+
+        print("User data saved to database")
 
         return unique_id, display_name
 
@@ -74,6 +121,9 @@ class SQLWork:
 
     # Helpers        
     def user_profile_db(self, unique_id, display_name, email):
+
+        print("-> user_profile_db()")
+
         connection = self.pool.get_connection()
         try:
             cursor = connection.cursor()
@@ -92,54 +142,74 @@ class SQLWork:
         except mysql.connector.Error as e:
             print(f"Error adding/checking user in database: {e}")
         finally:
+            print('<- user_profile_db()')
             cursor.close()
             connection.close()
 
 
     def user_playlists_db(self, unique_id, user_playlists): # Maybe add owner_id to filter by current user in playlist dropdwon?
-        connection = self.pool.get_connection()
         try:
-            cursor = connection.cursor()
-            
+            with self.get_cursor() as cursor:
+                # Get existing playlist IDs from the database for the current user
+                cursor.execute("SELECT playlist_id, name, image_url, owner_id FROM playlists WHERE unique_id = %s", (unique_id,))
+                existing_playlists = {row['playlist_id']: row for row in cursor.fetchall()}
+                
+                # Prepare data for batch operations
+                user_playlist_ids = set()
+                update_data = []
+                insert_data = []
 
-            # Get the existing playlist IDs from the database for the current user
-            query = "SELECT playlist_id FROM playlists WHERE unique_id = %s"
-            cursor.execute(query, (unique_id,))
-            existing_playlist_ids = [row[0] for row in cursor.fetchall()]
-            
-            # Get the playlist IDs from the user_playlists items
-            user_playlist_ids = [playlist['id'] for playlist in user_playlists]
-            
-            # Delete playlists from the database if they are not found in the user_playlists items
-            playlist_ids_to_delete = set(existing_playlist_ids) - set(user_playlist_ids)
-            if playlist_ids_to_delete:
-                delete_query = "DELETE FROM playlists WHERE playlist_id IN ({})".format(
-                    ','.join(['%s'] * len(playlist_ids_to_delete))
-                )
-                cursor.execute(delete_query, tuple(playlist_ids_to_delete))
-                print(f"Deleted {cursor.rowcount} playlists from the database")
+                for playlist in user_playlists:
+                    playlist_id = playlist['id']
+                    user_playlist_ids.add(playlist_id)
+                    name = playlist['name'] 
+                    image_url = playlist['images'][0]['url'] if playlist['images'] else None
+                    owner_id = playlist['owner']['id']
 
-            for playlist in user_playlists:
-                playlist_id = playlist['id']
-                name = playlist['name']
-                image_url = playlist['images'][0]['url'] if playlist['images'] else None
-                owner_id = playlist['owner']['id']
-                # print(owner_id)
-                # Check if the playlist already exists in the database, if not, insert it, if it does, update it
-                query = """
-                    INSERT INTO playlists (playlist_id, unique_id, name, image_url, owner_id)
+                    if playlist_id in existing_playlists:
+                        existing = existing_playlists[playlist_id]
+                        if (name != existing['name'] or 
+                            image_url != existing['image_url'] or 
+                            owner_id != existing['owner_id']):
+                            update_data.append((name, image_url, owner_id, unique_id, playlist_id))
+                            print(f"Updating playlist: {playlist_id}, Name: {name}")
+                    else:
+                        insert_data.append((playlist_id, name, image_url, owner_id, unique_id))
+
+                playlists_to_delete = set(existing_playlists.keys()) - user_playlist_ids
+                if playlists_to_delete:
+                    delete_query = "DELETE FROM playlists WHERE unique_id = %s AND playlist_id IN ({})".format(
+                        ','.join(['%s'] * len(playlists_to_delete))
+                    )
+                    cursor.execute(delete_query, (unique_id, *playlists_to_delete))
+                    print(f"Deleted {cursor.rowcount} playlists from the database")
+
+                print(update_data)
+                # Batch update existing playlists
+                if update_data:
+                    update_query = """
+                    UPDATE playlists
+                    SET name = %s, image_url = %s, owner_id = %s
+                    WHERE unique_id = %s AND playlist_id = %s
+                    """
+                    cursor.executemany(update_query, update_data)
+                    print(f"Updated {cursor.rowcount} playlists in the database")
+
+                # Batch insert new playlists
+                if insert_data:
+                    insert_query = """
+                    INSERT INTO playlists (playlist_id, name, image_url, owner_id, unique_id)
                     VALUES (%s, %s, %s, %s, %s)
-                    ON DUPLICATE KEY UPDATE name = VALUES(name), image_url = VALUES(image_url), owner_id = VALUES(owner_id)
-                """
-                cursor.execute(query, (playlist_id, unique_id, name, image_url, owner_id))
-                    
-            print('Playlists added to database')    
-            connection.commit()
+                    """
+                    cursor.executemany(insert_query, insert_data)
+                    print(f"Inserted {cursor.rowcount} playlists into the database")
+
+                print('Playlists added to database')
+
         except mysql.connector.Error as e:
             print(f"Error adding playlists to database: {e}")
-        finally:
-            cursor.close()
-            connection.close()
+            raise
+
 
     def user_recently_played_db(self, unique_id, recently_played):
         connection = self.pool.get_connection()
@@ -171,128 +241,157 @@ class SQLWork:
         finally:
             cursor.close()
             connection.close()
-
-    def user_top_artists_db(self, unique_id, top_artists):
-        connection = self.pool.get_connection()
-        try:
-            cursor = connection.cursor()
-            # Top Artists
-            for time_range, artists in top_artists.items():
-                clear_query = """
-                UPDATE user_top_artists
-                SET {}_rank = NULL
-                WHERE unique_id = %s
-                """.format(time_range)
-                cursor.execute(clear_query, (unique_id,))
-
-                for rank, artist in enumerate(artists['items'], start=1):
-                    artist_id = artist['id']
-                    artist_name = artist['name']
-
-                    # Check if the artist exists for the user
-                    check_query = """
-                    SELECT COUNT(*) FROM user_top_artists
-                    WHERE unique_id = %s AND artist_id = %s
-                    """
-                    cursor.execute(check_query, (unique_id, artist_id))
-                    artist_exists = cursor.fetchone()[0]
-
-                    if artist_exists:
-                        # Update the existing row with the new rank
-                        update_query = """
-                        UPDATE user_top_artists
-                        SET {}_rank = %s
-                        WHERE unique_id = %s AND artist_id = %s
-                        """.format(time_range)
-                        cursor.execute(update_query, (rank, unique_id, artist_id))
-                    else:
-                        # Insert a new row for the artist
-                        insert_query = """
-                        INSERT INTO user_top_artists (unique_id, artist_id, artist_name, {}_rank)
-                        VALUES (%s, %s, %s, %s)
-                        """.format(time_range)
-                        cursor.execute(insert_query, (unique_id, artist_id, artist_name, rank))    
-            delete_query = """
-            DELETE FROM user_top_artists
-            WHERE unique_id = %s
-            AND short_term_rank IS NULL
-            AND medium_term_rank IS NULL
-            AND long_term_rank IS NULL
-            """
             
-            print('Top artists added to database')
-            connection.commit()
+    def user_top_artists_db(self, unique_id, top_artists):
+        try:
+            with self.get_cursor() as cursor:
+                # Fetch existing artists for logging purposes
+                cursor.execute("""
+                    SELECT artist_id, artist_name, short_term_rank, medium_term_rank, long_term_rank 
+                    FROM user_top_artists 
+                    WHERE unique_id = %s
+                """, (unique_id,))
+                existing_artists = {row['artist_id']: row for row in cursor.fetchall()}
+
+                # Prepare data for upsert operation
+                upsert_data = []
+                all_artist_ids = set()
+
+                for time_range, artists in top_artists.items():
+                    for rank, artist in enumerate(artists['items'], start=1):
+                        artist_id = artist['id']
+                        artist_name = artist['name']
+                        all_artist_ids.add(artist_id)
+
+                        # Prepare data for upsert
+                        upsert_data.append((
+                            unique_id, artist_id, artist_name,
+                            rank if time_range == 'short_term' else None,
+                            rank if time_range == 'medium_term' else None,
+                            rank if time_range == 'long_term' else None
+                        ))
+
+                        # Log changes
+                        if artist_id in existing_artists:
+                            old_rank = existing_artists[artist_id][f'{time_range}_rank']
+                            if old_rank != rank:
+                                print(f"Artist {artist_name} {time_range}_rank: {old_rank} -> {rank}")
+                        else:
+                            print(f"New artist {artist_name} {time_range}_rank: None -> {rank}")
+
+                # Perform upsert operation
+                upsert_query = """
+                    INSERT INTO user_top_artists 
+                        (unique_id, artist_id, artist_name, short_term_rank, medium_term_rank, long_term_rank)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        artist_name = VALUES(artist_name),
+                        short_term_rank = COALESCE(VALUES(short_term_rank), short_term_rank),
+                        medium_term_rank = COALESCE(VALUES(medium_term_rank), medium_term_rank),
+                        long_term_rank = COALESCE(VALUES(long_term_rank), long_term_rank)
+                """
+                cursor.executemany(upsert_query, upsert_data)
+                
+                print(f'Artists upserted: {len(upsert_data)}')
+
+                # Update ranks to NULL for artists no longer in any top list
+                artists_to_update = set(existing_artists.keys()) - all_artist_ids
+                if artists_to_update:
+                    placeholders = ','.join(['%s'] * len(artists_to_update))
+                    null_update_query = f"""
+                        UPDATE user_top_artists
+                        SET short_term_rank = NULL, medium_term_rank = NULL, long_term_rank = NULL
+                        WHERE unique_id = %s AND artist_id IN ({placeholders})
+                    """
+                    cursor.execute(null_update_query, (unique_id, *artists_to_update))
+                    
+                    for artist_id in artists_to_update:
+                        artist = existing_artists[artist_id]
+                        print(f"Removing artist {artist['artist_name']} from top lists")
+
+                print(f'Top artists updated: {len(upsert_data)} upserted, {len(artists_to_update)} removed from lists')
 
         except mysql.connector.Error as e:
-            print(f"Error adding top artists to database: {e}")
-            connection.rollback()
-        finally:
-            cursor.close()
-            connection.close()
+            print(f"Error updating top artists in database: {e}")
+            raise
+
 
     def user_top_tracks_db(self, unique_id, top_tracks):
-        connection = self.pool.get_connection()
         try:
-            cursor = connection.cursor()
-            # Top Tracks
-            for time_range, tracks in top_tracks.items():
-                clear_query = """
-                UPDATE user_top_tracks
-                SET {}_rank = NULL
-                WHERE unique_id = %s
-                """.format(time_range)
-                cursor.execute(clear_query, (unique_id,))
+            with self.get_cursor() as cursor:
 
-                for rank, track in enumerate(tracks['items'], start=1):
-                    track_id = track['id']
-                    track_name = track['name']
-                    artist = track['artists'][0]
-                    artist_name = artist['name']
-    
-                    # Check if the track exists for the user
-                    check_query = """
-                    SELECT COUNT(*) FROM user_top_tracks
-                    WHERE unique_id = %s AND track_id = %s
+                cursor.execute("""
+                    SELECT track_id, track_name, artist_name, short_term_rank, medium_term_rank, long_term_rank
+                    FROM user_top_tracks
+                    WHERE unique_id = %s
+                """, (unique_id,))
+                existing_tracks = {row['track_id']: row for row in cursor.fetchall()}
+
+                # Prepare data for upsert operation
+                upsert_data = []
+                all_track_ids = set()
+
+                for time_range, tracks in top_tracks.items():
+                    for rank, track in enumerate(tracks['items'], start=1):
+                        track_id = track['id']
+                        track_name = track['name']
+                        artist = track['artists'][0]
+                        artist_name = artist['name']
+                        all_track_ids.add(track_id)
+
+                        # Prepare data for upsert
+                        upsert_data.append((
+                            unique_id, track_id, track_name, artist_name,
+                            rank if time_range == 'short_term' else None,
+                            rank if time_range == 'medium_term' else None,
+                            rank if time_range == 'long_term' else None
+                        ))
+
+                        # Log changes
+                        if track_id in existing_tracks:
+                            old_rank = existing_tracks[track_id][f'{time_range}_rank']
+                            if old_rank != rank:
+                                print(f"Track {track_name} {time_range}_rank: {old_rank} -> {rank}")
+                        else:
+                            print(f"New track {track_name} {time_range}_rank: None -> {rank}")
+
+                # Perform upsert operation
+                upsert_query = """
+                    INSERT INTO user_top_tracks
+                        (unique_id, track_id, track_name, artist_name, short_term_rank, medium_term_rank, long_term_rank)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    ON DUPLICATE KEY UPDATE
+                        track_name = VALUES(track_name),
+                        artist_name = VALUES(artist_name),
+                        short_term_rank = COALESCE(VALUES(short_term_rank), short_term_rank),
+                        medium_term_rank = COALESCE(VALUES(medium_term_rank), medium_term_rank),
+                        long_term_rank = COALESCE(VALUES(long_term_rank), long_term_rank)
                     """
-                    cursor.execute(check_query, (unique_id, track_id))
-                    track_exists = cursor.fetchone()[0]
-    
-                    if track_exists:
-                        # Update the existing row with the new rank
-                        update_query = """
+                cursor.executemany(upsert_query, upsert_data)
+
+                print(f'Top tracks upserted: {len(upsert_data)}')
+
+                # Update ranks to NULL for tracks no longer in any top list
+                tracks_to_update = set(existing_tracks.keys()) - all_track_ids
+                if tracks_to_update:
+                    placeholders = ','.join(['%s'] * len(tracks_to_update))
+                    null_update_query = f"""
                         UPDATE user_top_tracks
-                        SET {}_rank = %s
-                        WHERE unique_id = %s AND track_id = %s
-                        """.format(time_range)
-                        cursor.execute(update_query, (rank, unique_id, track_id))
-                    else:
-                        # Insert a new row for the track
-                        insert_query = """
-                        INSERT INTO user_top_tracks (unique_id, track_id, track_name, artist_name, {}_rank)
-                        VALUES (%s, %s, %s, %s, %s)
-                        """.format(time_range)
-                        cursor.execute(insert_query, (unique_id, track_id, track_name, artist_name, rank))
-            
-            # Delete tracks with null rankings in all three categories for the user
-            delete_query = """
-            DELETE FROM user_top_tracks
-            WHERE unique_id = %s
-            AND short_term_rank IS NULL
-            AND medium_term_rank IS NULL
-            AND long_term_rank IS NULL
-            """
-            cursor.execute(delete_query, (unique_id,))
-            
-            
-            print('Top tracks added to database')
-            connection.commit()
-    
+                        SET short_term_rank = NULL, medium_term_rank = NULL, long_term_rank = NULL
+                        WHERE unique_id = %s AND track_id IN ({placeholders})
+                    """
+                    cursor.execute(null_update_query, (unique_id, *tracks_to_update))
+                    
+                    for track_id in tracks_to_update:
+                        track = existing_tracks[track_id]
+                        print(f"Removing track {track['track_name']} from top lists")
+
+                print(f'Top tracks updated: {len(upsert_data)} upserted, {len(tracks_to_update)} removed from lists')
+        
         except mysql.connector.Error as e:
-            print(f"Error adding top tracks to database: {e}")
-            connection.rollback()
-        finally:
-            cursor.close()
-            connection.close()
+            print(f"Error updating top tracks in database: {e}")
+            raise
+        
     
     def append_tracks(self, data, append_count):
         connection = self.pool.get_connection()

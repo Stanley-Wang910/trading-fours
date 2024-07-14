@@ -407,6 +407,7 @@ export default function HomePage() {
         /> */}
         <motion.div
           className="mb-6 translate-x-[10vw] montserrat-reg w-full text-lg flex-col flex"
+          initial={{ opacity: 0 }}
           animate={{ opacity: isDiv1Visible ? 1 : 0 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
         >
@@ -415,14 +416,6 @@ export default function HomePage() {
             <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent font-bold">
               Inside
             </span>
-            {/* <TextGenerateEffect
-              className=""
-              words={"A Look Inside"}
-              isVisible={isDiv1Visible}
-              highlightText="Inside"
-              highlightColor="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent"
-              delay={0}
-            /> */}
           </span>
         </motion.div>
         <AnimatedDivider
@@ -586,6 +579,7 @@ export default function HomePage() {
             <div className="mt-[8vh]">
               <motion.div
                 className="mb-6 just montserrat-reg w-full text-lg flex-col flex translate-x-[10vw] translate-y-5"
+                initial={{ opacity: 0 }}
                 animate={{ opacity: isDiv2Visible ? 1 : 0 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
               >

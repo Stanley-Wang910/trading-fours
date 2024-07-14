@@ -66,7 +66,7 @@ class SessionStore:
             return [item.decode('utf-8') for item in self.redis.lrange(random_rec_key, 0, -1)]
 
 
-        if list_length < 50 and not self.redis.exists(sample_taken_key):
+        if list_length < 200 and not self.redis.exists(sample_taken_key):
             print("Not enough items for a sample")
             return None
 
@@ -109,15 +109,15 @@ class SessionStore:
 
 
     def set_user_top_data(self, key, data):
-        self.redis.set(key, json.dumps(data))
+        self.redis.set(key, json.dumps(data), ex=86400)
         self.cache[key] = data
         print("Cache size", len(self.cache))
 
-        cached_data = self.get_data_cache(key) 
-        if cached_data is not None and cached_data == data:
-            print("Data is cached")
-        else:
-            print("Data is not cached")
+        # cached_data = self.get_data_cache(key) 
+        # if cached_data is not None and cached_data == data:
+        #     print("Data is cached")
+        # else:
+        #     print("Data is not cached")
 
     def update_total_recs(self, num_recs: int):
         key = 'total_recs'
@@ -171,54 +171,58 @@ class SessionStore:
         if unique_id is None:
             print('No unique_id found in the session')
             return
-        print(f'Removing data associated with user: {unique_id}')
-        user_key_pattern = f"{unique_id}*"
-        cursor = "0"
-        total_deleted = 0  # To count the number of keys deleted
-
-        while cursor != "0":
-            print(f'Cursor: {cursor}')
-            cursor, keys = self.redis.scan(cursor=cursor, match=user_key_pattern)
-            print(f'Cursor: {cursor}')
-            print(f'Keys: {keys}')
-            if keys:
-                with self.redis.pipeline() as pipe:
-                    for key in keys:
-                        pipe.delete(key)
-                    deleted_count = pipe.execute()
-                total_deleted += sum(deleted_count)  # Update the count of deleted keys
-
-                print(f'Count of keys associated with user deleted: {total_deleted}')
-            else:
-                print('No keys found')
-
-        print('Count of keys associated with user deleted', total_deleted)
-        return
         
-
-    def clear_user_cache(self, unique_id):
-        print(f'Clearing cache for user: {unique_id}')
-        user_key_pattern = f"{unique_id}*"  # Adjust the naming convention if needed
+        print(f'Removing data associated with user: {unique_id}')
+        user_key_pattern = f"{unique_id}:*"
         cursor = "0"
-        keys_to_delete = []
+        total_deleted = 0
 
-        # Scan the in-memory cache for keys associated with the user
         while cursor != 0:
             print(f'Starting scan with cursor: {cursor}')
-            cursor, keys = self.redis.scan(cursor=cursor, match=user_key_pattern, count=1000)
-            print(f'Cursor after scan: {cursor}')
-            print(f'Number of keys found: {len(keys)}')
+            cursor, keys = self.redis.scan(cursor=cursor, match=user_key_pattern)
 
-            keys_to_delete.extend(key.decode() for key in keys if key.decode() in self.cache)
-            print(f'Number of keys to delete: {len(keys_to_delete)}')
+            deleted_count = 0
+            if keys:
+                # Delete from Redis
+                deleted_count = self.redis.delete(*keys)
+                total_deleted += deleted_count
 
-        # Remove the keys from the in-memory cache
-        for key in keys_to_delete:
-            self.cache.pop(key)
-            print(f'Removed key from cache: {key}')
+                # Remove from in-memory cache
+                for key in keys:
+                    key_str = key.decode('utf-8')
+                    if key_str in self.cache:
+                        del self.cache[key_str]
+                        print(f'Removed key from cache: {key_str}')
 
-        print(f'Cache size after clearing user cache: {len(self.cache)}')
-        return
+            print(f'Count of keys deleted: {deleted_count}')
+
+        print(f'Total count of keys deleted: {total_deleted}')
+        print(f'Cache size after clearing: {len(self.cache)}')
+            
+
+    # def clear_user_cache(self, unique_id):
+    #     print(f'Clearing cache for user: {unique_id}')
+    #     user_key_pattern = f"{unique_id}:*"  # Adjust the naming convention if needed
+    #     cursor = "0"
+    #     keys_to_delete = []
+
+    #     # Scan the in-memory cache for keys associated with the user
+    #     while cursor != 0:
+    #         print(f'Starting scan with cursor: {cursor}')
+    #         cursor, keys = self.redis.scan(cursor=cursor, match=user_key_pattern, count=1000)
+    #         print(f'Cursor after scan: {cursor}')
+    #         print(f'Number of keys found: {len(keys)}')
+
+    #         keys_to_delete.extend(key.decode() for key in keys if key.decode() in self.cache)
+    #         print(f'Number of keys to delete: {len(keys_to_delete)}')
+
+    #     # Remove the keys from the in-memory cache
+    #     for key in keys_to_delete:
+    #         self.cache.pop(key)
+    #         print(f'Removed key from cache: {key}')
+
+    #     print(f'Cache size after clearing user cache: {len(self.cache)}')
+    #     return
 
 
     def clear_all(self):
@@ -226,12 +230,13 @@ class SessionStore:
         self.redis.flushdb()
 
 
-    def print_all_data(self):
+    def print_all_keys(self):
         for key in self.redis.scan_iter():
-            data_str = self.redis.get(key)
-            if data_str:
-                data = json.loads(data_str)
-                print(f'Key: {key}, Data: {data}')
+            print(f'Key: {key}')
+            # data_str = self.redis.get(key)
+            # if data_str:
+            #     data = json.loads(data_str)
+            #     #, Data: {data}'
 
     def get_memory_usage(self, key):
         return self.redis.memory_usage(key) 
@@ -242,7 +247,7 @@ class SessionStore:
         key = 'total_recs'
         self.redis.set(key, json.dumps(num_recs))
 
-    def delete_keys(self):
-        key1 = f'sample_taken:{self._get_date_key()}'
-        key2 = f'random_recs:{self._get_date_key()}'    
-        self.redis.delete(key1, key2)
+    # def delete_keys(self):
+    #     key1 = f'sample_taken:{self._get_date_key()}'
+    #     key2 = f'random_recs:{self._get_date_key()}'    
+    #     self.redis.delete(key1, key2)

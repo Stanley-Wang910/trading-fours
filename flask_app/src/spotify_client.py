@@ -47,7 +47,7 @@ class SpotifyClient:
             else:
                 user_playlists = None
 
-
+ 
 
         recently_played = self.sp.current_user_recently_played()
         top_artists_short = self.sp.current_user_top_artists(20,0, 'short_term')

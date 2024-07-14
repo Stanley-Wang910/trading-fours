@@ -70,7 +70,7 @@ def auth_callback():
     print("Callback route reached")
     code = request.args.get('code')
     state = request.args.get('state')
-    print(code, state)
+    # print(code, state)
 
     if not code:
         return "Error: No code in request", 400
@@ -99,6 +99,8 @@ def auth_callback():
         session['access_token'] = token_info.get('access_token')
         session['refresh_token'] = token_info.get('refresh_token')
         session['token_expires'] = datetime.now().timestamp() + token_info.get('expires_in')
+
+        start_time = time.time()
         
         sp = SpotifyClient(Spotify(auth=session.get('access_token')))
         unique_id, display_name = sql_work.get_user_data(sp)
@@ -109,7 +111,10 @@ def auth_callback():
         re = RecEngine(sp, unique_id, sql_work)
 
         # Re-evaluate if this needs to be recalculated each time
+        # Check from SQL
         user_top_tracks, user_top_artists = check_user_top_data_session(unique_id, re)
+
+        print("Login time:", time.time() - start_time)  
        
         # Redirecting or handling logic here
         return redirect('http://localhost:3000/')
@@ -136,7 +141,9 @@ def get_token():
 def logout():
     print("Logout route reached")
     session_store.remove_user_data(session.get('unique_id'))
-    session_store.clear_user_cache(session.get('unique_id'))
+    print("User data removed from session store")
+    # session_store.clear_user_cache(session.get('unique_id'))
+    # print("User cache cleared")
     session.clear()
     response = jsonify({"message": "Logout successful"})
     response.status_code = 200
@@ -194,8 +201,9 @@ def refresh_token():
 
 
 def check_user_top_data_session(unique_id, re):
-    redis_key_top_tracks = f"{unique_id}_top_tracks"
-    redis_key_top_artists = f"{unique_id}_top_artists"
+    redis_key_top_tracks = f"{unique_id}:top_tracks"
+    redis_key_top_artists = f"{unique_id}:top_artists"
+    
     user_top_tracks = session_store.get_data(redis_key_top_tracks)
     user_top_artists = session_store.get_data(redis_key_top_artists)
     if user_top_tracks:
@@ -234,9 +242,10 @@ def append_to_dataset(data, choice):
     if append:
         session['append_counter'] = 0 
 
-def get_playlist_data_session(link):
+def get_playlist_data_session(unique_id,link):
     if session.get('last_search') == link and 'playlist_name' in session:
-        redis_key_playlist = f"{link}_playlist"
+        
+        redis_key_playlist = f"{unique_id}:{link}:playlist_vector"
         p_vector = session_store.get_data(redis_key_playlist)
         playlist_name = session.get('playlist_name')
         top_genres = session.get('top_genres')
@@ -245,9 +254,9 @@ def get_playlist_data_session(link):
         return p_vector, playlist_name, top_genres, top_ratios
     return None
 
-def get_track_data_session(link):
+def get_track_data_session(unique_id, link):
     if session.get('last_search') == link and 'track_name' in session:
-        redis_key_track = f"{link}_track"
+        redis_key_track = f"{unique_id}:{link}:track_vector"
         t_vector = session_store.get_data(redis_key_track)
         track_name = session.get('track_name')
         artist_name = session.get('artist_name')
@@ -255,7 +264,7 @@ def get_track_data_session(link):
         return t_vector, track_name, artist_name, release_date
     return None
 
-def save_playlist_data_session(playlist, link, re, sp):
+def save_playlist_data_session(unique_id, playlist, link, re, sp):
     p_vector = re.playlist_vector(playlist) # Get playlist vector
     playlist_name = sp.get_playlist_track_name(link) # Get playlist name
     top_genres, top_ratios = re.get_top_genres(p_vector) # Get top genres
@@ -263,7 +272,7 @@ def save_playlist_data_session(playlist, link, re, sp):
     # top_genres = top_genres.tolist() 
 
     # Save playlist data to session
-    redis_key_playlist = f"{link}_playlist"
+    redis_key_playlist = f"{unique_id}:{link}:playlist_vector"
     session_store.set_vector(redis_key_playlist, p_vector)
     session['playlist_name'] = playlist_name 
     session['top_genres'] = top_genres 
@@ -272,12 +281,12 @@ def save_playlist_data_session(playlist, link, re, sp):
     print('Playlist data saved to session')
     return p_vector, playlist_name, top_genres, top_ratios
 
-def save_track_data_session(track, link, re, sp):
+def save_track_data_session(unique_id, track, link, re, sp):
     track_name, artist_name, release_date = sp.get_playlist_track_name(link, 'track') # Get track name, artist name, and release date
     t_vector = re.track_vector(track) # Get track vector
     
     # Save track data to session
-    redis_key_track = f"{link}_track"
+    redis_key_track = f"{unique_id}:{link}:track_vector"
     session_store.set_vector(redis_key_track, t_vector)
     session['track_name'] = track_name
     session['artist_name'] = artist_name
@@ -316,7 +325,7 @@ def recommend():
 
     if type_id == 'playlist':
         # Check if playlist data exists in session
-        playlist_data = get_playlist_data_session(link)
+        playlist_data = get_playlist_data_session(unique_id, link)
         if playlist_data:
             print('Playlist data exists')
             p_vector, playlist_name, top_genres, top_ratios = playlist_data
@@ -333,14 +342,14 @@ def recommend():
             track_ids = set(playlist['id'])
 
             # append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
-            p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(playlist, link, re, sp) # Save Playlist data to session
+            p_vector, playlist_name, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, link, re, sp) # Save Playlist data to session
             print(top_ratios)
         
         recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, user_top_tracks, user_top_artists, class_items, top_genres, top_ratios, previously_recommended)
 
     elif type_id == 'track':
         # Check if track data exists in session
-        track_data = get_track_data_session(link)
+        track_data = get_track_data_session(unique_id, link)
         if track_data:
             print('Track data exists')
             t_vector, track_name, artist_name, release_date = track_data
@@ -355,7 +364,7 @@ def recommend():
             
             # append_to_dataset(track, type_id) # Append Track to dataset
             
-            t_vector, track_name, artist_name, release_date = save_track_data_session(track, link, re, sp) # Save Track data to session
+            t_vector, track_name, artist_name, release_date = save_track_data_session(unique_id, track, link, re, sp) # Save Track data to session
                
         # Get recommendations
         recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_ids, user_top_tracks, class_items, previously_recommended)
@@ -439,12 +448,12 @@ def get_random_recommendations():
 
 @app.route('/test') ### Keep for testing new features
 def test():
-    # unique_id: str = session.get('unique_id')
-    # access_token: str = session.get('access_token')
+    unique_id: str = session.get('unique_id')
+    access_token: str = session.get('access_token')
 
     # # Create Spotify client and RecEngine instance
-    # sp = SpotifyClient(Spotify(auth=access_token))
-    # re = RecEngine(sp, unique_id, sql_work)
+    sp = SpotifyClient(Spotify(auth=access_token))
+    re = RecEngine(sp, unique_id, sql_work)
 
 
     # while True:
@@ -459,31 +468,36 @@ def test():
     #     playlist.to_csv('playlist.csv')
 
     # session_store.update_total_recs(30)
-    # session_store.set_total_recs(7534)
-    action = input("Enter: 1. Delete keys, 2. Get Random Recommendations")
+    # action = input("Enter: 1. Delete keys, 2. Get Random Recommendations")
 
-    if (action == '1'): 
-        session_store.delete_keys()
-
-
-        if session_store.redis.exists(session_store._get_sample_taken_key()):
-            return jsonify({'message': 'Sample already taken, no random recs saved'})
-        return jsonify(' Sample not taken, random recs saved') 
-
-    elif (action == '2'):
-        total_recs, hourly_recs = session_store.get_total_recs()
-
-        print("Total recommendations:", total_recs, "Hourly recommendations:", hourly_recs)
-
-        random_recs = session_store.get_random_recs()
+    # if (action == '1'): 
+    #     session_store.delete_keys()
 
 
-    return jsonify(random_recs)
+    #     if session_store.redis.exists(session_store._get_sample_taken_key()):
+    #         return jsonify({'message': 'Sample already taken, no random recs saved'})
+    #     return jsonify(' Sample not taken, random recs saved') 
+
+    # elif (action == '2'):
+    #     total_recs, hourly_recs = session_store.get_total_recs()
+
+    #     print("Total recommendations:", total_recs, "Hourly recommendations:", hourly_recs)
+
+    #     random_recs = session_store.get_random_recs()
+
+    # session_store.clear_all()
+    # session_store.set_total_recs(8299)
+
+    session_store.print_all_keys()
+    # print("Total recommendations:", total, "Hourly recommendations:", hourly)
+    # recently_played = sp.sp.current_user_top_artists(20,0, 'long_term')
+
+    return jsonify("Test successful")
 
 
 
 if __name__ == '__main__':
     global rec_dataset
-    sql_work.connect_sql()
+    # sql_work.connect_sql()
     rec_dataset = sql_work.get_dataset()
     app.run(debug=True, port=5000)
