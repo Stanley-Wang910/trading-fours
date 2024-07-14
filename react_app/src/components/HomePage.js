@@ -618,7 +618,7 @@ export default function HomePage() {
               x: isDemoVisible ? "54vw" : "56vw",
               opacity: isDemoVisible ? 1 : 0,
             }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
+            transition={{ duration: 0.3, ease: [0.22, 0.68, 0.31, 1.0] }}
             onHoverStart={() => {
               setIsDemoContainerHovered(true);
             }}
@@ -664,12 +664,12 @@ export default function HomePage() {
                 <SearchBar demo={true} />
               </motion.div>
               <motion.div
-                className="absolute pointer-events-auto mt-2"
+                className="absolute pointer-events-auto mt-6"
                 animate={{
-                  x: isDemoContainerHovered ? "8%" : "15%",
-                  y: isDemoContainerHovered ? "2%" : "5%",
+                  x: isDemoContainerHovered ? "8%" : "12%",
+                  y: isDemoContainerHovered ? "2%" : "10%",
                   scale: isDemoContainerHovered ? 1 : 1,
-                  opacity: isDemoContainerHovered ? 1 : 0.9,
+                  opacity: isDemoContainerHovered ? 1 : 0.95,
                 }}
                 transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
               >
@@ -690,10 +690,10 @@ export default function HomePage() {
           </motion.div>
           {/* </div> */}
           <div
-            className={`${isGradientVisible ? "fade-in-gradient" : "opacity-0"} gradient-background absolute translate-x-[52vw] translate-y-[10vh] w-full h-full flex z-10 transition-opacity duration-700 ease-in`}
+            className={`${isGradientVisible ? "fade-in-gradient" : "opacity-0"} gradient-background absolute translate-x-[48vw] translate-y-[10vh] w-full h-full flex z-10 `}
           >
             <svg
-              className="blur-[75px] "
+              className="blur-[60px] "
               width="700"
               height="700"
               viewBox="0 0 500 500"

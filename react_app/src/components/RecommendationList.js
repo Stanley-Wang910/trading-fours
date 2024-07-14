@@ -149,15 +149,15 @@ function RecommendationsList({
 
   return (
     <div
-      className={`mt-[5vh] relative ${demo ? "w-[35vw] z-0" : ""} h-[80vh] overflow-hidden`}
+      className={`relative ${demo ? "w-[35vw] z-0" : "h-[80vh] overflow-hidden"}`}
     >
       {/* <div
         className={`mx-auto p-4 transition-transform duration-500 ${position === "left" ? "-translate-x-full" : ""}`}
       > */}
       <div className="flex justify-center h-full">
-        <div className="w-[35vw] lg:ml-[10vh] flex-shrink-0">
-          {!demo && (
-            <div className="mr-4 sticky top-0">
+        {!demo && (
+          <div className="w-[35vw] lg:ml-[10vh] flex-shrink-0">
+            <div className="mr-4 ">
               {isPlaylist &&
               recommendations.top_genres &&
               recommendations.playlist ? (
@@ -187,27 +187,25 @@ function RecommendationsList({
                 </h2>
               )}
             </div>
-          )}
-        </div>
-
+          </div>
+        )}
+        {/* <div className="recommendations-container p-4 bg-gradient-to-r from-gray-800 to-gray-600 shadow-2xl rounded-2xl transform overflow"> */}
         <div
-          className={`lg:ml-[10vh] w-3/4 max-w-screen-sm flex flex-col h-full`}
+          className={`${demo ? "w-[35vw] " : "lg:ml-[10vh] w-3/4 max-w-screen-sm flex flex-col h-full"} `}
         >
           <div
             ref={scrollContainerRef}
-            className={`recommendations-container p-5 bg-gradient-to-tr from-slate-900 via-slate-800 to-blue-900 shadow-2xl rounded-2xl relative overflow-y-auto flex-grow container-transition opacity-0 ${animate ? "recs-fade-up" : ""} ${animateOut ? "recs-fade-out" : ""}`}
+            className={` ${demo ? "overflow-hidden" : "overflow-y-auto flex-grow"} recommendations-container p-5 bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative  container-transition opacity-0 ${animate ? "recs-fade-up" : ""} ${animateOut ? "recs-fade-out" : ""}`}
             // style={{ "--container-height": `${containerHeight}px` }}
             onScroll={(e) => setScrollPosition(e.target.scrollTop)}
           >
-            <div className="absolute inset-0 ">
-              {showMeteors && !demo && (
-                <Meteors
-                  number={25}
-                  className="absolute inset-0 -translate-y-[4px]"
-                  style={{ zIndex: -1 }}
-                />
-              )}
-            </div>
+            {showMeteors && !demo && (
+              <Meteors
+                number={25}
+                className="absolute inset-0 -translate-y-[4px]"
+                style={{ zIndex: -1 }}
+              />
+            )}
             <ul className="meteor space-y-5 z-10 relative">
               {recommendationsArray.slice(0, visibleEmbeds).map((id, index) => (
                 <li
@@ -260,7 +258,7 @@ function RecommendationsList({
               ))}
             </ul>
           </div>
-          <div className="flex justify-between mt-4 px-1 py-1 bg-slate-900 rounded-b-2xl">
+          <div className="flex justify-between mt-4 px-1 py-1 ">
             {visibleEmbeds < recommendationsArray.length && (
               <button
                 className="z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
@@ -283,33 +281,32 @@ function RecommendationsList({
             </button>
           </div>
         </div>
-        {/* {!demo && (
-            <div className="absolute top-1/2 right-[-15px] transform -translate-y-1/2">
-              <div className="relative inline-block">
-                <div className="buttonDiv cursor-pointer text-gray-200 shadow-xl font-bold">
-                  <svg
-                    onClick={onTogglePosition}
-                    fill="#ffffff"
-                    width="28px"
-                    height="28px"
-                    className="transition-all hover:fill-custom-brown hover:scale-110 hover:rotate-6"
-                    viewBox="0 0 22 22"
-                    xmlns="http://www.w3.org/2000/svg"
-                    id="memory-music-note"
-                  >
-                    <path d="M11 2H18V7H13V18H12V19H11V20H7V19H6V18H5V14H6V13H7V12H11V2M11 15H10V14H8V15H7V17H8V18H10V17H11V15Z" />
-                  </svg>
-                </div>
-                <div className="absolute top-1/2 left-[100%] transform -translate-y-1/2 px-2 py-1 text-custom-brown text-xs font-semi-bold opacity-0 pointer-events-none transition-opacity duration-300 tooltip">
-                  Unpack Me!
-                </div>
+        {!demo && (
+          <div className="absolute top-1/2 right-[-15px] transform -translate-y-1/2">
+            <div className="relative inline-block">
+              <div className="buttonDiv cursor-pointer text-gray-200 shadow-xl font-bold">
+                <svg
+                  onClick={onTogglePosition}
+                  fill="#ffffff"
+                  width="28px"
+                  height="28px"
+                  className="transition-all hover:fill-custom-brown hover:scale-110 hover:rotate-6"
+                  viewBox="0 0 22 22"
+                  xmlns="http://www.w3.org/2000/svg"
+                  id="memory-music-note"
+                >
+                  <path d="M11 2H18V7H13V18H12V19H11V20H7V19H6V18H5V14H6V13H7V12H11V2M11 15H10V14H8V15H7V17H8V18H10V17H11V15Z" />
+                </svg>
+              </div>
+              <div className="absolute top-1/2 left-[100%] transform -translate-y-1/2 px-2 py-1 text-custom-brown text-xs font-semi-bold opacity-0 pointer-events-none transition-opacity duration-300 tooltip">
+                Unpack Me!
               </div>
             </div>
-          )} */}
+          </div>
+        )}
       </div>
+      {/* </div> */}
     </div>
-
-    // </div>
   );
 }
 
