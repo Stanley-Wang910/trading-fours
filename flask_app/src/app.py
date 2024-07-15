@@ -243,33 +243,26 @@ def append_to_dataset(data, choice):
         session['append_counter'] = 0 
 
 def get_playlist_data_session(unique_id,link):
-    if session.get('last_search') == link and 'playlist_name' in session:
-        
+    if session.get('last_search') == link:
         redis_key_playlist = f"{unique_id}:{link}:playlist_vector"
         p_vector = session_store.get_data(redis_key_playlist)
         p_features = session.get('p_features', {})
         top_genres = session.get('top_genres')
         top_ratios = session.get('top_ratios')
-        print(top_ratios)
         return p_vector, p_features, top_genres, top_ratios
     return None
 
 def get_track_data_session(unique_id, link):
-    if session.get('last_search') == link and 'track_name' in session:
+    if session.get('last_search') == link:
         redis_key_track = f"{unique_id}:{link}:track_vector"
         t_vector = session_store.get_data(redis_key_track)
-        track_name = session.get('track_name')
-        artist_name = session.get('artist_name')
-        release_date = session.get('release_date')
-        return t_vector, track_name, artist_name, release_date
+        t_features = session.get('t_features', {})
+        return t_vector, t_features
     return None
 
-def save_playlist_data_session(unique_id, playlist, link, p_features, re, sp):
+def save_playlist_data_session(unique_id, playlist,  p_features, link, re, sp):
     p_vector = re.playlist_vector(playlist) # Get playlist vector
-    # playlist_name = sp.get_playlist_track_name(link) # Get playlist name
     top_genres, top_ratios = re.get_top_genres(p_vector) # Get top genres
-    # playlist_ids = playlist['id'].tolist() # Get playlist track IDs
-    # top_genres = top_genres.tolist() 
 
     # Save playlist data to session
     redis_key_playlist = f"{unique_id}:{link}:playlist_vector"
@@ -278,21 +271,19 @@ def save_playlist_data_session(unique_id, playlist, link, p_features, re, sp):
     session['top_ratios'] = top_ratios
     session['last_search'] = link 
     session['p_features'] = p_features
+
     print('Playlist data saved to session')
     return p_vector, p_features, top_genres, top_ratios,
 
-def save_track_data_session(unique_id, track, link, re, sp):
-    track_name, artist_name, release_date = sp.get_playlist_track_name(link, 'track') # Get track name, artist name, and release date
+def save_track_data_session(unique_id, track, t_features, link, re, sp):
     t_vector = re.track_vector(track) # Get track vector
     
     # Save track data to session
     redis_key_track = f"{unique_id}:{link}:track_vector"
     session_store.set_vector(redis_key_track, t_vector)
-    session['track_name'] = track_name
-    session['artist_name'] = artist_name
-    session['release_date'] = release_date
+    session['t_features'] = t_features 
     session['last_search'] = link
-    return t_vector, track_name, artist_name, release_date
+    return t_vector, t_features
 
 @app.route('/recommend', methods=['GET'])
 def recommend():
@@ -318,8 +309,8 @@ def recommend():
     else:
         type_id = 'playlist'
 
-    redis_key = f'{unique_id}:{link}:{type_id}'
-    print(redis_key)
+    rec_redis_key = f'{unique_id}:{link}:{type_id}'
+    # print(rec_redis_key)
     
     user_top_tracks, user_top_artists = check_user_top_data_session(unique_id, re)
 
@@ -329,7 +320,7 @@ def recommend():
         if playlist_data:
             print('Playlist data exists')
             p_vector, p_features, top_genres, top_ratios = playlist_data
-            stored_recommendations = session_store.get_data(redis_key)
+            stored_recommendations = session_store.get_data(rec_redis_key)
             track_ids = stored_recommendations['track_ids']
             previously_recommended = stored_recommendations['recommended_ids']
             # re = RecEngine(sp, unique_id, sql_work)
@@ -347,9 +338,8 @@ def recommend():
                 'total_duration_ms': int(playlist['duration_ms'].sum())
             })
 
-
             # append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
-            p_vector, p_features, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, link, p_features,  re, sp) # Save Playlist data to session
+            p_vector, p_features, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, p_features, link,  re, sp) # Save Playlist data to session
             print(top_ratios)
         
         recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, user_top_tracks, user_top_artists, class_items, top_genres, top_ratios, previously_recommended)
@@ -359,8 +349,8 @@ def recommend():
         track_data = get_track_data_session(unique_id, link)
         if track_data:
             print('Track data exists')
-            t_vector, track_name, artist_name, release_date = track_data
-            stored_recommendations = session_store.get_data(redis_key)
+            t_vector, t_features = track_data
+            stored_recommendations = session_store.get_data(rec_redis_key)
             track_ids = stored_recommendations['track_ids']
             previously_recommended = stored_recommendations['recommended_ids']
         else:
@@ -368,12 +358,17 @@ def recommend():
             previously_recommended = []
             
             track, t_features = sp.track_base_features(link) 
-            track = sp.predict(link, type_id, class_items)
-            track_ids = track['id'].tolist() # Get track ID
+            track.to_csv('track.csv', index=False)
+            track = sp.predict(track, type_id, class_items)
+            track_ids = [link]
+
+            t_features.update({ 
+                'total_duration_ms': int(track['duration_ms']),
+            })
             
             # append_to_dataset(track, type_id) # Append Track to dataset
             
-            t_vector, track_name, artist_name, release_date = save_track_data_session(unique_id, track, link, re, sp) # Save Track data to session
+            t_vector, t_features = save_track_data_session(unique_id, track, t_features, link, re, sp) # Save Track data to session
                
         # Get recommendations
         recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_ids, user_top_tracks, class_items, previously_recommended)
@@ -381,11 +376,11 @@ def recommend():
     # Update recommended songs in session
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
     print("Length of updated_recommendations:", len(updated_recommendations))
-    session_store.set_prev_rec(redis_key, list(track_ids), list(updated_recommendations)) # Update prev rec for user
+    session_store.set_prev_rec(rec_redis_key, list(track_ids), list(updated_recommendations)) # Update prev rec for user
     session_store.set_random_recs(list(updated_recommendations)) # Update random recs app wide
-    memory_usage = session_store.get_memory_usage(redis_key)
+    memory_usage = session_store.get_memory_usage(rec_redis_key)
     print("Memory usage:", memory_usage, "bytes") 
-    stored_recommendations = session_store.get_data(redis_key)
+    stored_recommendations = session_store.get_data(rec_redis_key)
     if stored_recommendations:
         track_ids = stored_recommendations['track_ids']
         prev_rec = stored_recommendations['recommended_ids']
@@ -414,9 +409,8 @@ def recommend():
         })
     elif type_id == 'track':
         return jsonify({
-            'track': track_name,
-            'artist': artist_name,
-            'release_date': release_date,
+            't_features': t_features,
+            
             'recommended_ids': recommended_ids,
             'id': link
         })
@@ -476,20 +470,14 @@ def test():
     #     break
     link = link.split('/')[-1].split('?')[0]
     
-    track = sp.sp.track(link)
-    name = track['name']
-    image_300x300 = track['album']['images'][1]['url']
-    artist = track['artists'][0]['name']
-    artist_url = track['artists'][0]['external_urls']['spotify']
-    release_date = track['album']['release_date'].split('-')[0]
-    popularity = track['popularity']
-
-    
-    
-    
+    # track = sp.sp.track(link)
+    track, t_features  = sp.track_base_features(link)
+    track = sp.predict(track, 'track', class_items)
+    print(t_features)
+   
     return jsonify(
-        {'name': name, 'image_300x300': image_300x300, 'artist': artist, 'artist_url': artist_url, 'release_date': release_date, 'popularity': popularity, 'id': link}
-        # track
+        # {'name': name, 'image_300x300': image_300x300, 'artist': artist, 'artist_url': artist_url, 'release_date': release_date, 'popularity': popularity, 'id': link}
+        track.to_dict(orient='records')
     )
 
 

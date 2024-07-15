@@ -38,7 +38,8 @@ class SessionStore:
     def set_prev_rec(self, key, track_ids, recommended_songs):
         start_time = time.time()
         data = {'track_ids': track_ids, 'recommended_ids': recommended_songs}
-        self.redis.set(key, json.dumps(data))
+        self.redis.set(key, json.dumps(data), ex=86400, nx=True) # 1 day
+        self.redis.set(key, json.dumps(data), xx=True)
         self.cache[key] = data
         print("Time to set rec ids in redis:", time.time() - start_time)
 
