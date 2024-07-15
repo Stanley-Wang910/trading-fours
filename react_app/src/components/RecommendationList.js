@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import { Meteors } from "./ui/meteors.tsx"; // Adjust the path as necessary based on your project structure
 import clsx from "clsx";
+import RecommendationDesc from "./RecommendationDesc.js";
 
 function RecommendationsList({
   recommendations,
@@ -114,8 +115,7 @@ function RecommendationsList({
 
   // Check if recommendations is a playlist
   const isPlaylist =
-    recommendations && recommendations.hasOwnProperty("playlist"); // Check if recommendations is a playlist
-
+    recommendations && recommendations.hasOwnProperty("p_features"); // Check if recommendations is a playlist
   // Set the initial number of visible embeds
   useEffect(() => {
     if (recommendations) {
@@ -143,59 +143,26 @@ function RecommendationsList({
     return null; // If no recommendations or empty array, return null
   }
 
-  if (!recommendations || recommendations.length === 0) {
-    return null;
-  }
-
   return (
     <div
-      className={`relative ${demo ? "w-[35vw] z-0" : "h-[80vh] overflow-hidden"}`}
+      className={`relative ${demo ? "w-[35vw] z-0" : "h-[75vh] overflow-hidden"}`}
     >
       {/* <div
         className={`mx-auto p-4 transition-transform duration-500 ${position === "left" ? "-translate-x-full" : ""}`}
       > */}
       <div className="flex justify-center h-full">
-        {!demo && (
-          <div className="w-[35vw] lg:ml-[10vh] flex-shrink-0">
-            <div className="mr-4 ">
-              {isPlaylist &&
-              recommendations.top_genres &&
-              recommendations.playlist ? (
-                <h2 className="text-xl font-semibold text-gray-400 mb-4 text-center">
-                  <span className="text-gray-400 font-bold ">
-                    {recommendations.top_genres.join(", ")}
-                  </span>{" "}
-                  recommendations for{" "}
-                  <span className="text-yellow-600 font-bold italic">
-                    {recommendations.playlist}
-                  </span>
-                </h2>
-              ) : (
-                <h2 className="text-xl font-semibold text-gray-400 mb-4 text-center">
-                  Here are some recommendations for{" "}
-                  <span className="text-yellow-600 font-bold italic">
-                    {recommendations.track}
-                  </span>{" "}
-                  by{" "}
-                  <span className="text-gray-400 font-bold italic">
-                    {recommendations.artist}
-                  </span>
-                  , released in {""}
-                  <span className="text-gray-400 font-semibold">
-                    {recommendations.release_date}
-                  </span>
-                </h2>
-              )}
-            </div>
-          </div>
-        )}
+        <RecommendationDesc recommendations={recommendations} demo={demo} />
         {/* <div className="recommendations-container p-4 bg-gradient-to-r from-gray-800 to-gray-600 shadow-2xl rounded-2xl transform overflow"> */}
         <div
-          className={`${demo ? "w-[35vw] " : "lg:ml-[10vh] w-3/4 max-w-screen-sm flex flex-col h-full"} `}
+          className={`${demo ? "w-[35vw] " : "lg:ml-[10vh] w-3/4 max-w-screen-sm flex flex-col h-full "} `}
         >
           <div
             ref={scrollContainerRef}
-            className={` ${demo ? "overflow-hidden" : "overflow-y-auto flex-grow"} recommendations-container p-5 bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative  container-transition opacity-0 ${animate ? "recs-fade-up" : ""} ${animateOut ? "recs-fade-out" : ""}`}
+            className={` 
+              ${demo ? "overflow-hidden" : "overflow-y-auto flex-grow"} 
+              recommendations-container p-5 bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative  container-transition opacity-0 
+              ${animate ? "recs-fade-up" : ""} 
+              ${animateOut ? "recs-fade-out" : ""}`}
             // style={{ "--container-height": `${containerHeight}px` }}
             onScroll={(e) => setScrollPosition(e.target.scrollTop)}
           >
@@ -239,7 +206,7 @@ function RecommendationsList({
                       </svg>
                     </button>
                   )}
-                  <div className="embed-container w-full h-20 ">
+                  <div className="embed-container w-full">
                     <div
                       className={`embed ${loaded.includes(index) ? "active" : ""}`}
                     >
@@ -248,7 +215,7 @@ function RecommendationsList({
                         src={`https://open.spotify.com/embed/track/${id}?utm_source=generator`}
                         style={{ border: "none" }}
                         width="100%"
-                        height="132"
+                        height="80"
                         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                         loading="lazy"
                       ></iframe>
@@ -258,10 +225,10 @@ function RecommendationsList({
               ))}
             </ul>
           </div>
-          <div className="flex justify-between mt-4 px-1 py-1 ">
+          <div className="flex justify-between py-4 px-1 relative z-10 ">
             {visibleEmbeds < recommendationsArray.length && (
               <button
-                className="z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
+                className="  z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform"
                 onClick={handleLoadMore}
               >
                 <img src="/plus.png" alt="Arrow" width={20} height={20} />
@@ -281,7 +248,7 @@ function RecommendationsList({
             </button>
           </div>
         </div>
-        {!demo && (
+        {/* {!demo && (
           <div className="absolute top-1/2 right-[-15px] transform -translate-y-1/2">
             <div className="relative inline-block">
               <div className="buttonDiv cursor-pointer text-gray-200 shadow-xl font-bold">
@@ -303,7 +270,7 @@ function RecommendationsList({
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </div>
       {/* </div> */}
     </div>

@@ -307,8 +307,9 @@ class RecEngine:
 
         top_genres_ratios = {genre_name: top_genres[f'track_genre_{genre_name}'] / total_genres_sum for genre_name in top_genres_names}
 
-        for genre, ratio in top_genres_ratios.items():
-            print(f"{genre}: {ratio:.2%}")
+        # for genre, ratio in top_genres_ratios.items():
+        #     print(f"{genre}: {ratio:.2%}")
+        # print(top_genres_ratios)
     
         print("<- re:get_top_genres()")
         return top_genres_names, top_genres_ratios
@@ -543,7 +544,7 @@ class RecEngine:
         print("-> re:get_personalized_vector()")
         start_time = time.time()
 
-        user_top_tracks = self.sp.predict(user_top_tracks, 'playlist', class_items)
+        user_top_tracks = self.sp.predict(user_top_tracks, 'playlist', class_items) # list items
         ohe_user_top_tracks = self.ohe_features(user_top_tracks)
 
         ohe_user_top_tracks, vector = self.sort_columns(ohe_user_top_tracks, vector)

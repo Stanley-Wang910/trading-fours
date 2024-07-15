@@ -84,6 +84,24 @@ class SpotifyClient:
         playlist_id = id_dic[playlist_name]
         self.analyze_playlist(playlist_id)
 
+    def playlist_base_features(self, playlist_id):
+        playlist = self.sp.playlist(playlist_id)
+        playlist_features = {
+            'playlist_image': playlist['images'][0]['url'],   
+            'playlist_owner': playlist['owner']['display_name'],
+            'playlist_owner_link' : playlist['owner']['external_urls']['spotify'],
+            'playlist_name' : playlist['name']
+        }
+        return playlist, playlist_features
+
+    def track_base_features(self, track_id):
+        track = self.sp.track(track_id)
+        track_features = {
+            'track_name' : track['name'],
+            'track_popularity' : track['popularity'],
+            'track_explicit' : track['explicit']
+        }
+
     def analyze_playlist(self, input_data, type_analyze='classify'):
         """
         Analyzes a Spotify playlist by retrieving the tracks, their audio features, and merging them into a DataFrame.
@@ -95,15 +113,15 @@ class SpotifyClient:
         - playlist_with_features (pd.DataFrame): A DataFrame containing the playlist tracks and their audio features.
         """
         print("-> sp:analyze_playlist()")
-        if isinstance(input_data, str):
+        if isinstance(input_data, dict):
             start_time = time.time()
             # Input is a playlist ID
             playlist_id = input_data
             
             # Retrieve the tracks from the playlist
-
+            playlist = input_data
             playlist_data = []
-            playlist_tracks = self.sp.playlist(playlist_id)['tracks']
+            playlist_tracks = playlist['tracks']
 
             while playlist_tracks:
                 playlist_data.extend([
@@ -179,6 +197,7 @@ class SpotifyClient:
         
         print('<- sp:analyze_playlist()')
         # Return the resulting DataFrame
+
         return playlist_with_features
 
     def get_playlist_track_name(self, id, input='playlist'):
@@ -317,7 +336,7 @@ class SpotifyClient:
             release_date = data['release_date']
             data.drop('release_date', axis=1, inplace=True)
         elif (choice == 'playlist'):
-            data = self.analyze_playlist(data_entry)
+                data = self.analyze_playlist(data_entry)
         else:
             raise ValueError("Invalid choice. Expected 'track' or 'playlist'.")
             
@@ -360,6 +379,7 @@ class SpotifyClient:
         print("Prediction completed in {:.2f} seconds.".format(time.time() - start_time))
         # Return the data DataFrame with predicted genre labels
         print('<- sp:predict()')
+        
         return data
 
    

@@ -2,7 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import clsx from "clsx";
 
-function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setIsLocalLoading, setAnimateOut}) {
+function PlaylistDropdown({
+  onRecommendations,
+  setIsLoading,
+  onQueryChange,
+  setIsLocalLoading,
+  setAnimateOut,
+}) {
   // State variables
   const [playlists, setPlaylists] = useState([]); // Holds list of playlists
   const [selectedPlaylist, setSelectedPlaylist] = useState(""); // Holds the selected playlist
@@ -21,14 +27,16 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
   // Refs
   const dropdownRef = useRef(null); // Reference for the dropdown
   const searchInputRef = useRef(null); // Reference for the search input
-  const listRef = useRef(null); // Reference dropdownRef // Effecgt hook to fetch playlists 
+  const listRef = useRef(null); // Reference dropdownRef // Effecgt hook to fetch playlists
   const itemsRef = useRef([]); // Reference for the items in the list
-
 
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/search`, { withCredentials: true });
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/search`,
+          { withCredentials: true }
+        );
         setPlaylists(response.data || []);
       } catch (error) {
         console.error("Error fetching playlists", error);
@@ -37,7 +45,7 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
 
     fetchPlaylists();
   }, []); // dropdownRefunt
-  
+
   // Effect hook to fcus on searchbar when Dropdown Opens
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
@@ -52,7 +60,8 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
         const listRect = listRef.current.getBoundingClientRect();
         const scrollTop = window.scrollY || document.documentElement.scrollTop;
         const isOutsideListVertically =
-          mousePosition.y < listRect.top + scrollTop || mousePosition.y > listRect.bottom + scrollTop;
+          mousePosition.y < listRect.top + scrollTop ||
+          mousePosition.y > listRect.bottom + scrollTop;
 
         if (isOutsideListVertically) {
           // console.log("Mouse is outside the list vertically");
@@ -64,14 +73,15 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
     const handleMouseMove = (event) => {
       setMousePosition({ x: event.pageX, y: event.pageY });
       setHasMouseMoved(true); // Set to true when mouse moves
-
     };
 
     const handleClickOutside = (event) => {
       if (
         dropdownRef.current &&
         !dropdownRef.current.contains(event.target) &&
-        listRef.current && !listRef.current.contains(event.target)) {
+        listRef.current &&
+        !listRef.current.contains(event.target)
+      ) {
         setIsOpen(false);
         setShowImagePreview(false);
       }
@@ -94,11 +104,14 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
     setIsOpen(false);
     setAnimateOut(true);
     setTimeout(async () => {
-      setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on seadropdownRef  
+      setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on seadropdownRef
       setIsLoading(true); // Set the global loading state to true : for loading animation
       onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/recommend?link=${id}`, { withCredentials: true });
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${id}`,
+          { withCredentials: true }
+        );
         onRecommendations(response.data || []);
       } catch (error) {
         console.error("Error fetching search results", error);
@@ -127,7 +140,7 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
           if (itemsRef.current[newIndex]) {
             const item = itemsRef.current[newIndex];
             const rect = item.getBoundingClientRect();
-            const newTop = rect.top + window.scrollY; 
+            const newTop = rect.top + window.scrollY;
             const newLeft = rect.left;
             setFocusedItemPos({ top: newTop, left: newLeft });
             item.scrollIntoView({ block: "nearest" });
@@ -136,28 +149,28 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
         });
         break;
       case "ArrowUp":
-        e.preventDefault()
-        setHoveredPlaylist(null)
+        e.preventDefault();
+        setHoveredPlaylist(null);
         setFocusedIndex((prevIndex) => {
-          const newIndex = (prevIndex - 1 + filteredPlaylists.length) % filteredPlaylists.length;
+          const newIndex =
+            (prevIndex - 1 + filteredPlaylists.length) %
+            filteredPlaylists.length;
           if (itemsRef.current[newIndex]) {
             const item = itemsRef.current[newIndex];
             const rect = item.getBoundingClientRect();
-            const newTop = rect.top + window.scrollY; 
+            const newTop = rect.top + window.scrollY;
             const newLeft = rect.left;
             setFocusedItemPos({ top: newTop, left: newLeft });
             item.scrollIntoView({ block: "nearest" });
             console.log("item position", { top: newTop, left: newLeft });
-
           }
           return newIndex;
-        })
+        });
         break;
       case "Enter":
-        e.preventDefault()
+        e.preventDefault();
         if (focusedIndex >= 0) {
           handlePlaylistSelect(filteredPlaylists[focusedIndex][1]);
-
         }
         break;
       default:
@@ -165,10 +178,9 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
     }
 
     setIsKeyNavigating(false); // Reset setIsKeyNavigating(false);
-  }
+  };
 
-
- const filteredPlaylists = playlists.filter((playlist) =>
+  const filteredPlaylists = playlists.filter((playlist) =>
     playlist[0].toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -177,7 +189,6 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
       window.addEventListener("keydown", handleKeyDown);
     } else {
       window.removeEventListener("keydown", handleKeyDown);
-
     }
 
     return () => {
@@ -185,7 +196,6 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
     };
   }, [isOpen, handleKeyDown, filteredPlaylists.length]);
 
-   
   return (
     <div ref={dropdownRef} className="relative w-full max-w-md">
       <div className="dropdownButton relative inline-block">
@@ -223,100 +233,101 @@ function PlaylistDropdown({ onRecommendations, setIsLoading, onQueryChange, setI
           My Saved Playlists
         </div>
       </div>
-       
-        <ul
-          className={clsx(
-            "dropdown-height-animate overflow-y-auto absolute mt-3 w-80 bg-gray-700 rounded-xl shadow-lg z-20 transition-all duration-200 ease-in-out lg:translate-x-[-10px] translate-x-[-180px] custom-scrollbar",
-            {
-              "max-h-0": !isOpen,
-              "max-h-[400px]": isOpen,
-            }
-          )} 
-          
-          ref={listRef}
-        >
-          <li className="px-3 py-2">
-              <input
-                type="text"
-                placeholder="Search playlists..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="px-3 py-2 w-full bg-gray-800 text-gray-300 rounded-md focus:outline-none text-sm"
-                ref={searchInputRef}
-              />
-          </li>
-          {filteredPlaylists.map((playlist, index) => {
-            if (!playlist || playlist.length < 2) return null;
-            const [name, id] = playlist;
-            return (
-              <li 
-                key={id} 
-                className={clsx(
-                  "px-3 py-2 cursor-pointer text-gray-300 text-sm  border-b border-gray-500" ,
-                  { "bg-gray-600": focusedIndex === index }
-                )}
-                onClick={() => handlePlaylistSelect(id)}
-                onMouseEnter={() => {
-                  if (!isKeyNavigating && hasMouseMoved) {
-                    setHoveredPlaylist(playlist)
-                    setShowImagePreview(true)
-                    setKeyImagePreview(false)
-                    setFocusedIndex(index)
-                  }
 
-                }}
-                onMouseLeave={() => {
-                  setHoveredPlaylist(null)
-                  setShowImagePreview(false)
-                }}
-                ref={(element) => (itemsRef.current[index] = element)}
-              >
-                {name}
-              </li>
-            );
-          })}
-        </ul>
-        {isOpen && hoveredPlaylist && showImagePreview && hoveredPlaylist[2] && (
-          <div
-            ref={imageRef}
-            className="fixed z-50 p-2 transition-transform duration-300 ease-out"
-            style={{
-              transform: `translate(${mousePosition.x-700}px, ${mousePosition.y - 302}px)`, // Adjust position without affecting the scale
-              width: "120px"
-              // height: "200px",
-            }}
-          >
-            <img 
-              src={hoveredPlaylist[2]} 
-              alt={hoveredPlaylist[0]} 
-              className="w-full translate-x-[-20px] translate-y-[-170px] lg:translate-x-[-400px] lg:translate-y-[-170px] rounded shadow-lg pointer-events-none" />
-          </div>
+      <ul
+        className={clsx(
+          "dropdown-height-animate overflow-y-auto absolute mt-3 w-80 bg-gray-700 rounded-xl shadow-lg z-20 transition-all duration-200 ease-in-out lg:translate-x-[-10px] translate-x-[-180px] custom-scrollbar",
+          {
+            "max-h-0": !isOpen,
+            "max-h-[400px]": isOpen,
+          }
         )}
-
-        {isOpen && focusedIndex >= 0 && !showImagePreview && keyImagePreview && filteredPlaylists[focusedIndex] && (() => {
-          const {top, left } = focusedItemPos;
+        ref={listRef}
+      >
+        <li className="px-3 py-2">
+          <input
+            type="text"
+            placeholder="Search playlists..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="px-3 py-2 w-full bg-gray-800 text-gray-300 rounded-md focus:outline-none text-sm"
+            ref={searchInputRef}
+          />
+        </li>
+        {filteredPlaylists.map((playlist, index) => {
+          if (!playlist || playlist.length < 2) return null;
+          const [name, id] = playlist;
           return (
-          <div
-          className="fixed z-50 p-2 transition-transform duration-300 "
+            <li
+              key={id}
+              className={clsx(
+                "px-3 py-2 cursor-pointer text-gray-300 text-sm  border-b border-gray-500",
+                { "bg-gray-600": focusedIndex === index }
+              )}
+              onClick={() => handlePlaylistSelect(id)}
+              onMouseEnter={() => {
+                if (!isKeyNavigating && hasMouseMoved) {
+                  setHoveredPlaylist(playlist);
+                  setShowImagePreview(true);
+                  setKeyImagePreview(false);
+                  setFocusedIndex(index);
+                }
+              }}
+              onMouseLeave={() => {
+                setHoveredPlaylist(null);
+                setShowImagePreview(false);
+              }}
+              ref={(element) => (itemsRef.current[index] = element)}
+            >
+              {name}
+            </li>
+          );
+        })}
+      </ul>
+      {isOpen && hoveredPlaylist && showImagePreview && hoveredPlaylist[2] && (
+        <div
+          ref={imageRef}
+          className="fixed z-50 p-2 transition-transform duration-300 ease-out"
           style={{
-            transform: `translate(${left - window.innerWidth * 0.95}px, ${top-window.innerHeight * 0.5}px)`, // Adjust position to the left of the focused item
-
+            transform: `translate(${mousePosition.x - 700}px, ${mousePosition.y - 302}px)`, // Adjust position without affecting the scale
             width: "120px",
-          
-
+            // height: "200px",
           }}
-          >
-            <img
-              src={filteredPlaylists[focusedIndex][2]}
-              alt={filteredPlaylists[focusedIndex][0]}
-              className="w-full rounded lg:translate-x-[335%]  shadow-lg pointer-events-none"
-            />
-          </div>
-        );
-      })()}
+        >
+          <img
+            src={hoveredPlaylist[2]}
+            alt={hoveredPlaylist[0]}
+            className="w-full translate-x-[-20px] translate-y-[-170px] lg:translate-x-[-400px] lg:translate-y-[-170px] rounded shadow-lg pointer-events-none"
+          />
+        </div>
+      )}
 
-      </div>
-    );
-  }
-  
-  export default PlaylistDropdown;
+      {isOpen &&
+        focusedIndex >= 0 &&
+        !showImagePreview &&
+        keyImagePreview &&
+        filteredPlaylists[focusedIndex] &&
+        (() => {
+          const { top, left } = focusedItemPos;
+          return (
+            <div
+              className="fixed z-50 p-2 transition-transform duration-300 "
+              style={{
+                transform: `translate(${left - window.innerWidth * 0.95}px, ${top - window.innerHeight * 0.5}px)`, // Adjust position to the left of the focused item
+
+                width: "120px",
+              }}
+            >
+              <img
+                src={filteredPlaylists[focusedIndex][2]}
+                alt={filteredPlaylists[focusedIndex][0]}
+                className="w-full rounded lg:translate-x-[335%]  shadow-lg pointer-events-none"
+              />
+            </div>
+          );
+        })()}
+    </div>
+  );
+}
+
+export default PlaylistDropdown;

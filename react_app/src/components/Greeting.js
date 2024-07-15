@@ -112,11 +112,11 @@ function Greeting() {
     let greetingMessage = "";
     console.log(currentTime);
     if (currentTime >= 3 && currentTime < 12) {
-      greetingMessage = "good morning";
+      greetingMessage = "Good Morning";
     } else if (currentTime >= 12 && currentTime < 18) {
-      greetingMessage = "good afternoon";
+      greetingMessage = "Good Afternoon";
     } else {
-      greetingMessage = "good evening";
+      greetingMessage = "Good Evening";
     }
 
     setGreetings(greetingMessage);
@@ -124,7 +124,7 @@ function Greeting() {
 
   useEffect(() => {
     if (user && user.display_name) {
-      const name = user.display_name.toLowerCase();
+      const name = user.display_name;
       let currentIndex = 0;
 
       // Delay before starting the animation
@@ -163,7 +163,7 @@ function Greeting() {
                 // onMouseEnter={handleMouseEnter}
                 // onMouseLeave={handleMouseLeave}
               >
-                discover your new favorite&nbsp;
+                Discover your new favorite&nbsp;
                 <span className="text-yellow-500 italic relative inline-block">
                   {lastWord}
                 </span>

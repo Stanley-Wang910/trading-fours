@@ -613,12 +613,12 @@ export default function HomePage() {
           {/* <div className="sm:-translate-x-8 absolute z-20 "> */}
           <motion.div
             className={`absolute z-20 inline-flex ${isDemoVisible ? "cursor-events-auto" : "cursor-events-none invisible user-select-none"}`}
-            initial={{ scale: 1.0, x: "56vw", opacity: 0 }}
+            initial={{ scale: 1.0, x: "54vw", opacity: 0 }}
             animate={{
-              x: isDemoVisible ? "54vw" : "56vw",
+              x: isDemoVisible ? "51vw" : "56vw",
               opacity: isDemoVisible ? 1 : 0,
             }}
-            transition={{ duration: 0.3, ease: [0.22, 0.68, 0.31, 1.0] }}
+            transition={{ duration: 1, ease: [0.22, 0.68, 0.31, 1.0] }}
             onHoverStart={() => {
               setIsDemoContainerHovered(true);
             }}
