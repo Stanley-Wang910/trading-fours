@@ -8,6 +8,7 @@ function PlaylistDropdown({
   onQueryChange,
   setIsLocalLoading,
   setAnimateOut,
+  setLastActionShuffle,
 }) {
   // State variables
   const [playlists, setPlaylists] = useState([]); // Holds list of playlists
@@ -101,6 +102,7 @@ function PlaylistDropdown({
 
   const handlePlaylistSelect = async (id) => {
     // Why is this not Callback?
+    setLastActionShuffle(false);
     setSelectedPlaylist(id);
     setIsOpen(false);
     setAnimateOut(true);

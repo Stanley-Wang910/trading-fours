@@ -1,15 +1,18 @@
 import React from "react";
-import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
-import GlossyContainer from "./GlossyContainer.js";
+import { motion } from "framer-motion";
+// import GlossyContainer from "./GlossyContainer.js";
 
 const RecommendationDesc = ({
   recommendations,
   animate,
   animateOut,
+  isShuffling,
+  lastActionShuffle,
   demo = false,
 }) => {
   if (demo) return null;
 
+  const shouldAnimate = !lastActionShuffle && !isShuffling;
   const isPlaylist = recommendations.top_genres && recommendations.p_features;
   console.log(recommendations);
 
@@ -23,7 +26,7 @@ const RecommendationDesc = ({
 
   function formatDate(date) {
     var options = {
-      weekday: "long",
+      // weekday: "long",
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -35,23 +38,19 @@ const RecommendationDesc = ({
   return (
     <div
       className={`
-        w-[35vw] lg:ml-[10vh] mt-[10vh]
+        w-auto max-w-[40vw] mx-auto mt-10 ml-[5vw] mr-[4vw]
        
         `}
     >
-      <div className="mr-4">
+      <div className="flex flex-col md:flex-row sm:items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 ">
         <div
-          className={`opacity-0
-                ${animate ? "recsDesc-fade-in" : ""} 
-                ${animateOut ? "recsDesc-fade-out" : ""}
+          className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"} w-full md:w-[15vw] sm:w-[15vw] max-w-xs
+                ${animate && shouldAnimate ? "recsDesc-fade-in" : ""} 
+                ${animateOut && shouldAnimate ? "recsDesc-fade-out" : ""}
             
             `}
         >
-          <motion.div
-            className={`w-[15vw] mx-auto 
-                  `}
-            whileTap={{ scale: 0.95 }}
-          >
+          <motion.div className={` `} whileTap={{ scale: 0.95 }}>
             <a
               href={`https://open.spotify.com/track/${recommendations.id}`}
               target="_blank"
@@ -73,16 +72,23 @@ const RecommendationDesc = ({
               />
             </a>
           </motion.div>
-          <div className="text-center">
+        </div>
+        <div className="md:text-left md:w-2/3 w-full sm:text-center">
+          <div
+            className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
+             ${animate && shouldAnimate ? "recsDesc-fade-in" : ""} 
+                ${animateOut && shouldAnimate ? "recsDesc-fade-out" : ""}
+            `}
+          >
             <h1
-              className={`text-2xl text-center text-amber-500 font-bold italic
+              className={`text-2xl text-amber-500 font-bold italic mb-2
               `}
             >
               {isPlaylist
                 ? recommendations.p_features.playlist_name
                 : recommendations.t_features.name}
             </h1>
-            <span className="text-gray-400 text-md font-semibold">
+            <span className="text-gray-400 text-md font-semibold ">
               <a
                 href={
                   isPlaylist
@@ -103,22 +109,21 @@ const RecommendationDesc = ({
                     ? recommendations.p_features.playlist_owner
                     : recommendations.t_features.artist}
                 </span>
-              </a>{" "}
-              <br />
+              </a>
             </span>
           </div>
+          <span
+            className={`text-gray-400 md:text-left sm:text-center font-semibold text-sm block mt-2 ${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
+                           ${animate && shouldAnimate ? "recsDesc-fade-in1" : ""} 
+                            ${animateOut && shouldAnimate ? "recsDesc-fade-out1" : ""}`}
+          >
+            {`${isPlaylist ? `${recommendations.p_features.num_tracks} Tracks` : `${formatDate(recommendations.t_features.release_date)}`}`}
+            <br />
+            {isPlaylist
+              ? formatDuration(recommendations.p_features.total_duration_ms)
+              : formatDuration(recommendations.t_features.total_duration_ms)}
+          </span>
         </div>
-        <span
-          className={`text-gray-400 text-center font-semibold text-sm block mt-2 opacity-0
-                           ${animate ? "recsDesc-fade-in1" : ""} 
-                            ${animateOut ? "recsDesc-fade-out1" : ""}`}
-        >
-          {`${isPlaylist ? `${recommendations.p_features.num_tracks} Tracks` : `Released ${formatDate(recommendations.t_features.release_date)}`}`}
-          <br />
-          {isPlaylist
-            ? formatDuration(recommendations.p_features.total_duration_ms)
-            : formatDuration(recommendations.t_features.total_duration_ms)}
-        </span>
       </div>
     </div>
   );

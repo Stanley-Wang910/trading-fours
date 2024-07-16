@@ -7,6 +7,7 @@ import GradientBackground from "./components/GradientBackground";
 import Footer from "./components/Footer";
 import Greeting from "./components/Greeting";
 import HomePage from "./components/HomePage";
+import LoadingBars from "./components/LoadingBars";
 
 import axios from "axios";
 
@@ -17,6 +18,9 @@ function App() {
   const [token, setToken] = useState("");
   const [recommendations, setRecommendations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isShuffling, setIsShuffling] = useState(false);
+  const [lastActionShuffle, setLastActionShuffle] = useState(false);
+
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [recommendationPosition, setRecommendationPosition] =
@@ -145,18 +149,12 @@ function App() {
                     setIsLoading={setIsLoading}
                     onQueryChange={handleQueryChange}
                     setAnimateOut={setAnimateOut}
+                    setLastActionShuffle={setLastActionShuffle}
                   />
                 </div>
                 <div className="recommendations-container w-full justify-center items-center z-10">
-                  {isLoading ? ( // Change setTimeout before this is true for animations
-                    <div className="loader">
-                      <div className="bar1"></div>
-                      <div className="bar2"></div>
-                      <div className="bar3"></div>
-                      <div className="bar4"></div>
-                      <div className="bar5"></div>
-                      <div className="bar6"></div>
-                    </div>
+                  {isLoading && !isShuffling ? ( // Change setTimeout before this is true for animations
+                    <LoadingBars className="mt-[30vh] top-[60%] left-[50%]  -translate-y-1/2 -translate-x-1/2" />
                   ) : (
                     <div className="relative">
                       <RecommendationsList
@@ -172,6 +170,10 @@ function App() {
                         setFavoritedTracks={setFavoritedTracks}
                         animateOut={animateOut}
                         setAnimateOut={setAnimateOut}
+                        isShuffling={isShuffling}
+                        setIsShuffling={setIsShuffling}
+                        lastActionShuffle={lastActionShuffle}
+                        setLastActionShuffle={setLastActionShuffle}
                       />
                       {showInfoContainer && (
                         <div

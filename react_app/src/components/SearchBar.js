@@ -10,6 +10,7 @@ function SearchBar({
   setIsLocalLoading,
   onQueryChange,
   setAnimateOut,
+  setLastActionShuffle,
   demo = false,
 }) {
   const [query, setQuery] = useState("");
@@ -39,6 +40,8 @@ function SearchBar({
         return;
       }
 
+      setLastActionShuffle(false);
+
       setAnimateOut(true);
       setTimeout(async () => {
         setIsLoading(true);
@@ -63,7 +66,15 @@ function SearchBar({
         setAnimateOut(false);
       }, 500);
     },
-    [query, onQueryChange, onRecommendations, setIsLoading]
+    [
+      demo,
+      setIsLocalLoading,
+      query,
+      onQueryChange,
+      onRecommendations,
+      setIsLoading,
+      setAnimateOut,
+    ]
   );
 
   return (
@@ -127,6 +138,7 @@ function SearchBar({
             onQueryChange={onQueryChange}
             setIsLocalLoading={setIsLocalLoading}
             setAnimateOut={setAnimateOut}
+            setLastActionShuffle={setLastActionShuffle}
           />
         </div>
       )}

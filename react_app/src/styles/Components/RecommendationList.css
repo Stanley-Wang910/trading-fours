@@ -75,7 +75,7 @@
 @keyframes recsDescFadeIn1 {
   from {
     opacity: 0;
-    transform: translateX(-25px);
+    transform: translateX(25px);
   }
   to {
     opacity: 1;
@@ -187,6 +187,17 @@
     transition: opacity 2s, transform 1.75s;
 
   }
+
+  .embed.active-shuffle {
+    opacity: 80%;
+    transform: translateY(0);
+    /* animation: popEffect 0.3s ease-out 1.75s;  */
+    transition: opacity 2s , transform 1.75s ;
+
+  }
+
+
+  
 
 
   .recommendations-container {
