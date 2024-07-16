@@ -13,7 +13,7 @@ REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD')
 REDIS_DB = os.environ.get('REDIS_DB', 0)
 
 # Create a Redis connection pool
-redis_pool = redis.ConnectionPool(
+default_redis_pool = redis.ConnectionPool(
     host=REDIS_HOST,
     port=REDIS_PORT,
     password=REDIS_PASSWORD,
@@ -21,8 +21,8 @@ redis_pool = redis.ConnectionPool(
 )
 
 class SessionStore:
-    def __init__(self):
-        self.redis = redis.Redis(connection_pool=redis_pool)
+    def __init__(self, redis_pool=None):
+        self.redis = redis.Redis(connection_pool=default_redis_pool or redis_pool)
         self.cache = {}
 
     def _get_date_key(self):
@@ -51,8 +51,8 @@ class SessionStore:
 
         pipe = self.redis.pipeline()
         pipe.rpush(self._get_random_recs_key(), *recommended_songs)
-        pipe.expire(self._get_random_recs_key(), 86400) # 1 day
-        pipe.expire(self._get_sample_taken_key(), 86400) # 1 day
+        pipe.expire(self._get_random_recs_key(), 86400, nx=True) # 1 day
+        pipe.expire(self._get_sample_taken_key(), 86400, nx=True) # 1 day
         pipe.execute()
 
     def get_random_recs(self):
@@ -83,8 +83,6 @@ class SessionStore:
         if not sample:
             print("Sample empty")
             return None
-        
-
          
         pipe = self.redis.pipeline()
         pipe.delete(random_rec_key)
@@ -128,12 +126,10 @@ class SessionStore:
         pipeline = self.redis.pipeline()
         pipeline.incrby(key, num_recs)
         pipeline.incrby(hourly_key, num_recs)
-        pipeline.expire(hourly_key, 3600)
+        pipeline.expire(hourly_key, 3600, nx=True)
         pipeline.execute()
-        # self.redis.incrby(key, json.dumps(num_recs))
-    
-    
 
+    
     def get_total_recs(self):
         key = 'total_recs'
         total_recs = self.redis.get(key)

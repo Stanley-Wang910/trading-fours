@@ -8,7 +8,9 @@ function RecommendationsList({
   recommendations,
   onRecommendations,
   setIsLoading,
+  setIsLocalLoading,
   query,
+  onQueryChange,
   position,
   onTogglePosition,
   setFavoritedTracks,
@@ -73,6 +75,7 @@ function RecommendationsList({
     setAnimateOut(true);
     setTimeout(async () => {
       setIsLoading(true);
+      setIsLocalLoading(true);
 
       try {
         const response = await axios.get(
@@ -86,32 +89,57 @@ function RecommendationsList({
       }
 
       setIsLoading(false);
+      setIsLocalLoading(false);
       setAnimateOut(false);
     }, 250);
   }, [query, setAnimateOut, setIsLoading, onRecommendations]);
 
   // Handler for clicking like
-  const handleClickLike = (index) => {
+  const handleClickLike = async (index) => {
     const trackID = recommendationsArray[index];
     console.log("Clicked like", index, trackID);
-    setClickedLikes((prevClickedLikes) => {
-      if (prevClickedLikes.includes(index)) {
-        setFavoritedTracks((prevFavorited) =>
-          prevFavorited.filter((id) => id !== trackID)
+
+    setAnimateOut(true);
+    setTimeout(async () => {
+      setIsLocalLoading(true);
+      setIsLoading(true);
+      onQueryChange(trackID);
+
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${trackID}`,
+          { withCredentials: true }
         );
-        return prevClickedLikes.filter((likeIndex) => likeIndex !== index);
-      } else {
-        setFavoritedTracks((prevFavorited) => {
-          if (!prevFavorited.includes(trackID)) {
-            return [...prevFavorited, trackID];
-          }
-          return prevFavorited;
-        });
-        return [...prevClickedLikes, index];
+        onRecommendations(response.data || []);
+      } catch (error) {
+        console.error("Error fetching search results", error);
+        onRecommendations([]);
       }
-    });
+      setIsLocalLoading(false);
+      setIsLoading(false);
+      setAnimateOut(false);
+    }, 250);
+
+    // setClickedLikes((prevClickedLikes) => {
+    //   if (prevClickedLikes.includes(index)) {
+    //     setFavoritedTracks((prevFavorited) =>
+    //       prevFavorited.filter((id) => id !== trackID)
+    //     );
+    //     return prevClickedLikes.filter((likeIndex) => likeIndex !== index);
+    //   } else {
+    //     setFavoritedTracks((prevFavorited) => {
+    //       if (!prevFavorited.includes(trackID)) {
+    //         return [...prevFavorited, trackID];
+    //       }
+    //       return prevFavorited;
+    //     });
+    //     return [...prevClickedLikes, index];
+    //   }
+    // });
     // console.log("Favorited", favorited);
   };
+  //   [query, setAnimateOut, setIsLoading, onRecommendations]
+  // );
 
   // Check if recommendations is a playlist
   const isPlaylist =

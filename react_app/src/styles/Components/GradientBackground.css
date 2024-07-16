@@ -33,7 +33,9 @@
   }
   
   .fade-in-gradient {
-    animation: fadeInGradient 1s ease-in-out;
+    opacity: 0;
+    animation: fadeInGradient 1s ease-in-out forwards;
+    /* animation-delay: 0.5s; */
   }
   
   @keyframes fadeInGradient {

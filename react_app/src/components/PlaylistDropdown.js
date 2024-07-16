@@ -100,11 +100,12 @@ function PlaylistDropdown({
   }, [searchQuery, mousePosition]);
 
   const handlePlaylistSelect = async (id) => {
+    // Why is this not Callback?
     setSelectedPlaylist(id);
     setIsOpen(false);
     setAnimateOut(true);
     setTimeout(async () => {
-      setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on seadropdownRef
+      setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on searchdropdownRef
       setIsLoading(true); // Set the global loading state to true : for loading animation
       onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
       try {

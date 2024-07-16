@@ -17,6 +17,7 @@ function App() {
   const [token, setToken] = useState("");
   const [recommendations, setRecommendations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [recommendationPosition, setRecommendationPosition] =
     useState("center");
@@ -139,6 +140,8 @@ function App() {
                 <div className="search-container mt-16 mb-4 w-full max-w-lg z-20">
                   <SearchBar
                     onRecommendations={handleRecommendations}
+                    isLocalLoading={isLocalLoading}
+                    setIsLocalLoading={setIsLocalLoading}
                     setIsLoading={setIsLoading}
                     onQueryChange={handleQueryChange}
                     setAnimateOut={setAnimateOut}
@@ -159,9 +162,11 @@ function App() {
                       <RecommendationsList
                         recommendations={recommendations}
                         onRecommendations={handleRecommendations}
-                        isLoading={isLoading}
+                        // isLoading={isLoading}
                         setIsLoading={setIsLoading}
+                        setIsLocalLoading={setIsLocalLoading}
                         query={query}
+                        onQueryChange={handleQueryChange}
                         position={recommendationPosition}
                         onTogglePosition={handleTogglePosition}
                         setFavoritedTracks={setFavoritedTracks}

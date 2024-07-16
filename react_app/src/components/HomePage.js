@@ -54,7 +54,9 @@ export default function HomePage() {
   const isVideoEmbedVisible = useDelayAnimation(isDiv2Visible, 500);
 
   const [scrollDemoRef, isDemoVisible] = useScrollAnimation();
-  const isGradientVisible = useDelayAnimation(isDemoVisible, 0);
+  const isGradientVisible = useDelayAnimation(isDemoVisible, 500);
+  const searchAnimate = useDelayAnimation(isDemoVisible, 100);
+  const recAnimate = useDelayAnimation(isDemoVisible, 100);
 
   const [isTotalRecsHovered, setIsTotalRecsHovered] = useState(false);
   const [isMoreInfoHovered, setIsMoreInfoHovered] = useState(false);
@@ -656,7 +658,11 @@ export default function HomePage() {
                 className="mt-10 pointer-events-auto w-[33vw]  "
                 animate={{
                   scale: isDemoContainerHovered ? 1 : 0.95,
-                  x: isDemoContainerHovered ? "12%" : "5%",
+                  x: searchAnimate
+                    ? isDemoContainerHovered
+                      ? "12%"
+                      : "5%"
+                    : "15%",
                   y: isDemoContainerHovered ? "30%" : "10%",
                 }}
                 transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
@@ -666,8 +672,16 @@ export default function HomePage() {
               <motion.div
                 className="absolute pointer-events-auto mt-6"
                 animate={{
-                  x: isDemoContainerHovered ? "8%" : "12%",
-                  y: isDemoContainerHovered ? "2%" : "10%",
+                  x: recAnimate
+                    ? isDemoContainerHovered
+                      ? "8%"
+                      : "12%"
+                    : "-10%",
+                  y: recAnimate
+                    ? isDemoContainerHovered
+                      ? "2%"
+                      : "10%"
+                    : "2%",
                   scale: isDemoContainerHovered ? 1 : 1,
                   opacity: isDemoContainerHovered ? 1 : 0.95,
                 }}

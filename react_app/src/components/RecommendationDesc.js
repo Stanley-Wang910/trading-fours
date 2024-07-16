@@ -6,13 +6,25 @@ const RecommendationDesc = ({ recommendations, demo = false }) => {
   if (demo) return null;
 
   const isPlaylist = recommendations.top_genres && recommendations.p_features;
-  console.log(recommendations.id);
+  console.log(recommendations);
 
   function formatDuration(ms) {
     const hours = Math.floor(ms / 3600000);
     const minutes = Math.floor((ms % 3600000) / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
 
-    return `${hours ? `${hours} hours` : ""}${minutes ? `, ${minutes} minutes` : ""}`;
+    return `${hours ? `${hours} hours` : ""}${minutes ? `${hours ? ", " : ""} ${minutes} minutes` : ""}${seconds ? `${minutes ? ", " : ""} ${seconds} seconds` : ""}`;
+  }
+
+  function formatDate(date) {
+    var options = {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    };
+    const d = new Date(date);
+    return `${d.toLocaleDateString("en-US", options)}`;
   }
 
   return (
@@ -56,7 +68,7 @@ const RecommendationDesc = ({ recommendations, demo = false }) => {
                 shadow={false}
               > */}
             <div className="text-center">
-              <h1 className="text-2xl text-center bg-gradient-to-b from-amber-400 to-custom-brown bg-clip-text text-transparent font-bold italic">
+              <h1 className="text-2xl text-center text-amber-500 font-bold italic">
                 {recommendations.p_features.playlist_name}
               </h1>
               {/* <h2 className="text-xl font-semibold text-gray-400 mb-4 text-center">
@@ -78,7 +90,8 @@ const RecommendationDesc = ({ recommendations, demo = false }) => {
                 </a>{" "}
                 <br />
                 <span className="text-sm block mt-2">
-                  {recommendations.p_features.num_tracks} Tracks,{" "}
+                  {recommendations.p_features.num_tracks} Tracks
+                  <br />
                   {formatDuration(recommendations.p_features.total_duration_ms)}
                 </span>
               </span>
@@ -87,19 +100,43 @@ const RecommendationDesc = ({ recommendations, demo = false }) => {
             </motion.div> */}
           </>
         ) : (
-          <h2 className="text-xl font-semibold text-gray-400 mb-4 text-center">
-            <span className="text-yellow-600 font-bold italic">
-              {recommendations.track}
-            </span>{" "}
-            by{" "}
-            <span className="text-gray-400 font-bold italic">
-              {recommendations.artist}
-            </span>
-            , released in{" "}
-            <span className="text-gray-400 font-semibold">
-              {recommendations.release_date}
-            </span>
-          </h2>
+          <>
+            <motion.div className="w-[15vw] mx-auto" whileTap={{ scale: 0.95 }}>
+              <a
+                href={`https://open.spotify.com/track/${recommendations.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <img
+                  src={recommendations.t_features.track_image}
+                  alt={recommendations.t_features.name}
+                  className="w-full rounded-xl "
+                />
+              </a>
+            </motion.div>
+            <div className="text-center">
+              <h1 className="text-2xl text-center text-amber-500 font-bold italic">
+                {recommendations.t_features.name}
+              </h1>
+              <span className="text-gray-400 text-md font-semibold">
+                <a
+                  href={recommendations.t_features.artist_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover-effect-link"
+                  data-replace={recommendations.t_features.artist}
+                >
+                  <span>{recommendations.t_features.artist}</span>
+                </a>{" "}
+                <br />
+                <span className="text-sm block mt-2">
+                  {formatDate(recommendations.t_features.release_date)} <br />
+                  {formatDuration(recommendations.t_features.total_duration_ms)}
+                </span>
+              </span>
+            </div>
+          </>
         )}
       </div>
     </div>

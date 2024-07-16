@@ -47,8 +47,6 @@ class SpotifyClient:
             else:
                 user_playlists = None
 
- 
-
         recently_played = self.sp.current_user_recently_played()
         top_artists_short = self.sp.current_user_top_artists(20,0, 'short_term')
         top_artists_med = self.sp.current_user_top_artists(20,0, 'medium_term')
@@ -68,31 +66,19 @@ class SpotifyClient:
         }
         return user_profile, all_playlists, recently_played, top_artists, top_tracks
     
-    def get_id_name(self):
-        """
-        Retrieves a dictionary mapping playlist names to their corresponding IDs.
-
-        Returns:
-            dict: A dictionary where the keys are playlist names and the values are playlist IDs.
-        """
-        id_name = {}
-        for i in self.sp.current_user_playlists()['items']:
-            id_name[i['name']] = i['uri'].split(':')[2]
-        return id_name
     
     def analyze_my_playlist(self, playlist_name, id_dic, sp):
         playlist_id = id_dic[playlist_name]
         self.analyze_playlist(playlist_id)
 
-    def playlist_base_features(self, playlist_id):
-        playlist = self.sp.playlist(playlist_id)
+    def playlist_base_features(self, playlist):
         playlist_features = {
             'playlist_image': playlist['images'][0]['url'],   
             'playlist_owner': playlist['owner']['display_name'],
             'playlist_owner_link' : playlist['owner']['external_urls']['spotify'],
             'playlist_name' : playlist['name']
         }
-        return playlist, playlist_features
+        return playlist_features
 
 
     def analyze_playlist(self, input_data, type_analyze='classify'):
@@ -193,7 +179,7 @@ class SpotifyClient:
 
         return playlist_with_features
     
-    def track_base_features(self, track_id):
+    def track_base_features(self, track, track_id):
         """
         Retrieves the audio features of a list of track IDs from Spotify API.
 
@@ -204,12 +190,10 @@ class SpotifyClient:
             pandas.DataFrame: A DataFrame containing the audio features of the tracks, along with additional information such as artist, name, popularity, and explicitness.
         """
         print("-> sp:get_song_features()")
-        if not track_id:
-            print("No track provided.")
-            return
-
-        
-        
+        # if not track_id:
+        #     print("No track provided.")
+        #     return
+     
         # Retrieve audio features for the track IDs
         audio_features_list = self.sp.audio_features(track_id)
 
@@ -221,8 +205,6 @@ class SpotifyClient:
 
         # Retrieve additional information for each track
 
-    
-        track = self.sp.track(track_id)
         track_features = {
             'artist': track['artists'][0]['name'],
             'id': track['id'],
@@ -252,14 +234,14 @@ class SpotifyClient:
         try:
             track = self.sp.track(id)
             if track:
-                return 'track'
+                return 'track', track
         except:
             pass  # Track not found or an error occurred
         
         try:
             playlist = self.sp.playlist(id)
             if playlist:
-                return 'playlist'
+                return 'playlist', playlist
         except:
             pass  # Playlist not found or an error occurred
 

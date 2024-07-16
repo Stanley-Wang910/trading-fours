@@ -6,12 +6,14 @@ import PlaylistDropdown from "./PlaylistDropdown";
 function SearchBar({
   onRecommendations,
   setIsLoading,
+  isLocalLoading,
+  setIsLocalLoading,
   onQueryChange,
   setAnimateOut,
   demo = false,
 }) {
   const [query, setQuery] = useState("");
-  const [isLocalLoading, setIsLocalLoading] = useState(false);
+  // const [isLocalLoading, setIsLocalLoading] = useState(false);
 
   const radius = 100;
   const [visible, setVisible] = React.useState(false);

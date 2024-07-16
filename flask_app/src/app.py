@@ -301,13 +301,24 @@ def recommend():
     link = request.args.get('link')
     if not link:
         return jsonify({'error': 'No link provided'}), 400 # Cannot process request
-
+    
     if '/' in link:
         # Extract the type and ID from the link
-        type_id = link.split('/')[3]
+        # type_id = link.split('/')[3]
         link = link.split('/')[-1].split('?')[0]
+        type_id, data = sp.get_id_type(link)
+        session['type_id'] = type_id
     else:
-        type_id = 'playlist'
+        if session.get('type_id') is not None and session.get('last_search') == link:
+            print("Type ID exists in session", session.get('type_id'))
+            type_id = session.get('type_id')
+        else:
+            start_time = time.time()
+            type_id, data = sp.get_id_type(link)
+            print("Extracted type_id in %s seconds", (time.time() - start_time))
+            session['type_id'] = type_id
+
+        # type_id = 'playlist'
 
     rec_redis_key = f'{unique_id}:{link}:{type_id}'
     # print(rec_redis_key)
@@ -327,8 +338,9 @@ def recommend():
         else:
             print('Saving playlist data to session')
             previously_recommended = []
+            playlist = data
             # re = RecEngine(sp, unique_id, sql_work)
-            playlist, p_features = sp.playlist_base_features(link)
+            p_features = sp.playlist_base_features(playlist)
             playlist = sp.predict(playlist, type_id, class_items)
             playlist.to_csv('playlist.csv', index=False)
             track_ids = set(playlist['id'])
@@ -356,8 +368,8 @@ def recommend():
         else:
             print('Saving track data to session')
             previously_recommended = []
-            
-            track, t_features = sp.track_base_features(link) 
+            track = data
+            track, t_features = sp.track_base_features(track, link) 
             track.to_csv('track.csv', index=False)
             track = sp.predict(track, type_id, class_items)
             track_ids = [link]
@@ -464,56 +476,16 @@ def test():
     re = RecEngine(sp, unique_id, sql_work)
 
 
-
-    link = input("Enter a playlist link: ")
-    # if not link:
-    #     break
-    link = link.split('/')[-1].split('?')[0]
     
-    # track = sp.sp.track(link)
-    track, t_features  = sp.track_base_features(link)
-    track = sp.predict(track, 'track', class_items)
-    print(t_features)
+    deets = sp.sp.recommendation_genre_seeds()
+
+    
+  
    
     return jsonify(
         # {'name': name, 'image_300x300': image_300x300, 'artist': artist, 'artist_url': artist_url, 'release_date': release_date, 'popularity': popularity, 'id': link}
-        track.to_dict(orient='records')
+        deets
     )
-
-
-
-
-
-
-    #     playlist = sp.predict(link, 'playlist', class_items)
-    #     top_genres = playlist['track_genre'].value_counts().head(3).index.tolist()
-    #     print("Top three genres:", top_genres)
-    #     playlist.to_csv('playlist.csv')
-
-    # session_store.update_total_recs(30)
-    # action = input("Enter: 1. Delete keys, 2. Get Random Recommendations")
-
-    # if (action == '1'): 
-    #     session_store.delete_keys()
-
-
-    #     if session_store.redis.exists(session_store._get_sample_taken_key()):
-    #         return jsonify({'message': 'Sample already taken, no random recs saved'})
-    #     return jsonify(' Sample not taken, random recs saved') 
-
-    # elif (action == '2'):
-    #     total_recs, hourly_recs = session_store.get_total_recs()
-
-    #     print("Total recommendations:", total_recs, "Hourly recommendations:", hourly_recs)
-
-    #     random_recs = session_store.get_random_recs()
-
-    # session_store.clear_all()
-    # session_store.set_total_recs(8299)
-
-    # print("Total recommendations:", total, "Hourly recommendations:", hourly)
-    # recently_played = sp.sp.current_user_top_artists(20,0, 'long_term')
-    # return jsonify(playlist_json)
 
 
 
