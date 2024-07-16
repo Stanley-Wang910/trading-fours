@@ -59,7 +59,7 @@ def auth_login():
         'response_type': 'code',
         'client_id': os.getenv('SPOTIFY_CLIENT_ID'),
         'scope': scope,
-        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
         'state': state
     }
     url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
@@ -90,7 +90,7 @@ def auth_callback():
     auth_data = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
     }
     response = requests.post('https://accounts.spotify.com/api/token', data=auth_data, headers=auth_header)
     print(f"Token exchange response: {response.status_code}, {response.text}")
@@ -373,6 +373,8 @@ def recommend():
             track.to_csv('track.csv', index=False)
             track = sp.predict(track, type_id, class_items)
             track_ids = [link]
+
+            print(track['track_genre'])
 
             t_features.update({ 
                 'total_duration_ms': int(track['duration_ms']),

@@ -121,7 +121,7 @@ function PlaylistDropdown({
       setIsLocalLoading(false); // Set the local loading state to false
       setIsLoading(false);
       setAnimateOut(false);
-    }, 250);
+    }, 500); // Change based on the recommendation animation times
   };
 
   const handleKeyDown = (e) => {

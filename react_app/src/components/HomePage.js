@@ -55,8 +55,8 @@ export default function HomePage() {
 
   const [scrollDemoRef, isDemoVisible] = useScrollAnimation();
   const isGradientVisible = useDelayAnimation(isDemoVisible, 500);
-  const searchAnimate = useDelayAnimation(isDemoVisible, 100);
-  const recAnimate = useDelayAnimation(isDemoVisible, 100);
+  const searchAnimate = useDelayAnimation(isDemoVisible, 50);
+  const recAnimate = useDelayAnimation(isDemoVisible, 50);
 
   const [isTotalRecsHovered, setIsTotalRecsHovered] = useState(false);
   const [isMoreInfoHovered, setIsMoreInfoHovered] = useState(false);
@@ -656,6 +656,7 @@ export default function HomePage() {
               </div>
               <motion.div
                 className="mt-10 pointer-events-auto w-[33vw]  "
+                initial={{ opacity: 0 }}
                 animate={{
                   scale: isDemoContainerHovered ? 1 : 0.95,
                   x: searchAnimate
@@ -664,6 +665,7 @@ export default function HomePage() {
                       : "5%"
                     : "15%",
                   y: isDemoContainerHovered ? "30%" : "10%",
+                  opacity: searchAnimate ? 1 : 0,
                 }}
                 transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
               >
@@ -682,8 +684,9 @@ export default function HomePage() {
                       ? "2%"
                       : "10%"
                     : "2%",
+
                   scale: isDemoContainerHovered ? 1 : 1,
-                  opacity: isDemoContainerHovered ? 1 : 0.95,
+                  opacity: searchAnimate ? 1 : 0,
                 }}
                 transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
               >

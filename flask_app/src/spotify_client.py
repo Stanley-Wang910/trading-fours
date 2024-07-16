@@ -340,6 +340,8 @@ class SpotifyClient:
         print("Prediction completed in {:.2f} seconds.".format(time.time() - start_time))
         # Return the data DataFrame with predicted genre labels
         print('<- sp:predict()')
+
+        data.to_csv('data_Genre.csv', index=False)    
         
         return data
 

@@ -148,7 +148,7 @@ function App() {
                   />
                 </div>
                 <div className="recommendations-container w-full justify-center items-center z-10">
-                  {isLoading ? (
+                  {isLoading ? ( // Change setTimeout before this is true for animations
                     <div className="loader">
                       <div className="bar1"></div>
                       <div className="bar2"></div>

@@ -4,7 +4,7 @@
 @keyframes recsFadeUp {
   from {
     opacity: 0;
-    transform: translateX(-50px);
+    transform: translateX(50px);
   }
   to {
     opacity: 1;
@@ -13,12 +13,16 @@
 }
 
 .recs-fade-up {
-  animation: recsFadeUp 0.5s ease-out forwards;
+  animation: recsFadeUp 0.75s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0.1s;
 }
 
 .recs-fade-out {
-  animation: recsFadeOut .25s ease-out forwards;
+  opacity: 0;
+  animation: recsFadeOut .5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0.1s;
 }
+
 
 @keyframes recsFadeOut {
   from {
@@ -30,6 +34,96 @@
     transform: translateX(50px);
   }
 }
+
+.recsDesc-fade-in {
+  animation: recsDescFadeIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+.recsDesc-fade-out {
+  animation: recsDescFadeOut 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+@keyframes recsDescFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+@keyframes recsDescFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+} 
+
+.recsDesc-fade-in1 {
+  animation: recsDescFadeIn1 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0.3s;
+}
+.recsDesc-fade-out1 {
+  animation: recsDescFadeOut1 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
+
+@keyframes recsDescFadeIn1 {
+  from {
+    opacity: 0;
+    transform: translateX(-25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+}
+
+@keyframes recsDescFadeOut1 {
+  from {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+} 
+
+.loadMore-fade-up {
+  animation: buttonFadeUp 0.75s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0.15s;
+}
+.shuffle-fade-up {
+  animation: buttonFadeUp 0.75s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0.25s;
+}
+
+.loadMore-fade-out {
+  animation: recsFadeOut 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0s;
+}
+.shuffle-fade-out {
+  animation: recsFadeOut 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0s;
+}
+
+
+@keyframes buttonFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
 
 
 

@@ -61,7 +61,7 @@ function SearchBar({
         setIsLoading(false);
         setIsLocalLoading(false);
         setAnimateOut(false);
-      }, 250);
+      }, 500);
     },
     [query, onQueryChange, onRecommendations, setIsLoading]
   );
