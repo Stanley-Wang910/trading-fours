@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 
-const AnimatedCounter = ({ value, isCountVisible }) => {
+const AnimatedCounter = ({
+  value,
+  isCountVisible,
+  durationMs = 200,
+  className = "",
+}) => {
   const counterRef = useRef(null);
   const [currentValue, setCurrentValue] = useState(0);
   const [isFirstRender, setIsFirstRender] = useState(true);
@@ -30,17 +35,21 @@ const AnimatedCounter = ({ value, isCountVisible }) => {
     };
 
     if (isFirstRender) {
-      animateValue(Math.max(0, value - 100), value, 200);
+      animateValue(Math.max(0, value - 100), value, durationMs);
       setIsFirstRender(false);
       console.log("First render");
     } else {
-      animateValue(currentValue, value, 200);
+      animateValue(currentValue, value, durationMs);
     }
   }, [value, isFirstRender, currentValue, isCountVisible]);
 
   if (!isCountVisible) return null;
 
-  return <span ref={counterRef}>{currentValue.toLocaleString()}</span>;
+  return (
+    <span className={`${className}`} ref={counterRef}>
+      {currentValue.toLocaleString()}
+    </span>
+  );
 };
 
 export default AnimatedCounter;

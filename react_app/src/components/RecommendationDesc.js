@@ -1,6 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
+import PopularityBar from "./PopularityBar.js";
 // import GlossyContainer from "./GlossyContainer.js";
+import AnimatedCounter from "./AnimatedCounter.js";
 
 const RecommendationDesc = ({
   recommendations,
@@ -21,7 +23,7 @@ const RecommendationDesc = ({
     const minutes = Math.floor((ms % 3600000) / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
 
-    return `${hours ? `${hours} hours` : ""}${minutes ? `${hours ? ", " : ""} ${minutes} minutes` : ""}${seconds ? `${minutes ? ", " : ""} ${seconds} seconds` : ""}`;
+    return `${hours ? `${hours} hr` : ""}${minutes ? `${hours ? "" : ""} ${minutes} min` : ""}${seconds ? `${minutes ? "" : ""} ${seconds} s` : ""}`;
   }
 
   function formatDate(date) {
@@ -38,12 +40,12 @@ const RecommendationDesc = ({
   return (
     <div
       className={`
-        w-auto max-w-[40vw] mx-auto mt-10 ml-[5vw] mr-[4vw]
+        w-auto max-w-[40vw] mx-auto mt-10 ml-[5vw] mr-[4vw] h-auto
        
         `}
     >
       <div className="flex flex-col md:flex-row sm:items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 ">
-        <div
+        <div // Image
           className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"} w-full md:w-[15vw] sm:w-[15vw] max-w-xs
                 ${animate && shouldAnimate ? "recsDesc-fade-in" : ""} 
                 ${animateOut && shouldAnimate ? "recsDesc-fade-out" : ""}
@@ -112,17 +114,76 @@ const RecommendationDesc = ({
               </a>
             </span>
           </div>
-          <span
+          <div
             className={`text-gray-400 md:text-left sm:text-center font-semibold text-sm block mt-2 ${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
                            ${animate && shouldAnimate ? "recsDesc-fade-in1" : ""} 
                             ${animateOut && shouldAnimate ? "recsDesc-fade-out1" : ""}`}
           >
-            {`${isPlaylist ? `${recommendations.p_features.num_tracks} Tracks` : `${formatDate(recommendations.t_features.release_date)}`}`}
-            <br />
-            {isPlaylist
-              ? formatDuration(recommendations.p_features.total_duration_ms)
-              : formatDuration(recommendations.t_features.total_duration_ms)}
+            <span>
+              {`${isPlaylist ? `${recommendations.p_features.num_tracks} Tracks` : `${formatDate(recommendations.t_features.release_date)}`}`}
+              <br />
+              {isPlaylist
+                ? formatDuration(recommendations.p_features.total_duration_ms)
+                : formatDuration(recommendations.t_features.total_duration_ms)}
+              <br />
+            </span>
+          </div>
+        </div>
+      </div>
+      <div
+        className={`mt-2 text-gray-400 md:text-left sm:text-center font-semibold text-sm ${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
+                    ${animate && shouldAnimate ? "recsDesc-fade-in2" : ""} 
+                    ${animateOut && shouldAnimate ? "recsDesc-fade-out2" : ""}`}
+      >
+        {isPlaylist && (
+          <span className="mt-2 text-gray-300">
+            {Object.entries(recommendations.p_features.display_genres).map(
+              ([genre, percentage], index, array) => (
+                <React.Fragment key={genre}>
+                  {genre}:{" "}
+                  <span className="text-amber-400">
+                    {
+                      <AnimatedCounter
+                        value={(percentage * 100).toFixed(1)}
+                        isCountVisible={true}
+                        durationMs={500}
+                      />
+                    }
+                    %{index < array.length - 1 && <br />}
+                  </span>
+                </React.Fragment>
+              )
+            )}
           </span>
+        )}
+        <div className="mt-2">
+          {isPlaylist ? "Average Track Popularity:" : "Track Popularity"}
+        </div>
+        <div className={`w-full md:max-w-[13vw] mt-2 `}>
+          <motion.div className="flex items-center ">
+            <div className="flex-grow">
+              <PopularityBar
+                popularity={
+                  isPlaylist
+                    ? recommendations.p_features.avg_popularity
+                    : recommendations.t_features.popularity
+                }
+                orientation="horizontal"
+                delay={0.6} // Delay until recsDesc-fade-in1 animation finishes
+              />{" "}
+            </div>
+            <div className="flex-shrink-0 min-w-[40px] ml-2 text-amber-400">
+              <AnimatedCounter
+                value={
+                  isPlaylist
+                    ? recommendations.p_features.avg_popularity
+                    : recommendations.t_features.popularity
+                }
+                isCountVisible={true}
+                durationMs={150}
+              />
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>

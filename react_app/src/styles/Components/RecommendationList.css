@@ -71,6 +71,13 @@
 .recsDesc-fade-out1 {
   animation: recsDescFadeOut1 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
 }
+.recsDesc-fade-in2 {
+  animation: recsDescFadeIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0.3s;
+}
+.recsDesc-fade-out2 {
+  animation: recsDescFadeOut2 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+}
 
 @keyframes recsDescFadeIn1 {
   from {
@@ -93,6 +100,19 @@
     transform: translateY(50px);
   }
 } 
+
+
+@keyframes recsDescFadeOut2 {
+  from {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+} 
+
 
 .loadMore-fade-up {
   animation: buttonFadeUp 0.75s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;

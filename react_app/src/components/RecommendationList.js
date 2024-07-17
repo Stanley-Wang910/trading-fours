@@ -163,7 +163,11 @@ function RecommendationsList({
 
   useEffect(() => {
     // Effect to prevent premature rendering out and in of iframes on shufle
-    if (lastActionShuffle && animateOut) setLoaded([]);
+    if (lastActionShuffle && animateOut) {
+      setTimeout(() => {
+        setLoaded([]);
+      }, 500); // Timeout to wait until rec container aniamtes out
+    }
   });
 
   // Get the array of recommended ids

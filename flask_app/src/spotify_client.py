@@ -162,7 +162,7 @@ class SpotifyClient:
             audio_features_list.extend(self.sp.audio_features(chunk))
 
 
-        audio_features_df = pd.DataFrame(audio_features_list)
+        audio_features_df = pd.DataFrame(audio_features_list) # Consider filling none with 0
 
         # Select specific columns for the audio features DataFrame
         selected_columns = ['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms', 'time_signature']

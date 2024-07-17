@@ -59,7 +59,7 @@ def auth_login():
         'response_type': 'code',
         'client_id': os.getenv('SPOTIFY_CLIENT_ID'),
         'scope': scope,
-        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
         'state': state
     }
     url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
@@ -90,7 +90,7 @@ def auth_callback():
     auth_data = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
     }
     response = requests.post('https://accounts.spotify.com/api/token', data=auth_data, headers=auth_header)
     print(f"Token exchange response: {response.status_code}, {response.text}")
@@ -183,16 +183,23 @@ def refresh_token():
         recache_threshold = timedelta(days=1)
         last_cached_str = session.get('top_last_cached')
 
+        should_recache = False
         if last_cached_str is None:
-            last_cached = None
+            print("Last cached user data not found, recaching")
+            should_recache = True
         else:
             last_cached = datetime.fromisoformat(last_cached_str)
-        
-        if last_cached is None or datetime.now() - last_cached > recache_threshold:
+            should_recache = datetime.now() - last_cached > recache_threshold
 
+        if should_recache:
+            print("Recaching user data")
+    
             re = RecEngine(sp, unique_id, sql_work)
 
             user_top_tracks, user_top_artists = check_user_top_data_session(unique_id, re)
+
+            session['top_last_cached'] = datetime.now().isoformat()
+            print(f"Updated last_cached to: {session['top_last_cached']}")
 
         return True
     else:
@@ -262,8 +269,13 @@ def get_track_data_session(unique_id, link):
 
 def save_playlist_data_session(unique_id, playlist,  p_features, link, re, sp):
     p_vector = re.playlist_vector(playlist) # Get playlist vector
-    top_genres, top_ratios = re.get_top_genres(p_vector) # Get top genres
-
+    p_vector.to_csv('p_vector.csv', index=False)
+    top_genres, top_ratios = re.get_top_genres(p_vector) # Getting from playlist vector returns weighted genre weights based on date added
+    display_genres = get_display_genres(playlist)
+    p_features.update({
+        'display_genres': display_genres
+    })
+    print(p_features)
     # Save playlist data to session
     redis_key_playlist = f"{unique_id}:{link}:playlist_vector"
     session_store.set_vector(redis_key_playlist, p_vector)
@@ -284,6 +296,50 @@ def save_track_data_session(unique_id, track, t_features, link, re, sp):
     session['t_features'] = t_features 
     session['last_search'] = link
     return t_vector, t_features
+
+
+def get_display_genres(playlist, dominance_threshold=0.6, secondary_threshold=0.15, minimum_threshold=0.9, similarity_threshold=0.05):
+    
+    genre_counts = playlist['track_genre'].value_counts()
+    genre_ratios = genre_counts / len(playlist)
+    top_ratios = genre_ratios.head(3).to_dict()
+    print("Top ratios:", top_ratios)
+
+    
+    
+    sorted_ratios = sorted(top_ratios.items(), key=lambda x: x[1], reverse=True) # Return largest ratio first
+    display_genres = []
+
+    for i, (genre, ratio) in enumerate(sorted_ratios):
+        print(f"Processing genre {i+1}: {genre} - {ratio}")
+       
+        
+        display_genres.append((genre, ratio))
+
+        # Check if this genre close to the previous one
+        if i > 0 and abs(ratio - display_genres[i-1][1]) <= similarity_threshold: # If difference between ratios < 0.05 // Access previous ratio
+            print(f"Genre {i+1} is close to genre {i}")
+            continue # Continue without returning 
+
+        if i == 0 and ratio >= dominance_threshold: 
+            print("Display Genres:", {genre: ratio})    
+            return {genre: ratio}
+
+        if i == 1 and ratio < secondary_threshold and abs(ratio - display_genres[0][1]) > similarity_threshold: 
+            print(f"Second genre ({genre}) is not significant (<{secondary_threshold}) and not similar to first")
+            
+            return dict([display_genres[0]]) # Return first, as others insignificant
+
+        if i == 2:
+            if ratio < minimum_threshold and abs(ratio - display_genres[1][1]) > similarity_threshold: 
+                print(f"Third genre ({genre}) is not significant (<{minimum_threshold}) and not similar to second")
+                return dict(display_genres[:2])
+            else:
+                print("All three genres significant or similar in representation")
+                return dict(display_genres) # Return all 3 genres if no criteria was met
+
+    return dict(display_genres) # Return all genres if reached
+
 
 @app.route('/recommend', methods=['GET'])
 def recommend():
@@ -347,7 +403,8 @@ def recommend():
             
             p_features.update({
                 'num_tracks': len(track_ids),
-                'total_duration_ms': int(playlist['duration_ms'].sum())
+                'total_duration_ms': int(playlist['duration_ms'].sum()),
+                'avg_popularity': playlist['popularity'].mean(),
             })
 
             # append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
@@ -424,7 +481,6 @@ def recommend():
     elif type_id == 'track':
         return jsonify({
             't_features': t_features,
-            
             'recommended_ids': recommended_ids,
             'id': link
         })
