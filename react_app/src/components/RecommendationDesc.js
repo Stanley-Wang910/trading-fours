@@ -137,6 +137,7 @@ const RecommendationDesc = ({
       >
         {isPlaylist && (
           <span className="mt-2 text-gray-300">
+            Defining Genres:
             {Object.entries(recommendations.p_features.display_genres).map(
               ([genre, percentage], index, array) => (
                 <React.Fragment key={genre}>
