@@ -52,10 +52,7 @@ class SQLWork:
         finally:
             cursor.close()
             connection.close()
-
-
-
-            
+           
     def get_dataset(self):
         print("-> get_dataset()")
         retries = 5 
@@ -486,177 +483,264 @@ class SQLWork:
             cursor.close()
             connection.close()
 
-    def add_vector_to_db(self, vector, id, type_id):
-        connection = self.pool.get_connection()
-        try:
-            cursor = connection.cursor()
+    def add_vector_to_db(self, vector, playlist_id):
+        vector = vector.rename(columns={
+            'track_genre_R&B': 'track_genre_R_B',
+            'track_genre_Hip-Hop': 'track_genre_Hip_Hop'
+        })
 
-            values = (
-                id, 
-                vector['acousticness'], vector['danceability'], vector['duration_ms'],
-                vector['energy'], vector['instrumentalness'], vector['key_0'], vector['key_1'],
-                vector['key_10'], vector['key_11'], vector['key_2'], vector['key_3'],
-                vector['key_4'], vector['key_5'], vector['key_6'], vector['key_7'],
-                vector['key_8'], vector['key_9'], vector['liveness'], vector['loudness'],
-                vector['mode_0'], vector['mode_1'], vector['popularity'], vector['speechiness'],
-                vector['tempo'], vector['time_signature'], vector['track_genre_Alternative'],
-                vector['track_genre_Anime'], vector['track_genre_Blues'], vector['track_genre_Classical'],
-                vector['track_genre_Country'], vector['track_genre_Dance'], vector['track_genre_Electronic'],
-                vector['track_genre_Folk'], vector['track_genre_Hip-Hop'], vector['track_genre_Indie'],
-                vector['track_genre_Jazz'], vector['track_genre_Opera'], vector['track_genre_Pop'],
-                vector['track_genre_R&B'], vector['track_genre_Reggae'], vector['track_genre_Reggaeton'],
-                vector['track_genre_Rock'], vector['track_genre_Soul'], vector['track_genre_Soundtrack'],
-                vector['track_genre_World'], vector['valence']
-                )
+        if isinstance(vector, pd.DataFrame):
+            vector = vector.iloc[0].to_dict()
+
+        vector['playlist_id'] = playlist_id
+        upsert_query ="""
+        INSERT INTO playlist_vectors (
+            playlist_id, acousticness, danceability, duration_ms, energy,
+            instrumentalness, key_0, key_1, key_10, key_11, key_2, key_3,
+            key_4, key_5, key_6, key_7, key_8, key_9, liveness, loudness,
+            mode_0, mode_1, popularity, speechiness, tempo, time_signature,
+            track_genre_Alternative, track_genre_Anime, track_genre_Blues,
+            track_genre_Classical, track_genre_Country, track_genre_Dance,
+            track_genre_Electronic, track_genre_Folk, track_genre_Hip_Hop,
+            track_genre_Indie, track_genre_Jazz, track_genre_Opera,
+            track_genre_Pop, track_genre_R_B, track_genre_Reggae,
+            track_genre_Reggaeton, track_genre_Rock, track_genre_Soul,
+            track_genre_Soundtrack, track_genre_World, valence
+        ) VALUES (
+            %(playlist_id)s, %(acousticness)s, %(danceability)s, %(duration_ms)s, %(energy)s,
+            %(instrumentalness)s, %(key_0)s, %(key_1)s, %(key_10)s, %(key_11)s, %(key_2)s, %(key_3)s,
+            %(key_4)s, %(key_5)s, %(key_6)s, %(key_7)s, %(key_8)s, %(key_9)s, %(liveness)s, %(loudness)s,
+            %(mode_0)s, %(mode_1)s, %(popularity)s, %(speechiness)s, %(tempo)s, %(time_signature)s,
+            %(track_genre_Alternative)s, %(track_genre_Anime)s, %(track_genre_Blues)s,
+            %(track_genre_Classical)s, %(track_genre_Country)s, %(track_genre_Dance)s,
+            %(track_genre_Electronic)s, %(track_genre_Folk)s, %(track_genre_Hip_Hop)s,
+            %(track_genre_Indie)s, %(track_genre_Jazz)s, %(track_genre_Opera)s,
+            %(track_genre_Pop)s, %(track_genre_R_B)s, %(track_genre_Reggae)s,
+            %(track_genre_Reggaeton)s, %(track_genre_Rock)s, %(track_genre_Soul)s,
+            %(track_genre_Soundtrack)s, %(track_genre_World)s, %(valence)s
+        ) ON DUPLICATE KEY UPDATE
+            acousticness = VALUES(acousticness),
+            danceability = VALUES(danceability),
+            duration_ms = VALUES(duration_ms),
+            energy = VALUES(energy),
+            instrumentalness = VALUES(instrumentalness),
+            key_0 = VALUES(key_0),
+            key_1 = VALUES(key_1),
+            key_10 = VALUES(key_10),
+            key_11 = VALUES(key_11),
+            key_2 = VALUES(key_2),
+            key_3 = VALUES(key_3),
+            key_4 = VALUES(key_4),
+            key_5 = VALUES(key_5),
+            key_6 = VALUES(key_6),
+            key_7 = VALUES(key_7),
+            key_8 = VALUES(key_8),
+            key_9 = VALUES(key_9),
+            liveness = VALUES(liveness),
+            loudness = VALUES(loudness),
+            mode_0 = VALUES(mode_0),
+            mode_1 = VALUES(mode_1),
+            popularity = VALUES(popularity),
+            speechiness = VALUES(speechiness),
+            tempo = VALUES(tempo),
+            time_signature = VALUES(time_signature),
+            track_genre_Alternative = VALUES(track_genre_Alternative),
+            track_genre_Anime = VALUES(track_genre_Anime),
+            track_genre_Blues = VALUES(track_genre_Blues),
+            track_genre_Classical = VALUES(track_genre_Classical),
+            track_genre_Country = VALUES(track_genre_Country),
+            track_genre_Dance = VALUES(track_genre_Dance),
+            track_genre_Electronic = VALUES(track_genre_Electronic),
+            track_genre_Folk = VALUES(track_genre_Folk),
+            track_genre_Hip_Hop = VALUES(track_genre_Hip_Hop),
+            track_genre_Indie = VALUES(track_genre_Indie),
+            track_genre_Jazz = VALUES(track_genre_Jazz),
+            track_genre_Opera = VALUES(track_genre_Opera),
+            track_genre_Pop = VALUES(track_genre_Pop),
+            track_genre_R_B = VALUES(track_genre_R_B),
+            track_genre_Reggae = VALUES(track_genre_Reggae),
+            track_genre_Reggaeton = VALUES(track_genre_Reggaeton),
+            track_genre_Rock = VALUES(track_genre_Rock),
+            track_genre_Soul = VALUES(track_genre_Soul),
+            track_genre_Soundtrack = VALUES(track_genre_Soundtrack),
+            track_genre_World = VALUES(track_genre_World),
+            valence = VALUES(valence)
+        """
+        with self.get_cursor() as cursor:
+            cursor.execute(upsert_query, vector)
+            print(f"Playlist vector upserted for playlist ID: {playlist_id}")
+
+
+    #     connection = self.pool.get_connection()
+    #     try:
+    #         cursor = connection.cursor()
+
+    #         values = (
+    #             id, 
+    #             vector['acousticness'], vector['danceability'], vector['duration_ms'],
+    #             vector['energy'], vector['instrumentalness'], vector['key_0'], vector['key_1'],
+    #             vector['key_10'], vector['key_11'], vector['key_2'], vector['key_3'],
+    #             vector['key_4'], vector['key_5'], vector['key_6'], vector['key_7'],
+    #             vector['key_8'], vector['key_9'], vector['liveness'], vector['loudness'],
+    #             vector['mode_0'], vector['mode_1'], vector['popularity'], vector['speechiness'],
+    #             vector['tempo'], vector['time_signature'], vector['track_genre_Alternative'],
+    #             vector['track_genre_Anime'], vector['track_genre_Blues'], vector['track_genre_Classical'],
+    #             vector['track_genre_Country'], vector['track_genre_Dance'], vector['track_genre_Electronic'],
+    #             vector['track_genre_Folk'], vector['track_genre_Hip-Hop'], vector['track_genre_Indie'],
+    #             vector['track_genre_Jazz'], vector['track_genre_Opera'], vector['track_genre_Pop'],
+    #             vector['track_genre_R&B'], vector['track_genre_Reggae'], vector['track_genre_Reggaeton'],
+    #             vector['track_genre_Rock'], vector['track_genre_Soul'], vector['track_genre_Soundtrack'],
+    #             vector['track_genre_World'], vector['valence']
+    #             )
             
-            if type_id == 'playlist':
-                check_query = "SELECT COUNT(*) FROM playlist_vectors WHERE playlist_id = %s"
-                cursor.execute(check_query, (id,))
-                count = cursor.fetchone()[0]
+    #         if type_id == 'playlist':
+    #             check_query = "SELECT COUNT(*) FROM playlist_vectors WHERE playlist_id = %s"
+    #             cursor.execute(check_query, (id,))
+    #             count = cursor.fetchone()[0]
                 
-                if count > 0:
-                    # If the playlist vector exists, update it
-                    update_query = """
-                        UPDATE playlist_vectors SET
-                            acousticness = %s, danceability = %s, duration_ms = %s, energy = %s,
-                            instrumentalness = %s, key_0 = %s, key_1 = %s, key_10 = %s, key_11 = %s,
-                            key_2 = %s, key_3 = %s, key_4 = %s, key_5 = %s, key_6 = %s, key_7 = %s,
-                            key_8 = %s, key_9 = %s, liveness = %s, loudness = %s, mode_0 = %s,
-                            mode_1 = %s, popularity = %s, speechiness = %s, tempo = %s,
-                            time_signature = %s, track_genre_Alternative = %s, track_genre_Anime = %s,
-                            track_genre_Blues = %s, track_genre_Classical = %s, track_genre_Country = %s,
-                            track_genre_Dance = %s, track_genre_Electronic = %s, track_genre_Folk = %s,
-                            track_genre_Hip_Hop = %s, track_genre_Indie = %s, track_genre_Jazz = %s,
-                            track_genre_Opera = %s, track_genre_Pop = %s, track_genre_R_B = %s,
-                            track_genre_Reggae = %s, track_genre_Reggaeton = %s, track_genre_Rock = %s,
-                            track_genre_Soul = %s, track_genre_Soundtrack = %s, track_genre_World = %s,
-                            valence = %s
-                        WHERE playlist_id = %s
-                        """
-                    cursor.execute(update_query, values[1:] + (id,))
-                    print(f"Playlist vector updated in the 'playlist_vectors' table for playlist ID: {id}")
-                else:
-                    insert_query = """
-                        INSERT INTO playlist_vectors (
-                            playlist_id, acousticness, danceability, duration_ms, energy,
-                            instrumentalness, key_0, key_1, key_10, key_11, key_2, key_3,
-                            key_4, key_5, key_6, key_7, key_8, key_9, liveness, loudness,
-                            mode_0, mode_1, popularity, speechiness, tempo, time_signature,
-                            track_genre_Alternative, track_genre_Anime, track_genre_Blues,
-                            track_genre_Classical, track_genre_Country, track_genre_Dance,
-                            track_genre_Electronic, track_genre_Folk, track_genre_Hip_Hop,
-                            track_genre_Indie, track_genre_Jazz, track_genre_Opera,
-                            track_genre_Pop, track_genre_R_B, track_genre_Reggae,
-                            track_genre_Reggaeton, track_genre_Rock, track_genre_Soul,
-                            track_genre_Soundtrack, track_genre_World, valence
-                        )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s)
-                        """
+    #             if count > 0:
+    #                 # If the playlist vector exists, update it
+    #                 update_query = """
+    #                     UPDATE playlist_vectors SET
+    #                         acousticness = %s, danceability = %s, duration_ms = %s, energy = %s,
+    #                         instrumentalness = %s, key_0 = %s, key_1 = %s, key_10 = %s, key_11 = %s,
+    #                         key_2 = %s, key_3 = %s, key_4 = %s, key_5 = %s, key_6 = %s, key_7 = %s,
+    #                         key_8 = %s, key_9 = %s, liveness = %s, loudness = %s, mode_0 = %s,
+    #                         mode_1 = %s, popularity = %s, speechiness = %s, tempo = %s,
+    #                         time_signature = %s, track_genre_Alternative = %s, track_genre_Anime = %s,
+    #                         track_genre_Blues = %s, track_genre_Classical = %s, track_genre_Country = %s,
+    #                         track_genre_Dance = %s, track_genre_Electronic = %s, track_genre_Folk = %s,
+    #                         track_genre_Hip_Hop = %s, track_genre_Indie = %s, track_genre_Jazz = %s,
+    #                         track_genre_Opera = %s, track_genre_Pop = %s, track_genre_R_B = %s,
+    #                         track_genre_Reggae = %s, track_genre_Reggaeton = %s, track_genre_Rock = %s,
+    #                         track_genre_Soul = %s, track_genre_Soundtrack = %s, track_genre_World = %s,
+    #                         valence = %s
+    #                     WHERE playlist_id = %s
+    #                     """
+    #                 cursor.execute(update_query, values[1:] + (id,))
+    #                 print(f"Playlist vector updated in the 'playlist_vectors' table for playlist ID: {id}")
+    #             else:
+    #                 insert_query = """
+    #                     INSERT INTO playlist_vectors (
+    #                         playlist_id, acousticness, danceability, duration_ms, energy,
+    #                         instrumentalness, key_0, key_1, key_10, key_11, key_2, key_3,
+    #                         key_4, key_5, key_6, key_7, key_8, key_9, liveness, loudness,
+    #                         mode_0, mode_1, popularity, speechiness, tempo, time_signature,
+    #                         track_genre_Alternative, track_genre_Anime, track_genre_Blues,
+    #                         track_genre_Classical, track_genre_Country, track_genre_Dance,
+    #                         track_genre_Electronic, track_genre_Folk, track_genre_Hip_Hop,
+    #                         track_genre_Indie, track_genre_Jazz, track_genre_Opera,
+    #                         track_genre_Pop, track_genre_R_B, track_genre_Reggae,
+    #                         track_genre_Reggaeton, track_genre_Rock, track_genre_Soul,
+    #                         track_genre_Soundtrack, track_genre_World, valence
+    #                     )
+    #                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+    #                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+    #                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+    #                             %s, %s, %s, %s, %s)
+    #                     """
 
-                    cursor.execute(insert_query, values)
-                    print(f"New playlist vector inserted into the 'playlist_vectors' table for playlist ID: {id}")
+    #                 cursor.execute(insert_query, values)
+    #                 print(f"New playlist vector inserted into the 'playlist_vectors' table for playlist ID: {id}")
             
-            elif type_id == 'track':
+    #         elif type_id == 'track':
 
-                check_query = "SELECT COUNT(*) FROM track_vectors WHERE track_id = %s"
-                cursor.execute(check_query, (id,))
-                count = cursor.fetchone()[0]
+    #             check_query = "SELECT COUNT(*) FROM track_vectors WHERE track_id = %s"
+    #             cursor.execute(check_query, (id,))
+    #             count = cursor.fetchone()[0]
 
-                if count > 0:
-                    print(f"Track vector already exists in the 'track_vectors' table for track ID: {id}")
+    #             if count > 0:
+    #                 print(f"Track vector already exists in the 'track_vectors' table for track ID: {id}")
                 
-                else:
-                    insert_query = """
-                        INSERT INTO track_vectors (
-                            track_id, acousticness, danceability, duration_ms, energy,
-                            instrumentalness, key_0, key_1, key_10, key_11, key_2, key_3,
-                            key_4, key_5, key_6, key_7, key_8, key_9, liveness, loudness,
-                            mode_0, mode_1, popularity, speechiness, tempo, time_signature,
-                            track_genre_Alternative, track_genre_Anime, track_genre_Blues,
-                            track_genre_Classical, track_genre_Country, track_genre_Dance,
-                            track_genre_Electronic, track_genre_Folk, track_genre_Hip_Hop,
-                            track_genre_Indie, track_genre_Jazz, track_genre_Opera,
-                            track_genre_Pop, track_genre_R_B, track_genre_Reggae,
-                            track_genre_Reggaeton, track_genre_Rock, track_genre_Soul,
-                            track_genre_Soundtrack, track_genre_World, valence
-                        )
+    #             else:
+    #                 insert_query = """
+    #                     INSERT INTO track_vectors (
+    #                         track_id, acousticness, danceability, duration_ms, energy,
+    #                         instrumentalness, key_0, key_1, key_10, key_11, key_2, key_3,
+    #                         key_4, key_5, key_6, key_7, key_8, key_9, liveness, loudness,
+    #                         mode_0, mode_1, popularity, speechiness, tempo, time_signature,
+    #                         track_genre_Alternative, track_genre_Anime, track_genre_Blues,
+    #                         track_genre_Classical, track_genre_Country, track_genre_Dance,
+    #                         track_genre_Electronic, track_genre_Folk, track_genre_Hip_Hop,
+    #                         track_genre_Indie, track_genre_Jazz, track_genre_Opera,
+    #                         track_genre_Pop, track_genre_R_B, track_genre_Reggae,
+    #                         track_genre_Reggaeton, track_genre_Rock, track_genre_Soul,
+    #                         track_genre_Soundtrack, track_genre_World, valence
+    #                     )
                         
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s)
-                        """
-                    cursor.execute(insert_query, values)
-                    print(f"New track vector inserted into the 'track_vectors' table for track ID: {id}")
-            connection.commit()
-        except mysql.connector.Error as e:
-            print(f"Error adding vector to database: {e}")
-        finally:
-            cursor.close()
-            connection.close()
+    #                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+    #                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+    #                             %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,
+    #                             %s, %s, %s, %s, %s)
+    #                     """
+    #                 cursor.execute(insert_query, values)
+    #                 print(f"New track vector inserted into the 'track_vectors' table for track ID: {id}")
+    #         connection.commit()
+    #     except mysql.connector.Error as e:
+    #         print(f"Error adding vector to database: {e}")
+    #     finally:
+    #         cursor.close()
+    #         connection.close()
     
-    def get_vector_from_db(self, id, type_id):
-        connection = self.pool.get_connection()
-        try:
-            cursor = connection.cursor()
-            if type_id == 'playlist':
-                query = f"SELECT * FROM playlist_vectors WHERE playlist_id = '{id}'"
-                columns = [
-                    'playlist_id', 'acousticness', 'danceability', 'duration_ms', 'energy',
-                    'instrumentalness', 'key_0', 'key_1', 'key_10', 'key_11', 'key_2', 'key_3',
-                    'key_4', 'key_5', 'key_6', 'key_7', 'key_8', 'key_9', 'liveness', 'loudness',
-                    'mode_0', 'mode_1', 'popularity', 'speechiness', 'tempo', 'time_signature',
-                    'track_genre_Alternative', 'track_genre_Anime', 'track_genre_Blues',
-                    'track_genre_Classical', 'track_genre_Country', 'track_genre_Dance',
-                    'track_genre_Electronic', 'track_genre_Folk', 'track_genre_Hip_Hop',
-                    'track_genre_Indie', 'track_genre_Jazz', 'track_genre_Opera',
-                    'track_genre_Pop', 'track_genre_R_B', 'track_genre_Reggae',
-                    'track_genre_Reggaeton', 'track_genre_Rock', 'track_genre_Soul',
-                    'track_genre_Soundtrack', 'track_genre_World', 'valence'
-                ]
-            elif type_id == 'track':
-                query = f"SELECT * FROM track_vectors WHERE track_id = '{id}'"
-                columns = [
-                    'track_id', 'acousticness', 'danceability', 'duration_ms', 'energy',
-                    'instrumentalness', 'key_0', 'key_1', 'key_10', 'key_11', 'key_2', 'key_3',
-                    'key_4', 'key_5', 'key_6', 'key_7', 'key_8', 'key_9', 'liveness', 'loudness',
-                    'mode_0', 'mode_1', 'popularity', 'speechiness', 'tempo', 'time_signature',
-                    'track_genre_Alternative', 'track_genre_Anime', 'track_genre_Blues',
-                    'track_genre_Classical', 'track_genre_Country', 'track_genre_Dance',
-                    'track_genre_Electronic', 'track_genre_Folk', 'track_genre_Hip_Hop',
-                    'track_genre_Indie', 'track_genre_Jazz', 'track_genre_Opera',
-                    'track_genre_Pop', 'track_genre_R_B', 'track_genre_Reggae',
-                    'track_genre_Reggaeton', 'track_genre_Rock', 'track_genre_Soul',
-                    'track_genre_Soundtrack', 'track_genre_World', 'valence'
-                ]
-            cursor.execute(query)
-            result = cursor.fetchone()
-            if result:
-                vector = pd.DataFrame([result], columns=columns)
+    # def get_vector_from_db(self, id, type_id):
+    #     connection = self.pool.get_connection()
+    #     try:
+    #         cursor = connection.cursor()
+    #         if type_id == 'playlist':
+    #             query = f"SELECT * FROM playlist_vectors WHERE playlist_id = '{id}'"
+    #             columns = [
+    #                 'playlist_id', 'acousticness', 'danceability', 'duration_ms', 'energy',
+    #                 'instrumentalness', 'key_0', 'key_1', 'key_10', 'key_11', 'key_2', 'key_3',
+    #                 'key_4', 'key_5', 'key_6', 'key_7', 'key_8', 'key_9', 'liveness', 'loudness',
+    #                 'mode_0', 'mode_1', 'popularity', 'speechiness', 'tempo', 'time_signature',
+    #                 'track_genre_Alternative', 'track_genre_Anime', 'track_genre_Blues',
+    #                 'track_genre_Classical', 'track_genre_Country', 'track_genre_Dance',
+    #                 'track_genre_Electronic', 'track_genre_Folk', 'track_genre_Hip_Hop',
+    #                 'track_genre_Indie', 'track_genre_Jazz', 'track_genre_Opera',
+    #                 'track_genre_Pop', 'track_genre_R_B', 'track_genre_Reggae',
+    #                 'track_genre_Reggaeton', 'track_genre_Rock', 'track_genre_Soul',
+    #                 'track_genre_Soundtrack', 'track_genre_World', 'valence'
+    #             ]
+    #         elif type_id == 'track':
+    #             query = f"SELECT * FROM track_vectors WHERE track_id = '{id}'"
+    #             columns = [
+    #                 'track_id', 'acousticness', 'danceability', 'duration_ms', 'energy',
+    #                 'instrumentalness', 'key_0', 'key_1', 'key_10', 'key_11', 'key_2', 'key_3',
+    #                 'key_4', 'key_5', 'key_6', 'key_7', 'key_8', 'key_9', 'liveness', 'loudness',
+    #                 'mode_0', 'mode_1', 'popularity', 'speechiness', 'tempo', 'time_signature',
+    #                 'track_genre_Alternative', 'track_genre_Anime', 'track_genre_Blues',
+    #                 'track_genre_Classical', 'track_genre_Country', 'track_genre_Dance',
+    #                 'track_genre_Electronic', 'track_genre_Folk', 'track_genre_Hip_Hop',
+    #                 'track_genre_Indie', 'track_genre_Jazz', 'track_genre_Opera',
+    #                 'track_genre_Pop', 'track_genre_R_B', 'track_genre_Reggae',
+    #                 'track_genre_Reggaeton', 'track_genre_Rock', 'track_genre_Soul',
+    #                 'track_genre_Soundtrack', 'track_genre_World', 'valence'
+    #             ]
+    #         cursor.execute(query)
+    #         result = cursor.fetchone()
+    #         if result:
+    #             vector = pd.DataFrame([result], columns=columns)
                 
-                # Rename columns
-                vector = vector.rename(columns={
-                    'track_genre_R_B': 'track_genre_R&B',
-                    'track_genre_Hip_Hop': 'track_genre_Hip-Hop'
-                })
+    #             # Rename columns
+    #             vector = vector.rename(columns={
+    #                 'track_genre_R_B': 'track_genre_R&B',
+    #                 'track_genre_Hip_Hop': 'track_genre_Hip-Hop'
+    #             })
                 
-                # Drop the 'playlist_id' or 'track_id' column
-                if type_id == 'playlist':
-                    vector = vector.drop(columns=['playlist_id'])
-                elif type_id == 'track':
-                    vector = vector.drop(columns=['track_id'])
-                print(f"Vector retrieved from {'playlist_vectors' if type_id == 'playlist' else 'track_vectors'} table.")
-                return vector
-            else:
-                return None
-        except mysql.connector.Error as e:
-            print(f"Error getting vector from database: {e}")
-        finally:
-            cursor.close()
-            connection.close()
+    #             # Drop the 'playlist_id' or 'track_id' column
+    #             if type_id == 'playlist':
+    #                 vector = vector.drop(columns=['playlist_id'])
+    #             elif type_id == 'track':
+    #                 vector = vector.drop(columns=['track_id'])
+    #             print(f"Vector retrieved from {'playlist_vectors' if type_id == 'playlist' else 'track_vectors'} table.")
+    #             return vector
+    #         else:
+    #             return None
+    #     except mysql.connector.Error as e:
+    #         print(f"Error getting vector from database: {e}")
+    #     finally:
+    #         cursor.close()
+    #         connection.close()
 
     def get_user_top_tracks(self, unique_id):
         connection = self.pool.get_connection()
@@ -766,12 +850,16 @@ class SQLWork:
             with self.get_cursor() as cursor:
                 cursor.execute("SELECT * FROM playlist_vectors")
                 playlist_vectors = pd.DataFrame(cursor.fetchall())
+
+                playlist_vectors = playlist_vectors.rename(columns={
+                    'track_genre_R_B': 'track_genre_R&B',
+                    'track_genre_Hip_Hop': 'track_genre_Hip-Hop'
+                })
             return playlist_vectors
         except mysql.connector.Error as e:
             print(f"Error getting playlist vectors from database: {e}")
             raise
 
-       
     
     def close_sql(self):
         self.pool.closeall()

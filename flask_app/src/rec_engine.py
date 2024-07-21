@@ -71,6 +71,8 @@ class RecEngine:
     def recommend_playist_to_playlist(self, playlist_id, p_vector, playlist_vectors, saved_playlist_ids, prev_p_rec_ids):
         print('-> re:recommend_playist_to_playlist()')
 
+        print("PLAYLIST ID:", playlist_id)
+
         # Filter out playlists in user saved playlists, so save the unique id in these vectors
         
         columns_to_drop = ['duration_ms', 'popularity']
@@ -511,6 +513,8 @@ class RecEngine:
         return recommended_ids
 
     def sort_columns(self, vector, ohe_dataset):
+        # Print none columns:
+        print(vector.columns[vector.isnull().any()])
         common_cols = vector.columns.intersection(ohe_dataset.columns)
         vector = vector[common_cols]
         ohe_dataset = ohe_dataset[common_cols]

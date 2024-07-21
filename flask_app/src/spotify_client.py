@@ -161,8 +161,12 @@ class SpotifyClient:
         for chunk in chunks(track_ids, 100):
             audio_features_list.extend(self.sp.audio_features(chunk))
 
+        # Filter out None entries 
+        audio_features_list = [features for features in audio_features_list if features is not None]
+
 
         audio_features_df = pd.DataFrame(audio_features_list) # Consider filling none with 0
+        audio_features_df.to_csv('../tests/csv_dumps/audio_features.csv', index=False)
 
         # Select specific columns for the audio features DataFrame
         selected_columns = ['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms', 'time_signature']

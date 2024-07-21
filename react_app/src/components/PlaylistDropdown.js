@@ -41,6 +41,7 @@ function PlaylistDropdown({
           { withCredentials: true }
         );
         setPlaylists(response.data || []);
+        console.log(response);
         setUserPlaylistIds(playlists.map((item) => item[1]));
       } catch (error) {
         console.error("Error fetching playlists", error);

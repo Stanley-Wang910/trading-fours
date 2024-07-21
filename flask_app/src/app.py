@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 import os
 from sql_work import SQLWork
 from session_store import SessionStore
+import csv
 
 import random
 from sklearn.metrics.pairwise import cosine_similarity
@@ -251,9 +252,10 @@ def append_to_dataset(data, choice):
 
 def get_playlist_data_session(unique_id,link):
     if session.get('last_search') == link:
-        redis_key_playlist = f"{unique_id}:{link}:playlist_vector"
-        p_vector = session_store.get_data(redis_key_playlist)
         p_features = session.get('p_features', {})
+        if_public = p_features['privacy']
+        redis_key_playlist = f"{unique_id}:{link}:{if_public}:playlist_vector"
+        p_vector = session_store.get_data(redis_key_playlist)
         top_genres = session.get('top_genres')
         top_ratios = session.get('top_ratios')
         return p_vector, p_features, top_genres, top_ratios
@@ -267,17 +269,24 @@ def get_track_data_session(unique_id, link):
         return t_vector, t_features
     return None
 
-def save_playlist_data_session(unique_id, playlist,  p_features, link, re, sp):
+def save_playlist_data_session(unique_id, playlist, p_features, link, if_public, re, sp):
     p_vector = re.playlist_vector(playlist) # Get playlist vector
     p_vector.to_csv('p_vector.csv', index=False)
     top_genres, top_ratios = re.get_top_genres(p_vector) # Getting from playlist vector returns weighted genre weights based on date added
     display_genres = get_display_genres(playlist)
     p_features.update({
-        'display_genres': display_genres
+        'display_genres': display_genres,
+        'privacy': if_public
     })
-    print(p_features)
     # Save playlist data to session
-    redis_key_playlist = f"{unique_id}:{link}:playlist_vector"
+    redis_key_playlist = f"{unique_id}:{link}:{if_public}:playlist_vector"
+    print(redis_key_playlist)
+
+    if if_public == 'public':
+        start_time = time.time()
+        sql_work.add_vector_to_db(p_vector, link)
+        print("Time to add vector to db:", time.time() - start_time)
+
     session_store.set_vector(redis_key_playlist, p_vector)
     session['top_genres'] = top_genres # To send as names to front end 
     session['top_ratios'] = top_ratios
@@ -303,17 +312,11 @@ def get_display_genres(playlist, dominance_threshold=0.6, secondary_threshold=0.
     genre_counts = playlist['track_genre'].value_counts()
     genre_ratios = genre_counts / len(playlist)
     top_ratios = genre_ratios.head(3).to_dict()
-    print("Top ratios:", top_ratios)
-
-    
-    
     sorted_ratios = sorted(top_ratios.items(), key=lambda x: x[1], reverse=True) # Return largest ratio first
     display_genres = []
 
     for i, (genre, ratio) in enumerate(sorted_ratios):
         print(f"Processing genre {i+1}: {genre} - {ratio}")
-       
-        
         display_genres.append((genre, ratio))
 
         # Check if this genre close to the previous one
@@ -414,13 +417,14 @@ def recommend():
                 'avg_popularity': playlist['popularity'].mean(),
             })
             ##
-            public = data['public']
-            print("playlist public:", public)   
+            if data['public']:
+                if_public = 'public'
+            else:
+                if_public = 'private'
             ##
 
-
             # append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
-            p_vector, p_features, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, p_features, link, re, sp) # Save Playlist data to session
+            p_vector, p_features, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, p_features, link, if_public, re, sp) # Save Playlist data to session
             print(top_ratios)
 
         
@@ -559,6 +563,29 @@ def get_random_recommendations():
     random_recs = session_store.get_random_recs()
     return jsonify(random_recs)
 
+def populate_seed_playlist_recs(sp, re):
+    seed_playlists = []
+    with open('../data/datasets/seed_playlists.csv', newline='') as f:
+        for line in f:
+            clean_line = line.strip().rstrip(',')
+            if clean_line:
+                seed_playlists.append(clean_line)
+
+    for seed in seed_playlists:
+        link = seed
+        link = link.split('/')[-1].split('?')[0]
+    
+        type_id, data = sp.get_id_type(link)
+
+        playlist = data
+        playlist = sp.predict(playlist, type_id, class_items)
+        p_vector = re.playlist_vector(playlist) # Get playlist vector
+        start_time = time.time()
+        sql_work.add_vector_to_db(p_vector, link)
+        print(f"Time to add {link}-vector to db:", time.time() - start_time)
+    
+
+
 
 
 @app.route('/test') ### Keep for testing new features
@@ -574,32 +601,9 @@ def test():
     sp = SpotifyClient(Spotify(auth=access_token))
     re = RecEngine(sp, unique_id, sql_work)
 
-    link = input("Enter a Spotify link: ")
-    link = link.split('/')[-1].split('?')[0]
-    type_id, data = sp.get_id_type(link)
-    # HTTP Error for GET to https://api.spotify.com/v1/tracks/0WfUcAldBcRf9bM4Si6VIq with Params: {'market': None} returned 404 due to Resource not found, happens when trying to class p as t
+    populate_seed_playlist_recs(sp, re)
 
     
-    # playlist = data
-    # p_features = sp.playlist_base_features(playlist)
-    # playlist = sp.predict(playlist, type_id, class_items)
-    # playlist.to_csv('../tests/csv_dumps/playlist.csv', index=False)
-    # track_ids = set(playlist['id'])
-
-    
-    # p_features.update({
-    #     'num_tracks': len(track_ids),
-    #     'total_duration_ms': int(playlist['duration_ms'].sum()),
-    #     'avg_popularity': playlist['popularity'].mean(),
-    # })
-
-    # public = data['public']
-    # print(public)
-
-    # p_vector = re.playlist_vector(playlist) # Get playlist vector
-    # p_vector.to_csv('../tests/csv_dumps/p_vector.csv', index=False)
-    # top_genres, top_ratios = re.get_top_genres(p_vector) # Getting from playlist vector returns weighted genre weights based on date added
-    # print(top_ratios)
 
     # playlist_vectors = sql_work.get_playlist_vectors()
     # playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
@@ -611,13 +615,13 @@ def test():
     #     print(p_features['playlist_name'])
 
 
-    playlist_vectors = sql_work.get_playlist_vectors()
-    playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
+    # playlist_vectors = sql_work.get_playlist_vectors()
+    # playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
     
 
     return jsonify(
         # {'name': name, 'image_300x300': image_300x300, 'artist': artist, 'artist_url': artist_url, 'release_date': release_date, 'popularity': popularity, 'id': link}
-        data
+        'Hello'
     )
 
 
@@ -628,5 +632,6 @@ if __name__ == '__main__':
     global playlist_vectors # Set up how to intermittently update during production runtime e.g. use Celery
     rec_dataset = sql_work.get_dataset()
     playlist_vectors = sql_work.get_playlist_vectors()
+    playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
 
     app.run(debug=True, port=5000)

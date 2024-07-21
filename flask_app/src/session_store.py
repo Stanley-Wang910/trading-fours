@@ -6,6 +6,7 @@ import pickle
 import pandas as pd
 from datetime import datetime, timedelta
 import random
+from sql_work import SQLWork
 # Load Redis environment variables
 REDIS_HOST = os.environ.get('REDIS_HOST')
 REDIS_PORT = os.environ.get('REDIS_PORT')
