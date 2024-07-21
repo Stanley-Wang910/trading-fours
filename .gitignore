@@ -5,3 +5,4 @@ myenv/
 .cache
 .flask_session/
 flask_app/src/*.csv
+flask_app/tests/csv_dumps

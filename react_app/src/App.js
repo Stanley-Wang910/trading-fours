@@ -20,12 +20,12 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isShuffling, setIsShuffling] = useState(false);
   const [lastActionShuffle, setLastActionShuffle] = useState(false);
+  const [userPlaylistIds, setUserPlaylistIds] = useState([]); // Holds list of playlists, send to children
 
   const [isLocalLoading, setIsLocalLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [recommendationPosition, setRecommendationPosition] =
     useState("center");
-  const [showInfoContainer, setShowInfoContainer] = useState(false);
   const [animateOut, setAnimateOut] = useState(false); // For animating out the recommendation containter
 
   const [favoritedTracks, setFavoritedTracks] = useState([]);
@@ -81,7 +81,7 @@ function App() {
         `Recommendation position changed from ${prevPositionRef.current} to ${recommendationPosition}`
       );
       // Toggle the visibility of the info container
-      setShowInfoContainer((show) => !show);
+      // setShowInfoContainer((show) => !show);
       prevPositionRef.current = recommendationPosition;
     }
   }, [recommendationPosition]); // Dependency on recommendationPosition
@@ -150,6 +150,8 @@ function App() {
                     onQueryChange={handleQueryChange}
                     setAnimateOut={setAnimateOut}
                     setLastActionShuffle={setLastActionShuffle}
+                    userPlaylistIds={userPlaylistIds}
+                    setUserPlaylistIds={setUserPlaylistIds}
                   />
                 </div>
                 <div className="recommendations-container w-full justify-center items-center z-10">
@@ -174,19 +176,8 @@ function App() {
                         setIsShuffling={setIsShuffling}
                         lastActionShuffle={lastActionShuffle}
                         setLastActionShuffle={setLastActionShuffle}
+                        userPlaylistIds={userPlaylistIds}
                       />
-                      {showInfoContainer && (
-                        <div
-                          className="additional-container absolute right-0 top-1/2 transform -translate-y-1/2 w-1/4 bg-white p-4 shadow-lg"
-                          style={{
-                            transform: `translateX(${
-                              recommendationPosition === "left" ? "100%" : "0"
-                            })`,
-                          }}
-                        >
-                          <p>Recommendation info Coming</p>
-                        </div>
-                      )}
                     </div>
                   )}
                 </div>

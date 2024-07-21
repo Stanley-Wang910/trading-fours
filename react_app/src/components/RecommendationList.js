@@ -22,6 +22,7 @@ function RecommendationsList({
   setIsShuffling,
   lastActionShuffle,
   setLastActionShuffle,
+  userPlaylistIds,
   demo = false,
 }) {
   //State variables
@@ -31,6 +32,8 @@ function RecommendationsList({
   const [containerHeight, setContainerHeight] = useState(575); // Set the starting height
   const [visibleButtons, setVisibleButtons] = useState({});
   const [animate, setAnimate] = useState(false);
+  const [showPlaylistRecs, setShowPlaylistRecs] = useState(false);
+  // const [recommendationsArray, setRecommendationsArray] = useState([]);
 
   const scrollContainerRef = useRef(null);
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -39,18 +42,21 @@ function RecommendationsList({
   const [hoveredIFrame, setHoveredIFrame] = useState(null);
 
   // Constants
-  const maxHeight = 3000; // Set the maximum height for recommendations container
-  const extendRec = 500;
+  // const maxHeight = 3000; // Set the maximum height for recommendations container
+  // const extendRec = 500;
   // Memoized callbakc to handle loading more embeds
   const handleLoadMore = useCallback(() => {
-    const newVisibleEmbeds = visibleEmbeds + 5;
+    const incrementCounter = showPlaylistRecs ? 3 : 5;
+    const scrollMultiplier = showPlaylistRecs ? 372 : 132;
+    const newVisibleEmbeds = visibleEmbeds + incrementCounter;
     setVisibleEmbeds(newVisibleEmbeds);
-    setContainerHeight((prev) => Math.min(prev + extendRec, maxHeight));
+    // setContainerHeight((prev) => Math.min(prev + extendRec, maxHeight));
 
     setTimeout(() => {
       const scrollContainer = scrollContainerRef.current;
       if (scrollContainer) {
-        const newScrollPosition = (newVisibleEmbeds - 5) * 132;
+        const newScrollPosition =
+          (newVisibleEmbeds - incrementCounter) * scrollMultiplier;
         scrollContainer.scrollTo({
           top: newScrollPosition,
           behavior: "smooth",
@@ -58,7 +64,7 @@ function RecommendationsList({
         setScrollPosition(newScrollPosition);
       }
     }, 500);
-  }, [visibleEmbeds]);
+  }, [visibleEmbeds, showPlaylistRecs]);
 
   // Handler for loading embeds
 
@@ -89,8 +95,9 @@ function RecommendationsList({
       setIsShuffling(true);
 
       try {
-        const response = await axios.get(
+        const response = await axios.post(
           `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${query}`,
+          { userPlaylistIds },
           { withCredentials: true }
         );
         onRecommendations(response.data || []);
@@ -119,8 +126,9 @@ function RecommendationsList({
       onQueryChange(trackID);
 
       try {
-        const response = await axios.get(
+        const response = await axios.post(
           `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${trackID}`,
+          { userPlaylistIds },
           { withCredentials: true }
         );
         onRecommendations(response.data || []);
@@ -153,13 +161,10 @@ function RecommendationsList({
   useEffect(() => {
     if (recommendations) {
       setAnimate(true);
-      const initialVisibleEmbeds = isPlaylist ? 5 : 5; // Set initial number of visible embeds based on whether it's a playlist or not
+      const initialVisibleEmbeds = showPlaylistRecs ? 3 : 5;
       setVisibleEmbeds(initialVisibleEmbeds);
     }
-    // else {
-    //   // setAnimate(false);
-    // }
-  }, [recommendations, lastActionShuffle]);
+  }, [recommendations, lastActionShuffle, showPlaylistRecs]);
 
   useEffect(() => {
     // Effect to prevent premature rendering out and in of iframes on shufle
@@ -171,7 +176,9 @@ function RecommendationsList({
   });
 
   // Get the array of recommended ids
-  const recommendationsArray = recommendations.recommended_ids || []; // Get the array of recommended ids
+  const recommendationsArray = showPlaylistRecs
+    ? recommendations.playlist_rec_ids || []
+    : recommendations.recommended_ids || []; // Get the array of recommended ids
   // console.log(recommendationsArray);
 
   // Load meteors when recommendations are received
@@ -188,6 +195,25 @@ function RecommendationsList({
     return null; // If no recommendations or empty array, return null
   }
 
+  const handleShowPlaylistsToggle = () => {
+    setAnimateOut(true);
+    setLastActionShuffle(true);
+    setTimeout(() => {
+      setIsLocalLoading(true);
+      setIsLoading(true);
+      setIsShuffling(true);
+
+      setShowPlaylistRecs(!showPlaylistRecs);
+
+      setTimeout(() => {
+        setIsLoading(false);
+        setIsLocalLoading(false);
+        setAnimateOut(false);
+        setIsShuffling(false);
+      }, 1500);
+    }, 500);
+  };
+
   return (
     <div
       className={`relative ${demo ? "w-[35vw] z-0" : "h-[75vh] mt-10 overflow-hidden "}`}
@@ -202,7 +228,7 @@ function RecommendationsList({
           demo={demo}
         />
         <div
-          className={`${demo ? "w-[35vw] " : "lg:ml-[0vh] lg:mr-[5vw] w-3/4 flex flex-col h-full "} `}
+          className={`${demo ? "w-[35vw] " : "lg:ml-[0vh]  w-3/4 flex flex-col h-full "} `}
         >
           {isShuffling ? (
             <div className="">
@@ -214,7 +240,7 @@ function RecommendationsList({
                 ref={scrollContainerRef}
                 className={` 
               ${demo ? "overflow-hidden" : "overflow-y-auto flex-grow"} 
-              recommendations-container p-5 bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative  container-transition opacity-0 
+              recommendations-container pt-5 ${showPlaylistRecs ? "px-10" : "px-5"} pb-5 bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative  container-transition opacity-0 
               ${animate ? "recs-fade-up opacity-0" : ""} 
                   ${animateOut ? "recs-fade-out opacity-100" : ""}
               `}
@@ -293,14 +319,16 @@ function RecommendationsList({
                         )}
                         <div className="embed-container w-full">
                           <div
-                            className={`embed ${loaded.includes(index) ? "active" : ""}`}
+                            className={`${showPlaylistRecs ? "embed-p" : "embed"} ${loaded.includes(index) ? "active" : ""}`}
                           >
                             <iframe
                               onLoad={() => handleLoad(index)}
-                              src={`https://open.spotify.com/embed/track/${id}?utm_source=generator`}
+                              src={`https://open.spotify.com/embed/${
+                                showPlaylistRecs ? `playlist` : `track`
+                              }/${id}?utm_source=generator`} // [playlist]
                               style={{ border: "none" }}
                               width="100%"
-                              height="80"
+                              height={showPlaylistRecs ? "352" : "83"} // 152
                               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                               loading="lazy"
                             ></iframe>
@@ -312,59 +340,71 @@ function RecommendationsList({
               </motion.div>
               <div className="flex justify-between py-4 px-1 relative z-10 ">
                 {visibleEmbeds < recommendationsArray.length && (
-                  <button
-                    className={` opacity-0 z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform 
-                  ${animate ? "loadMore-fade-up opacity-0" : ""} 
-                  ${animateOut ? "loadMore-fade-out opacity-100" : ""}
-                  `}
+                  <motion.button
+                    className="rounded-full"
+                    whileTap={{ scale: 0.9 }}
                     onClick={handleLoadMore}
                   >
-                    <img src="/plus.png" alt="Arrow" width={20} height={20} />
-                  </button>
+                    <div
+                      className={` opacity-0 z-50 px-4 py-2 bg-custom-brown  shadow-xl font-bold rounded-full hover:bg-yellow-700 
+                        ${animate ? "loadMore-fade-up opacity-0" : ""} 
+                        ${animateOut ? "loadMore-fade-out opacity-100" : ""}
+                        `}
+                    >
+                      <img src="/plus.png" alt="Arrow" width={20} height={20} />
+                    </div>
+                  </motion.button>
                 )}
-                <button
-                  className={` opacity-0 z-50 px-4 py-2 bg-custom-brown text-gray-200 shadow-xl font-bold rounded-full hover:bg-yellow-700 duration-300 hover:scale-105 transition-transform
-              
-                  ${animate ? "shuffle-fade-up opacity-0" : ""} 
-                  ${animateOut ? "shuffle-fade-out opacity-100" : ""}
-                  `}
+                <motion.button
+                  className="rounded-full"
+                  whileTap={{ scale: 0.9 }}
                   onClick={handleShuffle}
                 >
-                  <img
-                    src="/arrow.png"
-                    alt="Arrow"
-                    style={{ transform: "scaleX(0.9)" }}
-                    width={20}
-                    height={20}
-                  />
-                </button>
+                  <div
+                    className={` opacity-0 z-50 px-4 py-2 bg-custom-brown  shadow-xl font-bold rounded-full hover:bg-yellow-700 
+                    ${animate ? "shuffle-fade-up opacity-0" : ""} 
+                    ${animateOut ? "shuffle-fade-out opacity-100" : ""}
+                  `}
+                  >
+                    <img
+                      src="/arrow.png"
+                      alt="Arrow"
+                      style={{ transform: "scaleX(0.9)" }}
+                      width={20}
+                      height={20}
+                    />
+                  </div>
+                </motion.button>
               </div>
             </>
           )}
         </div>
-        {/* {!demo && (
-          <div className="absolute top-1/2 right-[-15px] transform -translate-y-1/2">
-            <div className="relative inline-block">
-              <div className="buttonDiv cursor-pointer text-gray-200 shadow-xl font-bold">
-                <svg
-                  onClick={onTogglePosition}
-                  fill="#ffffff"
-                  width="28px"
-                  height="28px"
-                  className="transition-all hover:fill-custom-brown hover:scale-110 hover:rotate-6"
-                  viewBox="0 0 22 22"
-                  xmlns="http://www.w3.org/2000/svg"
-                  id="memory-music-note"
-                >
-                  <path d="M11 2H18V7H13V18H12V19H11V20H7V19H6V18H5V14H6V13H7V12H11V2M11 15H10V14H8V15H7V17H8V18H10V17H11V15Z" />
-                </svg>
-              </div>
+        {!demo && (
+          <div className="relative top-1/2 -translate-y-[5vh] right-0 ml-4 md:mr-[2vw]">
+            <button
+              className={`relative inline-block 
+                  ${animate ? "playlistToggle-fade-in opacity-0" : ""} 
+                  ${animateOut ? "playlistToggle-fade-out opacity-100" : ""}
+                  `}
+            >
+              <svg
+                onClick={handleShowPlaylistsToggle}
+                fill="#ffffff"
+                width="28px"
+                height="28px"
+                className="transition-all hover:fill-custom-brown hover:scale-110 hover:rotate-6"
+                viewBox="0 0 22 22"
+                xmlns="http://www.w3.org/2000/svg"
+                id="memory-music-note"
+              >
+                <path d="M11 2H18V7H13V18H12V19H11V20H7V19H6V18H5V14H6V13H7V12H11V2M11 15H10V14H8V15H7V17H8V18H10V17H11V15Z" />
+              </svg>
               <div className="absolute top-1/2 left-[100%] transform -translate-y-1/2 px-2 py-1 text-custom-brown text-xs font-semi-bold opacity-0 pointer-events-none transition-opacity duration-300 tooltip">
                 Unpack Me!
               </div>
-            </div>
+            </button>
           </div>
-        )} */}
+        )}
       </div>
     </div>
   );

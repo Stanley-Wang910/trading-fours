@@ -10,14 +10,18 @@ const PopularityBar = ({
   const clampedPopularity = Math.min(Math.max(popularity, 0), 100);
 
   const containerStyle = {
-    width: orientation === "horizontal" ? "100%" : "8px",
-    height: orientation === "horizontal" ? "8px" : height,
+    width: orientation === "horizontal" ? "100%" : "1.25vh",
+    height: orientation === "horizontal" ? "1.25vh" : height,
     backgroundColor: "#94a3b8",
     borderRadius: "5px", // Rounded corners
     overflow: "hidden",
+    boxSizing: "border-box",
+    margin: 0,
+    padding: 0, // To fix bar displacement
   };
 
   const barStyle = {
+    height: "100",
     width: orientation === "horizontal" ? "100%" : "100%",
     height: orientation === "horizontal" ? "100%" : "100%",
     background:

@@ -761,6 +761,16 @@ class SQLWork:
             cursor.close()
             connection.close()
 
+    def get_playlist_vectors(self): 
+        try:
+            with self.get_cursor() as cursor:
+                cursor.execute("SELECT * FROM playlist_vectors")
+                playlist_vectors = pd.DataFrame(cursor.fetchall())
+            return playlist_vectors
+        except mysql.connector.Error as e:
+            print(f"Error getting playlist vectors from database: {e}")
+            raise
+
        
     
     def close_sql(self):

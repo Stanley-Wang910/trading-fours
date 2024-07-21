@@ -68,6 +68,30 @@ class RecEngine:
         print('<- re:playlist_vector()')
         return playlist_vector
 
+    def recommend_playist_to_playlist(self, playlist_id, p_vector, playlist_vectors, saved_playlist_ids, prev_p_rec_ids):
+        print('-> re:recommend_playist_to_playlist()')
+
+        # Filter out playlists in user saved playlists, so save the unique id in these vectors
+        
+        columns_to_drop = ['duration_ms', 'popularity']
+        p_vector.drop(columns=[col for col in columns_to_drop if col in p_vector.columns], axis=1, inplace=True)
+        playlist_vectors.drop(columns=[col for col in columns_to_drop if col in playlist_vectors.columns], axis=1, inplace=True)
+        
+        playlist_vectors = playlist_vectors[~playlist_vectors['playlist_id'].isin([playlist_id] + saved_playlist_ids + prev_p_rec_ids)]
+
+        playlist_vectors_no_id = playlist_vectors.drop(columns=['playlist_id'])
+
+        playlist_vectors['similarity'] = cosine_similarity(playlist_vectors_no_id.values, p_vector.values.reshape(1, -1))[:,0]
+
+        playlist_vectors = playlist_vectors.sort_values(by='similarity', ascending=False)
+        # Return the top 10 results playlist_id
+
+        print('<- re:recommend_playist_to_playlist()')
+        # Introduce a random element
+        return playlist_vectors['playlist_id'].head(9).tolist()   # .sample(5).tolist()
+
+
+
     def recommend_by_playlist(
         self,
         rec_dataset,
@@ -315,7 +339,6 @@ class RecEngine:
         return top_genres_names, top_genres_ratios
 
     def prepare_data(self, sp, rec_dataset, vector, ids, recommended_ids, top_artist_names=None):
-        # TODO: optimize
         print('-> re:prepare_data()')
         start_time = time.time()
 
@@ -338,7 +361,7 @@ class RecEngine:
             ohe_top_artist_tracks = ohe_top_artist_tracks.reindex(columns=ohe_rec_dataset.columns)
         
         # Drop unnecessary columns from the vector and ohe_rec_dataset
-        columns_to_drop = ['duration_ms', 'popularity']
+        columns_to_drop = ['duration_ms', 'popularity'] # Reconsider if you should drop popularity
         vector.drop(columns=[col for col in columns_to_drop if col in vector.columns], axis=1, inplace=True)
         ohe_rec_dataset.drop(columns=[col for col in columns_to_drop if col in ohe_rec_dataset.columns], axis=1, inplace=True)
         
@@ -351,7 +374,6 @@ class RecEngine:
         
         if top_artist_names is not None:
             ohe_top_artist_tracks.fillna(0, inplace=True)
-            # ohe_top_artist_tracks.to_csv('ohe_top_artist_tracks.csv', index=False)
         
         print("Time taken to prepare data:", time.time() - start_time, "s")
         print("<- re:prepare_data()")

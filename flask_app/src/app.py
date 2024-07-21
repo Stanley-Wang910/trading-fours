@@ -341,7 +341,7 @@ def get_display_genres(playlist, dominance_threshold=0.6, secondary_threshold=0.
     return dict(display_genres) # Return all genres if reached
 
 
-@app.route('/recommend', methods=['GET'])
+@app.route('/recommend', methods=['POST'])
 def recommend():
 
     start_finish_time = time.time()
@@ -354,7 +354,14 @@ def recommend():
     unique_id = session.get('unique_id')
     re = RecEngine(sp, unique_id, sql_work)
 
+    
+    saved_playlists_ids = request.json.get('userPlaylistIds')
+    # if not saved_playlists:
+    #     return jsonify({error: 'No playlists provided' }), 400
+
+
     link = request.args.get('link')
+    # saved_playlists = request.json.get('playlists')
     if not link:
         return jsonify({'error': 'No link provided'}), 400 # Cannot process request
     
@@ -390,15 +397,15 @@ def recommend():
             stored_recommendations = session_store.get_data(rec_redis_key)
             track_ids = stored_recommendations['track_ids']
             previously_recommended = stored_recommendations['recommended_ids']
-            # re = RecEngine(sp, unique_id, sql_work)
+            prev_p_rec_ids = stored_recommendations['playlist_rec_ids']
         else:
             print('Saving playlist data to session')
-            previously_recommended = []
             playlist = data
-            # re = RecEngine(sp, unique_id, sql_work)
+            previously_recommended = []
+            prev_p_rec_ids = []
             p_features = sp.playlist_base_features(playlist)
             playlist = sp.predict(playlist, type_id, class_items)
-            playlist.to_csv('playlist.csv', index=False)
+            # playlist.to_csv('playlist.csv', index=False)
             track_ids = set(playlist['id'])
             
             p_features.update({
@@ -406,12 +413,23 @@ def recommend():
                 'total_duration_ms': int(playlist['duration_ms'].sum()),
                 'avg_popularity': playlist['popularity'].mean(),
             })
+            ##
+            public = data['public']
+            print("playlist public:", public)   
+            ##
+
 
             # append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
-            p_vector, p_features, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, p_features, link,  re, sp) # Save Playlist data to session
+            p_vector, p_features, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, p_features, link, re, sp) # Save Playlist data to session
             print(top_ratios)
+
         
         recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, user_top_tracks, user_top_artists, class_items, top_genres, top_ratios, previously_recommended)
+        
+        start_time =  time.time()
+        playlist_rec_ids = re.recommend_playist_to_playlist(link, p_vector, playlist_vectors, saved_playlists_ids, prev_p_rec_ids)
+        print("Time taken to get playlist recommendations:", time.time() - start_time)
+
 
     elif type_id == 'track':
         # Check if track data exists in session
@@ -422,12 +440,14 @@ def recommend():
             stored_recommendations = session_store.get_data(rec_redis_key)
             track_ids = stored_recommendations['track_ids']
             previously_recommended = stored_recommendations['recommended_ids']
+            prev_p_rec_ids = stored_recommendations['playlist_rec_ids']
         else:
             print('Saving track data to session')
             previously_recommended = []
+            prev_p_rec_ids = []
             track = data
             track, t_features = sp.track_base_features(track, link) 
-            track.to_csv('track.csv', index=False)
+            # track.to_csv('track.csv', index=False)
             track = sp.predict(track, type_id, class_items)
             track_ids = [link]
 
@@ -443,11 +463,25 @@ def recommend():
                
         # Get recommendations
         recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_ids, user_top_tracks, class_items, previously_recommended)
+        
+        start_time =  time.time()
+        playlist_rec_ids = re.recommend_playist_to_playlist(link, t_vector, playlist_vectors, saved_playlists_ids, prev_p_rec_ids)
+        print("Time taken to get playlist recommendations:", time.time() - start_time)
 
     # Update recommended songs in session
     updated_recommendations = set(previously_recommended).union(set(recommended_ids))
     print("Length of updated_recommendations:", len(updated_recommendations))
-    session_store.set_prev_rec(rec_redis_key, list(track_ids), list(updated_recommendations)) # Update prev rec for user
+
+
+    updated_playlist_recommendations = set(prev_p_rec_ids).union(set(playlist_rec_ids))
+    prev_rec = {
+        'track_ids': list(track_ids),
+        'recommended_ids': list(updated_recommendations),
+        'playlist_rec_ids': list(updated_playlist_recommendations),
+    }
+    session_store.set_prev_rec(rec_redis_key, prev_rec) # Update prev rec for user
+
+
     session_store.set_random_recs(list(updated_recommendations)) # Update random recs app wide
     memory_usage = session_store.get_memory_usage(rec_redis_key)
     print("Memory usage:", memory_usage, "bytes") 
@@ -460,6 +494,7 @@ def recommend():
         print("Duplicate strings in recommended_ids:", duplicate_strings)
         print("Length of track_ids:", len(track_ids))
         print("Length of recommended_ids:", len(prev_rec))
+        print("Length of playlist rec ids:", len(updated_playlist_recommendations))
     else:
         print("Stored recommendations not found")
         
@@ -476,12 +511,14 @@ def recommend():
             'p_features': p_features,
             'top_genres': top_genres,
             'recommended_ids': recommended_ids,
+            'playlist_rec_ids': playlist_rec_ids,
             'id': link,
         })
     elif type_id == 'track':
         return jsonify({
             't_features': t_features,
             'recommended_ids': recommended_ids,
+            'playlist_rec_ids': playlist_rec_ids,
             'id': link
         })
 
@@ -526,6 +563,10 @@ def get_random_recommendations():
 
 @app.route('/test') ### Keep for testing new features
 def test():
+
+    if is_token_expired():
+        if not refresh_token():
+            return redirect('/auth/login')
     unique_id: str = session.get('unique_id')
     access_token: str = session.get('access_token')
 
@@ -533,16 +574,50 @@ def test():
     sp = SpotifyClient(Spotify(auth=access_token))
     re = RecEngine(sp, unique_id, sql_work)
 
+    link = input("Enter a Spotify link: ")
+    link = link.split('/')[-1].split('?')[0]
+    type_id, data = sp.get_id_type(link)
+    # HTTP Error for GET to https://api.spotify.com/v1/tracks/0WfUcAldBcRf9bM4Si6VIq with Params: {'market': None} returned 404 due to Resource not found, happens when trying to class p as t
 
     
-    deets = sp.sp.recommendation_genre_seeds()
+    # playlist = data
+    # p_features = sp.playlist_base_features(playlist)
+    # playlist = sp.predict(playlist, type_id, class_items)
+    # playlist.to_csv('../tests/csv_dumps/playlist.csv', index=False)
+    # track_ids = set(playlist['id'])
 
     
-  
-   
+    # p_features.update({
+    #     'num_tracks': len(track_ids),
+    #     'total_duration_ms': int(playlist['duration_ms'].sum()),
+    #     'avg_popularity': playlist['popularity'].mean(),
+    # })
+
+    # public = data['public']
+    # print(public)
+
+    # p_vector = re.playlist_vector(playlist) # Get playlist vector
+    # p_vector.to_csv('../tests/csv_dumps/p_vector.csv', index=False)
+    # top_genres, top_ratios = re.get_top_genres(p_vector) # Getting from playlist vector returns weighted genre weights based on date added
+    # print(top_ratios)
+
+    # playlist_vectors = sql_work.get_playlist_vectors()
+    # playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
+
+    # top_recs = re.recommend_playist_to_playlist(link, p_vector, playlist_vectors)
+    # for p_id in top_recs:
+    #     _ , playlist = sp.get_id_type(p_id)
+    #     p_features = sp.playlist_base_features(playlist)
+    #     print(p_features['playlist_name'])
+
+
+    playlist_vectors = sql_work.get_playlist_vectors()
+    playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
+    
+
     return jsonify(
         # {'name': name, 'image_300x300': image_300x300, 'artist': artist, 'artist_url': artist_url, 'release_date': release_date, 'popularity': popularity, 'id': link}
-        deets
+        data
     )
 
 
@@ -550,6 +625,8 @@ def test():
 
 if __name__ == '__main__':
     global rec_dataset
-    # sql_work.connect_sql()
+    global playlist_vectors # Set up how to intermittently update during production runtime e.g. use Celery
     rec_dataset = sql_work.get_dataset()
+    playlist_vectors = sql_work.get_playlist_vectors()
+
     app.run(debug=True, port=5000)

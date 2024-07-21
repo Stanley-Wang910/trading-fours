@@ -132,6 +132,38 @@
   animation-delay: 0s;
 }
 
+.playlistToggle-fade-in {
+  animation: playlistFadeIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0.3s;
+}
+
+.playlistToggle-fade-out {
+  animation: playlistFadeOut 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+  animation-delay: 0.1s;
+}
+
+@keyframes playlistFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-25px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+}
+
+
+@keyframes playlistFadeOut {
+  from {
+    opacity: 1;
+    transform: translateX(0px);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-25px);
+  }
+}
 
 @keyframes buttonFadeUp {
   from {
@@ -157,10 +189,6 @@
     transform: translateX(-65%);
   }
   
-  .buttonDiv:hover + .tooltip {
-    opacity: 1;
-    pointer-events: auto;
-  }
   
   .opacity-100 {
     opacity: 1;
@@ -198,6 +226,14 @@
     transition: none;
   
   }
+  .embed-p {
+    position: relative;
+    opacity: 0;
+    transform: translateX(-100%) scale(1);
+    /* transform: translateX(-400%); */
+    transition: none;
+  
+  }
 
   
   .embed.active {
@@ -207,17 +243,23 @@
     transition: opacity 2s, transform 1.75s;
 
   }
+  .embed-p.active {
+    opacity: 80%;
+    transform: translateX(0);
+    /* animation: popEffect 0.3s ease-out 1.75s;  */
+    transition: opacity 2s, transform 1.75s;
 
+  }
+/* 
   .embed.active-shuffle {
     opacity: 80%;
     transform: translateY(0);
-    /* animation: popEffect 0.3s ease-out 1.75s;  */
     transition: opacity 2s , transform 1.75s ;
 
   }
 
 
-  
+   */
 
 
   .recommendations-container {

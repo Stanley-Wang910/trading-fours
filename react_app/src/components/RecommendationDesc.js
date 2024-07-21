@@ -23,7 +23,7 @@ const RecommendationDesc = ({
     const minutes = Math.floor((ms % 3600000) / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
 
-    return `${hours ? `${hours} hr` : ""}${minutes ? `${hours ? "" : ""} ${minutes} min` : ""}${seconds ? `${minutes ? "" : ""} ${seconds} s` : ""}`;
+    return `${hours ? `${hours}hr` : ""}${minutes ? `${hours ? "" : ""} ${minutes}min` : ""}${seconds ? `${minutes ? "" : ""} ${seconds} s` : ""}`;
   }
 
   function formatDate(date) {
@@ -40,24 +40,31 @@ const RecommendationDesc = ({
   return (
     <div
       className={`
-        w-auto max-w-[40vw] mx-auto mt-10 ml-[5vw] mr-[4vw] h-auto
+        w-auto max-w-[40vw] mx-auto mt-10 ml-[3vw] h-auto
        
         `}
     >
       <div className="flex flex-col md:flex-row sm:items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 ">
         <div // Image
-          className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"} w-full md:w-[15vw] sm:w-[15vw] max-w-xs
+          className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"} w-full md:w-[12vw] sm:w-[15vw] max-w-xs
                 ${animate && shouldAnimate ? "recsDesc-fade-in" : ""} 
                 ${animateOut && shouldAnimate ? "recsDesc-fade-out" : ""}
             
             `}
         >
-          <motion.div className={` `} whileTap={{ scale: 0.95 }}>
+          <motion.div
+            className={` `}
+            whileTap={{ scale: 0.95 }}
+            whileHover={{ opacity: 0.8 }}
+          >
             <a
-              href={`https://open.spotify.com/track/${recommendations.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block"
+              onClick={() => {
+                setTimeout(() => {
+                  const url = `https://open.spotify.com/${isPlaylist ? `playlist` : `track`}/${recommendations.id}`;
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }, 200); // Delay of 1000 milliseconds (1 second)
+              }}
+              className="inline-block cursor-pointer"
             >
               <img
                 src={
@@ -75,11 +82,11 @@ const RecommendationDesc = ({
             </a>
           </motion.div>
         </div>
-        <div className="md:text-left md:w-2/3 w-full sm:text-center">
+        <div className="md:text-left md:w-[15vw] w-full sm:text-center">
           <div
             className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
-             ${animate && shouldAnimate ? "recsDesc-fade-in" : ""} 
-                ${animateOut && shouldAnimate ? "recsDesc-fade-out" : ""}
+            //  ${animate && shouldAnimate ? "recsDesc-fade-in" : ""} 
+            //     ${animateOut && shouldAnimate ? "recsDesc-fade-out" : ""}
             `}
           >
             <h1
@@ -138,6 +145,7 @@ const RecommendationDesc = ({
         {isPlaylist && (
           <span className="mt-2 text-gray-300">
             Defining Genres:
+            <br />
             {Object.entries(recommendations.p_features.display_genres).map(
               ([genre, percentage], index, array) => (
                 <React.Fragment key={genre}>

@@ -35,12 +35,12 @@ class SessionStore:
         return f'sample_taken:{self._get_date_key()}'
 
 
-    def set_prev_rec(self, key, track_ids, recommended_songs):
+    def set_prev_rec(self, key, prev_rec):
         start_time = time.time()
-        data = {'track_ids': track_ids, 'recommended_ids': recommended_songs}
-        self.redis.set(key, json.dumps(data), ex=86400, nx=True) # 1 day
-        self.redis.set(key, json.dumps(data), xx=True)
-        self.cache[key] = data
+        # data = {'track_ids': track_ids, 'recommended_ids': recommended_songs}
+        self.redis.set(key, json.dumps(prev_rec), ex=86400, nx=True) # 1 day
+        self.redis.set(key, json.dumps(prev_rec), xx=True)
+        self.cache[key] = prev_rec
         print("Time to set rec ids in redis:", time.time() - start_time)
 
 

@@ -11,6 +11,8 @@ function SearchBar({
   onQueryChange,
   setAnimateOut,
   setLastActionShuffle,
+  userPlaylistIds,
+  setUserPlaylistIds,
   demo = false,
 }) {
   const [query, setQuery] = useState("");
@@ -49,8 +51,9 @@ function SearchBar({
         onQueryChange(query);
 
         try {
-          const response = await axios.get(
+          const response = await axios.post(
             `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${query}`,
+            { userPlaylistIds },
             { withCredentials: true }
           );
           onRecommendations(response.data || []);
@@ -139,6 +142,8 @@ function SearchBar({
             setIsLocalLoading={setIsLocalLoading}
             setAnimateOut={setAnimateOut}
             setLastActionShuffle={setLastActionShuffle}
+            userPlaylistIds={userPlaylistIds}
+            setUserPlaylistIds={setUserPlaylistIds}
           />
         </div>
       )}

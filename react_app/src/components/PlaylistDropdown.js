@@ -9,6 +9,8 @@ function PlaylistDropdown({
   setIsLocalLoading,
   setAnimateOut,
   setLastActionShuffle,
+  userPlaylistIds,
+  setUserPlaylistIds,
 }) {
   // State variables
   const [playlists, setPlaylists] = useState([]); // Holds list of playlists
@@ -39,6 +41,7 @@ function PlaylistDropdown({
           { withCredentials: true }
         );
         setPlaylists(response.data || []);
+        setUserPlaylistIds(playlists.map((item) => item[1]));
       } catch (error) {
         console.error("Error fetching playlists", error);
       }
@@ -111,8 +114,9 @@ function PlaylistDropdown({
       setIsLoading(true); // Set the global loading state to true : for loading animation
       onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
       try {
-        const response = await axios.get(
+        const response = await axios.post(
           `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${id}`,
+          { userPlaylistIds },
           { withCredentials: true }
         );
         onRecommendations(response.data || []);
