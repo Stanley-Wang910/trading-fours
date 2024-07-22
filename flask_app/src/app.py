@@ -206,8 +206,6 @@ def refresh_token():
     else:
         return False
 
-
-
 def check_user_top_data_session(unique_id, re):
     redis_key_top_tracks = f"{unique_id}:top_tracks"
     redis_key_top_artists = f"{unique_id}:top_artists"
@@ -230,7 +228,6 @@ def check_user_top_data_session(unique_id, re):
         session_store.set_user_top_data(redis_key_top_artists, user_top_artists)
         print("User top artists saved")
     return user_top_tracks, user_top_artists
-
 
 # Append Data to rec_dataset
 def append_to_dataset(data, choice):
@@ -306,9 +303,7 @@ def save_track_data_session(unique_id, track, t_features, link, re, sp):
     session['last_search'] = link
     return t_vector, t_features
 
-
 def get_display_genres(playlist, dominance_threshold=0.6, secondary_threshold=0.15, minimum_threshold=0.9, similarity_threshold=0.05):
-    
     genre_counts = playlist['track_genre'].value_counts()
     genre_ratios = genre_counts / len(playlist)
     top_ratios = genre_ratios.head(3).to_dict()
@@ -342,7 +337,6 @@ def get_display_genres(playlist, dominance_threshold=0.6, secondary_threshold=0.
                 return dict(display_genres) # Return all 3 genres if no criteria was met
 
     return dict(display_genres) # Return all genres if reached
-
 
 @app.route('/recommend', methods=['POST'])
 def recommend():
@@ -425,12 +419,17 @@ def recommend():
 
             # append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
             p_vector, p_features, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, p_features, link, if_public, re, sp) # Save Playlist data to session
-            print(top_ratios)
+            print("Line 422, top ratios:", top_ratios)
+            if len(track_ids) > 30: 
+                session_store.update_trending_genres(top_ratios)
+                trending_genres = session_store.get_trending_genres()
+                print(trending_genres)
 
         
         recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, user_top_tracks, user_top_artists, class_items, top_genres, top_ratios, previously_recommended)
         
         start_time =  time.time()
+        print("Length of user saved playlist ids:", len(saved_playlists_ids)) # Why is nothing here? 
         playlist_rec_ids = re.recommend_playist_to_playlist(link, p_vector, playlist_vectors, saved_playlists_ids, prev_p_rec_ids)
         print("Time taken to get playlist recommendations:", time.time() - start_time)
 
@@ -485,7 +484,6 @@ def recommend():
     }
     session_store.set_prev_rec(rec_redis_key, prev_rec) # Update prev rec for user
 
-
     session_store.set_random_recs(list(updated_recommendations)) # Update random recs app wide
     memory_usage = session_store.get_memory_usage(rec_redis_key)
     print("Memory usage:", memory_usage, "bytes") 
@@ -532,7 +530,6 @@ def autocomplete_playlist():
     playlists = sql_work.get_unique_user_playlist(unique_id)
     return jsonify(playlists)
 
-
 @app.route('/user', methods=['GET'])
 def get_user_data():
     unique_id = session.get('unique_id')
@@ -563,6 +560,12 @@ def get_random_recommendations():
     random_recs = session_store.get_random_recs()
     return jsonify(random_recs)
 
+@app.route('/trending-genres', methods=['GET'])
+def get_trending_genres():
+    trending_genres = session_store.get_trending_genres()
+    return jsonify(trending_genres)
+
+
 def populate_seed_playlist_recs(sp, re):
     seed_playlists = []
     with open('../data/datasets/seed_playlists.csv', newline='') as f:
@@ -585,12 +588,8 @@ def populate_seed_playlist_recs(sp, re):
         print(f"Time to add {link}-vector to db:", time.time() - start_time)
     
 
-
-
-
 @app.route('/test') ### Keep for testing new features
 def test():
-
     if is_token_expired():
         if not refresh_token():
             return redirect('/auth/login')
@@ -601,28 +600,10 @@ def test():
     sp = SpotifyClient(Spotify(auth=access_token))
     re = RecEngine(sp, unique_id, sql_work)
 
-    populate_seed_playlist_recs(sp, re)
+    # session_store.update_total_recs(-13457)
+    jsonified_top_3 = get_trending_genres()
 
-    
-
-    # playlist_vectors = sql_work.get_playlist_vectors()
-    # playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
-
-    # top_recs = re.recommend_playist_to_playlist(link, p_vector, playlist_vectors)
-    # for p_id in top_recs:
-    #     _ , playlist = sp.get_id_type(p_id)
-    #     p_features = sp.playlist_base_features(playlist)
-    #     print(p_features['playlist_name'])
-
-
-    # playlist_vectors = sql_work.get_playlist_vectors()
-    # playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
-    
-
-    return jsonify(
-        # {'name': name, 'image_300x300': image_300x300, 'artist': artist, 'artist_url': artist_url, 'release_date': release_date, 'popularity': popularity, 'id': link}
-        'Hello'
-    )
+    return jsonified_top_3
 
 
 

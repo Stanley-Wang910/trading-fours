@@ -14,6 +14,7 @@ import useScrollAnimation from "./ScrollAnimation.js";
 import useDelayAnimation from "./DelayAnimation.js";
 import SearchBar from "./SearchBar.js";
 import RecommendationsList from "./RecommendationList.js";
+import DemoContainer from "./DemoContainer.js";
 
 import "../styles/Components/HomePage.css";
 
@@ -37,6 +38,11 @@ export default function HomePage() {
   ];
   const [trackIds, setTrackIds] = useState(DEFAULT_TRACK_IDS);
   const [totalRecs, setTotalRecs] = useState(0);
+  const [trendingGenres, setTrendingGenres] = useState([
+    "Electronic",
+    "Alternative",
+    "Reggaeton",
+  ]);
   const [hourlyIncrease, setHourlyIncrease] = useState(0);
 
   const [isTextGenComplete, setIsTextGenComplete] = useState(false);
@@ -75,17 +81,6 @@ export default function HomePage() {
       setTimeout(() => setIsAnimating(false), 500);
     }
   };
-
-  const mockRecommendations = {
-    playlist: "Demo Playlist",
-    top_genres: ["Pop", "Rock", "Electronic"],
-    recommended_ids: [
-      "3BdHMOIA9B0bN53jbE5nWe", // Live from kitchen
-      "5WbfFTuIldjL9x7W6y5l7R", // Pol
-      "5DRnssBoVo8e7uAQZkNT8O",
-    ],
-  };
-  const noop = () => {};
 
   const getBackgroundPosition = () => {
     if (isSwapped) {
@@ -224,9 +219,25 @@ export default function HomePage() {
     };
 
     getTotalRecs();
-    const intervalId = setInterval(getTotalRecs, 5000);
+    const intervalId = setInterval(getTotalRecs, 60000);
 
     return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    const getTrendingGenres = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/trending-genres`,
+          { withCredentials: true }
+        );
+        setTrendingGenres(response.data || []);
+      } catch (error) {
+        console.error("Error fetching trending recommendations", error);
+      }
+    };
+
+    getTrendingGenres();
   }, []);
 
   return (
@@ -376,7 +387,7 @@ export default function HomePage() {
 
         <div className="flex flex-col">
           <div
-            className={`group absolute right-[15%]  top-0 lg:w-[25vw] sm:w-[30vw] sm:translate-x-[20%] transition-all duration-1000 ease-in-out 
+            className={`group absolute sm:right-[10%] lg:right-[15%] top-0 lg:w-[30vw] sm:w-[40vw] sm:translate-x-[20%] transition-all duration-1000 ease-in-out 
                         ${isTextGenComplete ? "opacity-100" : "opacity-0"}`}
           >
             {!isRandomLoading && (
@@ -388,8 +399,8 @@ export default function HomePage() {
               />
             )}
             <div
-              className={`bg-gradient-to-br w-full from-gray-300 to-slate-400 bg-clip-text text-transparent text-sm montserrat-reg absolute bottom-0 translate-x-3/4 right-1/2 translate-y-[5vh] opacity-100 transition-all duration-1000 ease-out 
-            ${isTextGenComplete ? "translate-x-3/4" : "translate-x-1/2 "}`}
+              className={`bg-gradient-to-br w-full from-gray-300 to-slate-400 bg-clip-text text-transparent text-sm montserrat-reg absolute bottom-0 lg:translate-x-[105%] sm:translate-x-[67%] right-1/2 translate-y-[7vh] opacity-100  
+            `}
             >
               <div className="font-semibold">Some of Today's Discoveries</div>
             </div>
@@ -456,10 +467,59 @@ export default function HomePage() {
                 setIsMoreInfoHovered(false);
               }}
             >
-              <GlossyContainer gradientColor="from-slate-700/50  to-slate-900" />
+              <GlossyContainer gradientColor="from-slate-700/50  to-slate-900">
+                <div className="text-sm montserrat-reg text-slate-300  py-3 px-3 ">
+                  <motion.div
+                    animate={{
+                      opacity: isMoreInfoVisible && isSwapped ? 1 : 0,
+
+                      color:
+                        isMoreInfoHovered && isSwapped
+                          ? "rgb(148 163 184)"
+                          : "rgb(203 213 225)",
+                    }} // Using Tailwind colors: amber-400 and slate-400
+                    transition={{ duration: 0.3 }}
+                    onMouseEnter={() => {
+                      console.log("hovered on new songs");
+                    }}
+                    onMouseLeave={() => {
+                      console.log("hovered off new songs");
+                    }}
+                  >
+                    This Week's Trending Genres
+                  </motion.div>
+                </div>
+                <motion.div
+                  className={`text-3xl px-4 pt-1 lato-regular inline-flex 
+                  }`}
+                  animate={{
+                    scale: isMoreInfoHovered && isSwapped ? 1.02 : 1,
+                    opacity: isMoreInfoVisible && isSwapped ? 1 : 0,
+                    x: isMoreInfoHovered && isSwapped ? 3 : 0,
+                    y: isMoreInfoHovered && isSwapped ? -3 : 0,
+                    color:
+                      isMoreInfoHovered && isSwapped
+                        ? "rgb(203,213,225)" //slate-300
+                        : "rgb(148 163 184)", //slate-400
+                  }}
+                  transition={{
+                    color: { duration: 0.3, ease: "easeInOut" }, // Change if needed
+                    scale: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
+                    x: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
+                    y: { duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] },
+                    opacity: { duration: 0.3, ease: "easeInOut" },
+                  }}
+                  style={{
+                    willChange: "transform",
+                  }}
+                >
+                  <span className="tracking-tight  ">
+                    {trendingGenres.join(", ")}
+                  </span>
+                </motion.div>
+              </GlossyContainer>
             </motion.div>
             <motion.div
-              // ref={totalRecRef}
               className={`relative z-30 inline-flex ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
               initial={{ scale: 1, opacity: 0 }}
               animate={{
@@ -490,18 +550,19 @@ export default function HomePage() {
                 <div className="text-sm montserrat-reg text-slate-300  py-3 px-3 ">
                   <motion.div
                     animate={{
+                      opacity: isTotalRecsVisible && !isSwapped ? 1 : 0,
                       color:
                         isTotalRecsHovered && !isSwapped
                           ? "rgb(148 163 184)"
                           : "rgb(203 213 225)",
                     }} // Using Tailwind colors: amber-400 and slate-400
                     transition={{ duration: 0.3 }}
-                    onMouseEnter={() => {
-                      console.log("hovered on new songs");
-                    }}
-                    onMouseLeave={() => {
-                      console.log("hovered off new songs");
-                    }}
+                    // onMouseEnter={() => {
+                    //   console.log("hovered on new songs");
+                    // }}
+                    // onMouseLeave={() => {
+                    //   console.log("hovered off new songs");
+                    // }}
                   >
                     New Songs Discovered
                   </motion.div>
@@ -518,11 +579,6 @@ export default function HomePage() {
                       isTotalRecsHovered && !isSwapped
                         ? "rgb(203,213,225)" //slate-300
                         : "rgb(148 163 184)", //slate-400
-
-                    //
-                    // fill: isTotalRecsHovered
-                    //   ? "rgba(125,20,205)"
-                    //   : "rgba(203,213,225)", // slate-300
                   }}
                   transition={{
                     color: { duration: 0.3, ease: "easeInOut" }, // Change if needed
@@ -542,18 +598,18 @@ export default function HomePage() {
                     console.log("hovered off Total Recs Counter");
                   }}
                 >
-                  <AnimatedCounter
-                    value={Number(totalRecs) || 0}
-                    isCountVisible={isTotalRecsVisible}
-                  />
+                  <span className="tracking-tight">
+                    <AnimatedCounter
+                      value={Number(totalRecs) || 0}
+                      isCountVisible={isTotalRecsVisible}
+                    />
+                  </span>
                 </motion.div>
 
-                <div
-                  className={`text-sm right-4 lato-regular absolute
-                                 `}
-                >
+                <div className={`text-sm right-4 lato-regular absolute`}>
                   <motion.div
                     animate={{
+                      opacity: isTotalRecsVisible && !isSwapped ? 1 : 0,
                       color:
                         isTotalRecsHovered && !isSwapped
                           ? "rgb(251, 191, 36, 0.8)"
@@ -578,9 +634,9 @@ export default function HomePage() {
               </GlossyContainer>
             </motion.div>
 
-            <div className="mt-[8vh]">
+            <div className="mt-[8vh] sm:translate-x-[5vw] lg:translate-x-0">
               <motion.div
-                className="mb-6 just montserrat-reg w-full text-lg flex-col flex translate-x-[10vw] translate-y-5"
+                className="mb-6  montserrat-reg w-full text-lg flex-col flex translate-x-[10vw] translate-y-5"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: isDiv2Visible ? 1 : 0 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -596,7 +652,7 @@ export default function HomePage() {
                 direction="left"
                 isVisible={isDiv2Visible}
                 className="absolute"
-                width="38vw"
+                width="39vw"
                 xOffset="8vw"
                 yOffset={0}
               />
@@ -605,112 +661,22 @@ export default function HomePage() {
                 isVisible={isVideoEmbedVisible}
                 id="tzjeOJVYI7o"
                 title="Demo"
-                className="rounded-lg mt-4 w-full max-w-[35vw] mx-auto inline-flex my-auto "
+                className="rounded-lg mt-4 w-full lg:max-w-[35vw] sm:max-w-[45vw] mx-auto inline-flex my-auto "
               />
             </div>
           </div>
-
-          {/* <div className="mt-4 text-white">Hello</div> */}
-
-          {/* <div className="sm:-translate-x-8 absolute z-20 "> */}
-          <motion.div
-            className={`absolute z-20 inline-flex ${isDemoVisible ? "cursor-events-auto" : "cursor-events-none invisible user-select-none"}`}
-            initial={{ scale: 1.0, x: "54vw", opacity: 0 }}
-            animate={{
-              x: isDemoVisible ? "51vw" : "56vw",
-              opacity: isDemoVisible ? 1 : 0,
-            }}
-            transition={{ duration: 1, ease: [0.22, 0.68, 0.31, 1.0] }}
-            onHoverStart={() => {
-              setIsDemoContainerHovered(true);
-            }}
-            onHoverEnd={() => {
-              setIsDemoContainerHovered(false);
-            }}
-          >
-            <GlossyContainer
-              className="relative lg:w-[40vw] h-[70vh] opacity-[100%]"
-              degree={2}
-              radius="550"
-              brightness="0.15"
-              gradientPoint="ellipse_at_top_right"
-              gradientColor="from-slate-800/60 via-slate-900/60 to-slate-800/20"
-              shadow={false}
-            >
-              <div className="text-[1.4em] lato-regular font-bold  mt-12 px-12  ">
-                <span className=" bg-gradient-to-b from-gray-200 to-gray-400 bg-clip-text text-transparent ">
-                  <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent">
-                    Infinite
-                  </span>{" "}
-                  possibilities for where the music takes{" "}
-                  <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent">
-                    you
-                  </span>
-                  .
-                </span>
-                <span className="  mt-4 text-sm text-gray-400 leading-snug block">
-                  Enter any playlist or track — a unique improvisation of a
-                  sound or vibe you want to capture — and receive a brand new
-                  take on it.
-                </span>
-              </div>
-              <motion.div
-                className="mt-10 pointer-events-auto w-[33vw]  "
-                initial={{ opacity: 0 }}
-                animate={{
-                  scale: isDemoContainerHovered ? 1 : 0.95,
-                  x: searchAnimate
-                    ? isDemoContainerHovered
-                      ? "12%"
-                      : "5%"
-                    : "15%",
-                  y: isDemoContainerHovered ? "30%" : "10%",
-                  opacity: searchAnimate ? 1 : 0,
-                }}
-                transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
-              >
-                <SearchBar demo={true} />
-              </motion.div>
-              <motion.div
-                className="absolute pointer-events-auto mt-6"
-                animate={{
-                  x: recAnimate
-                    ? isDemoContainerHovered
-                      ? "8%"
-                      : "12%"
-                    : "-10%",
-                  y: recAnimate
-                    ? isDemoContainerHovered
-                      ? "2%"
-                      : "10%"
-                    : "2%",
-
-                  scale: isDemoContainerHovered ? 1 : 1,
-                  opacity: searchAnimate ? 1 : 0,
-                }}
-                transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
-              >
-                <RecommendationsList
-                  recommendations={mockRecommendations}
-                  onRecommendations={noop}
-                  setIsLoading={noop}
-                  query="demo query"
-                  position=""
-                  onTogglePosition={noop}
-                  setFavoritedTracks={noop}
-                  animateOut={false}
-                  setAnimateOut={noop}
-                  demo={true}
-                />
-              </motion.div>
-            </GlossyContainer>
-          </motion.div>
-          {/* </div> */}
+          <DemoContainer
+            isDemoVisible={isDemoVisible}
+            isDemoContainerHovered={isDemoContainerHovered}
+            setIsDemoContainerHovered={setIsDemoContainerHovered}
+            searchAnimate={searchAnimate}
+            recAnimate={recAnimate}
+          />
           <div
-            className={`${isGradientVisible ? "fade-in-gradient" : "opacity-0"} gradient-background absolute translate-x-[48vw] translate-y-[10vh] w-full h-full flex z-10 `}
+            className={`${isGradientVisible ? "fade-in-gradient " : "opacity-0"}  sm:invisible md:invisible lg:visible gradient-background absolute translate-x-[48vw] translate-y-[10vh] w-full h-full flex z-10 `}
           >
             <svg
-              className="blur-[60px] "
+              className="blur-[60px] sm:opacity-0 md:opacity-100"
               width="700"
               height="700"
               viewBox="0 0 500 500"

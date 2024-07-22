@@ -181,7 +181,7 @@ class SQLWork:
                     cursor.execute(delete_query, (unique_id, *playlists_to_delete))
                     print(f"Deleted {cursor.rowcount} playlists from the database")
 
-                print(update_data)
+                print("Update Data:", update_data)
                 # Batch update existing playlists
                 if update_data:
                     update_query = """

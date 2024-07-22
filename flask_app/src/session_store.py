@@ -72,8 +72,6 @@ class SessionStore:
             print("Not enough items for a sample")
             return None
 
-
-        # 10 Random indices
         random_indicies = random.sample(range(list_length), 10)
         pipe = self.redis.pipeline()
         for index in random_indicies:
@@ -95,9 +93,26 @@ class SessionStore:
     
         print("Sample taken and replaced original data")
         return sample
-        
 
-    
+
+
+    def update_trending_genres(self, genre_ratios):
+        key = f"genre_ratios:{datetime.now().strftime('%Y-%W')}"
+        pipeline = self.redis.pipeline()
+        for genre, ratio in genre_ratios.items():
+            pipeline.hincrbyfloat(key, genre, ratio)
+
+        # 1 week expire
+        pipeline.expire(key, 604800, nx=True)
+        pipeline.execute()
+
+    def get_trending_genres(self):
+        key = f"genre_ratios:{datetime.now().strftime('%Y-%W')}"
+        decoded_trending_genres = {k.decode('utf-8'): float(v) for k, v in self.redis.hgetall(key).items()}
+        top_3 = dict(sorted(decoded_trending_genres.items(), key=lambda x: x[1], reverse=True)[:3])
+        print("Top 3 genres", top_3)
+        return list(top_3.keys())
+            
     def set_vector(self, key, vector, ttl=3600):
         if isinstance(vector, pd.DataFrame):
             serialized_vector = pickle.dumps(vector)
@@ -107,17 +122,10 @@ class SessionStore:
         self.redis.expire(key, ttl)
         self.cache[key] = vector
 
-
     def set_user_top_data(self, key, data):
         self.redis.set(key, json.dumps(data), ex=86400)
         self.cache[key] = data
         print("Cache size", len(self.cache))
-
-        # cached_data = self.get_data_cache(key) 
-        # if cached_data is not None and cached_data == data:
-        #     print("Data is cached")
-        # else:
-        #     print("Data is not cached")
 
     def update_total_recs(self, num_recs: int):
         key = 'total_recs'
@@ -196,32 +204,6 @@ class SessionStore:
 
         print(f'Total count of keys deleted: {total_deleted}')
         print(f'Cache size after clearing: {len(self.cache)}')
-            
-
-    # def clear_user_cache(self, unique_id):
-    #     print(f'Clearing cache for user: {unique_id}')
-    #     user_key_pattern = f"{unique_id}:*"  # Adjust the naming convention if needed
-    #     cursor = "0"
-    #     keys_to_delete = []
-
-    #     # Scan the in-memory cache for keys associated with the user
-    #     while cursor != 0:
-    #         print(f'Starting scan with cursor: {cursor}')
-    #         cursor, keys = self.redis.scan(cursor=cursor, match=user_key_pattern, count=1000)
-    #         print(f'Cursor after scan: {cursor}')
-    #         print(f'Number of keys found: {len(keys)}')
-
-    #         keys_to_delete.extend(key.decode() for key in keys if key.decode() in self.cache)
-    #         print(f'Number of keys to delete: {len(keys_to_delete)}')
-
-    #     # Remove the keys from the in-memory cache
-    #     for key in keys_to_delete:
-    #         self.cache.pop(key)
-    #         print(f'Removed key from cache: {key}')
-
-    #     print(f'Cache size after clearing user cache: {len(self.cache)}')
-    #     return
-
 
     def clear_all(self):
         self.cache.clear()
@@ -231,10 +213,6 @@ class SessionStore:
     def print_all_keys(self):
         for key in self.redis.scan_iter():
             print(f'Key: {key}')
-            # data_str = self.redis.get(key)
-            # if data_str:
-            #     data = json.loads(data_str)
-            #     #, Data: {data}'
 
     def get_memory_usage(self, key):
         return self.redis.memory_usage(key) 
@@ -244,8 +222,3 @@ class SessionStore:
     def set_total_recs(self, num_recs: int): # For Testing
         key = 'total_recs'
         self.redis.set(key, json.dumps(num_recs))
-
-    # def delete_keys(self):
-    #     key1 = f'sample_taken:{self._get_date_key()}'
-    #     key2 = f'random_recs:{self._get_date_key()}'    
-    #     self.redis.delete(key1, key2)

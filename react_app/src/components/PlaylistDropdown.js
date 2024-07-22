@@ -33,6 +33,10 @@ function PlaylistDropdown({
   const listRef = useRef(null); // Reference dropdownRef // Effecgt hook to fetch playlists
   const itemsRef = useRef([]); // Reference for the items in the list
 
+  const filteredPlaylists = playlists.filter((playlist) =>
+    playlist[0].toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
@@ -111,6 +115,7 @@ function PlaylistDropdown({
     setIsOpen(false);
     setAnimateOut(true);
     setTimeout(async () => {
+      console.log(userPlaylistIds);
       setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on searchdropdownRef
       setIsLoading(true); // Set the global loading state to true : for loading animation
       onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
@@ -177,8 +182,13 @@ function PlaylistDropdown({
         break;
       case "Enter":
         e.preventDefault();
-        if (focusedIndex >= 0) {
-          handlePlaylistSelect(filteredPlaylists[focusedIndex][1]);
+        if (focusedIndex >= 0 && focusedIndex < filteredPlaylists.length) {
+          const selectedPlaylist = filteredPlaylists[focusedIndex];
+          if (selectedPlaylist && selectedPlaylist.length > 1) {
+            handlePlaylistSelect(filteredPlaylists[focusedIndex][1]);
+          } else {
+            console.error("Selected playlist is invalid", selectedPlaylist);
+          }
         }
         break;
       default:
@@ -187,10 +197,6 @@ function PlaylistDropdown({
 
     setIsKeyNavigating(false); // Reset setIsKeyNavigating(false);
   };
-
-  const filteredPlaylists = playlists.filter((playlist) =>
-    playlist[0].toLowerCase().includes(searchQuery.toLowerCase())
-  );
 
   useEffect(() => {
     if (isOpen) {

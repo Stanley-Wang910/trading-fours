@@ -13,9 +13,6 @@ function RecommendationsList({
   setIsLocalLoading,
   query,
   onQueryChange,
-  position,
-  onTogglePosition,
-  setFavoritedTracks,
   animateOut,
   setAnimateOut,
   isShuffling,
@@ -29,7 +26,6 @@ function RecommendationsList({
   const [visibleEmbeds, setVisibleEmbeds] = useState(5); // State to track the number of visible embeds
   const [loaded, setLoaded] = useState([]);
   const [showMeteors, setShowMeteors] = useState(false);
-  const [containerHeight, setContainerHeight] = useState(575); // Set the starting height
   const [visibleButtons, setVisibleButtons] = useState({});
   const [animate, setAnimate] = useState(false);
   const [showPlaylistRecs, setShowPlaylistRecs] = useState(false);
@@ -41,9 +37,6 @@ function RecommendationsList({
   const [hoveredButton, setHoveredButton] = useState(null);
   const [hoveredIFrame, setHoveredIFrame] = useState(null);
 
-  // Constants
-  // const maxHeight = 3000; // Set the maximum height for recommendations container
-  // const extendRec = 500;
   // Memoized callbakc to handle loading more embeds
   const handleLoadMore = useCallback(() => {
     const incrementCounter = showPlaylistRecs ? 3 : 5;
@@ -240,7 +233,7 @@ function RecommendationsList({
                 ref={scrollContainerRef}
                 className={` 
               ${demo ? "overflow-hidden" : "overflow-y-auto flex-grow"} 
-              recommendations-container pt-5 ${showPlaylistRecs ? "px-10" : "px-5"} pb-5 bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative  container-transition opacity-0 
+              recommendations-container pt-5 ${showPlaylistRecs ? "lg:px-10 sm:pl-8 sm:pr-4" : "px-5"} pb-5 bg-gradient-to-tr from-gray-900 via-gray-800 to-blue-900 shadow-2xl rounded-2xl relative  container-transition opacity-0 
               ${animate ? "recs-fade-up opacity-0" : ""} 
                   ${animateOut ? "recs-fade-out opacity-100" : ""}
               `}
@@ -266,7 +259,9 @@ function RecommendationsList({
                       >
                         {loaded.includes(index) && visibleButtons[index] && (
                           <motion.button
-                            className="absolute left-0 pr-1 top-1/2"
+                            className={`absolute left-0 
+                            ${showPlaylistRecs ? "pr-4" : "pr-1"}
+                            top-1/2`}
                             onClick={() =>
                               demo ? null : handleTrackRecommend(index)
                             }
@@ -325,10 +320,10 @@ function RecommendationsList({
                               onLoad={() => handleLoad(index)}
                               src={`https://open.spotify.com/embed/${
                                 showPlaylistRecs ? `playlist` : `track`
-                              }/${id}?utm_source=generator`} // [playlist]
+                              }/${id}?utm_source=generator`}
                               style={{ border: "none" }}
                               width="100%"
-                              height={showPlaylistRecs ? "352" : "83"} // 152
+                              height={showPlaylistRecs ? "352" : "83"}
                               allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
                               loading="lazy"
                             ></iframe>
@@ -382,7 +377,7 @@ function RecommendationsList({
         {!demo && (
           <div className="relative top-1/2 -translate-y-[5vh] right-0 ml-4 md:mr-[2vw]">
             <button
-              className={`relative inline-block 
+              className={`opacity-0 relative inline-block 
                   ${animate ? "playlistToggle-fade-in opacity-0" : ""} 
                   ${animateOut ? "playlistToggle-fade-out opacity-100" : ""}
                   `}

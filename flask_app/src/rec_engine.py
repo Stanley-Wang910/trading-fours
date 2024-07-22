@@ -71,8 +71,6 @@ class RecEngine:
     def recommend_playist_to_playlist(self, playlist_id, p_vector, playlist_vectors, saved_playlist_ids, prev_p_rec_ids):
         print('-> re:recommend_playist_to_playlist()')
 
-        print("PLAYLIST ID:", playlist_id)
-
         # Filter out playlists in user saved playlists, so save the unique id in these vectors
         
         columns_to_drop = ['duration_ms', 'popularity']
