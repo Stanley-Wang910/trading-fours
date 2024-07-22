@@ -261,7 +261,7 @@ function PlaylistDropdown({
         <li className="px-3 py-2">
           <input
             type="text"
-            placeholder="Search playlists..."
+            placeholder="Search Playlists..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="px-3 py-2 w-full bg-gray-800 text-gray-300 rounded-md focus:outline-none text-sm"

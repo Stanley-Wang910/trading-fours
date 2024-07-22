@@ -490,7 +490,7 @@ export default function HomePage() {
                   </motion.div>
                 </div>
                 <motion.div
-                  className={`text-3xl px-4 pt-1 lato-regular inline-flex 
+                  className={`text-[1.5em] px-4 py-1 lato-regular inline-flex 
                   }`}
                   animate={{
                     scale: isMoreInfoHovered && isSwapped ? 1.02 : 1,

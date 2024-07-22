@@ -108,10 +108,13 @@ class SessionStore:
 
     def get_trending_genres(self):
         key = f"genre_ratios:{datetime.now().strftime('%Y-%W')}"
+        # print all keys with pattern genre_ratios:*
+        for key in self.redis.scan_iter(match='genre_ratios:*'):
+            print(key)
         decoded_trending_genres = {k.decode('utf-8'): float(v) for k, v in self.redis.hgetall(key).items()}
         top_3 = dict(sorted(decoded_trending_genres.items(), key=lambda x: x[1], reverse=True)[:3])
         print("Top 3 genres", top_3)
-        return list(top_3.keys())
+        return list(top_3.keys()) 
             
     def set_vector(self, key, vector, ttl=3600):
         if isinstance(vector, pd.DataFrame):

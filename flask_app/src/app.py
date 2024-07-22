@@ -353,8 +353,7 @@ def recommend():
 
     
     saved_playlists_ids = request.json.get('userPlaylistIds')
-    # if not saved_playlists:
-    #     return jsonify({error: 'No playlists provided' }), 400
+    print(f"Length of user saved playlists: {len(saved_playlists_ids)}")
 
 
     link = request.args.get('link')

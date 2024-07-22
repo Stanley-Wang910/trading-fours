@@ -40,13 +40,12 @@ const RecommendationDesc = ({
   return (
     <div
       className={`
-        w-auto max-w-[40vw] mx-auto mt-10 ml-[3vw] h-auto
-       
+        w-auto max-w-[40vw] mx-auto mt-10 lg:ml-[3vw] sm:ml-0.5 h-auto 
         `}
     >
-      <div className="flex flex-col md:flex-row sm:items-center md:items-start space-y-4 md:space-y-0 md:space-x-6 ">
+      <div className="flex flex-col md:flex-row sm:items-start lg:items-start sm:space-y-2 lg:space-y-4 md:space-y-0 md:space-x-6 ">
         <div // Image
-          className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"} w-full md:w-[12vw] sm:w-[15vw] max-w-xs
+          className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"} w-full lg:w-[12vw] sm:w-[15vw] max-w-xs
                 ${animate && shouldAnimate ? "recsDesc-fade-in" : ""} 
                 ${animateOut && shouldAnimate ? "recsDesc-fade-out" : ""}
             
@@ -82,7 +81,7 @@ const RecommendationDesc = ({
             </a>
           </motion.div>
         </div>
-        <div className="md:text-left md:w-[15vw] w-full sm:text-center">
+        <div className="md:w-[15vw] w-full sm:text-left">
           <div
             className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
             //  ${animate && shouldAnimate ? "recsDesc-fade-in" : ""} 
@@ -90,14 +89,14 @@ const RecommendationDesc = ({
             `}
           >
             <h1
-              className={`text-2xl text-amber-500 font-bold italic mb-2
+              className={`lg:text-2xl sm:text-xl text-amber-500 font-bold italic lg:mb-2 sm:mb-1
               `}
             >
               {isPlaylist
                 ? recommendations.p_features.playlist_name
                 : recommendations.t_features.name}
             </h1>
-            <span className="text-gray-400 text-md font-semibold ">
+            <span className="text-gray-400 lg:text-base sm:text-sm font-semibold ">
               <a
                 href={
                   isPlaylist
@@ -122,7 +121,7 @@ const RecommendationDesc = ({
             </span>
           </div>
           <div
-            className={`text-gray-400 md:text-left sm:text-center font-semibold text-sm block mt-2 ${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
+            className={`text-gray-400 sm:text-left font-semibold lg:text-sm sm:text-xs block lg:mt-2 sm:mt-1 ${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
                            ${animate && shouldAnimate ? "recsDesc-fade-in1" : ""} 
                             ${animateOut && shouldAnimate ? "recsDesc-fade-out1" : ""}`}
           >
@@ -138,7 +137,7 @@ const RecommendationDesc = ({
         </div>
       </div>
       <div
-        className={`mt-2 text-gray-400 md:text-left sm:text-center font-semibold text-sm ${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
+        className={`mt-2 text-gray-400 sm:text-left font-semibold lg:text-sm sm:text-xs ${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"}
                     ${animate && shouldAnimate ? "recsDesc-fade-in2" : ""} 
                     ${animateOut && shouldAnimate ? "recsDesc-fade-out2" : ""}`}
       >

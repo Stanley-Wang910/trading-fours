@@ -29,6 +29,7 @@ function RecommendationsList({
   const [visibleButtons, setVisibleButtons] = useState({});
   const [animate, setAnimate] = useState(false);
   const [showPlaylistRecs, setShowPlaylistRecs] = useState(false);
+  const [showToggleToolTip, setShowToggleToolTip] = useState(false);
   // const [recommendationsArray, setRecommendationsArray] = useState([]);
 
   const scrollContainerRef = useRef(null);
@@ -221,7 +222,7 @@ function RecommendationsList({
           demo={demo}
         />
         <div
-          className={`${demo ? "w-[35vw] " : "lg:ml-[0vh]  w-3/4 flex flex-col h-full "} `}
+          className={`${demo ? "w-[35vw] " : "lg:ml-[0vh] sm:ml-4  w-3/4 flex flex-col h-full "} `}
         >
           {isShuffling ? (
             <div className="">
@@ -341,7 +342,7 @@ function RecommendationsList({
                     onClick={handleLoadMore}
                   >
                     <div
-                      className={` opacity-0 z-50 px-4 py-2 bg-custom-brown  shadow-xl font-bold rounded-full hover:bg-yellow-700 
+                      className={` opacity-0 z-50 px-4 py-2 bg-custom-brown shadow-xl font-bold rounded-full hover:bg-yellow-700 
                         ${animate ? "loadMore-fade-up opacity-0" : ""} 
                         ${animateOut ? "loadMore-fade-out opacity-100" : ""}
                         `}
@@ -375,29 +376,49 @@ function RecommendationsList({
           )}
         </div>
         {!demo && (
-          <div className="relative top-1/2 -translate-y-[5vh] right-0 ml-4 md:mr-[2vw]">
-            <button
+          <div className=" relative top-1/2 -translate-y-[5vh] right-0 lg:ml-4 sm:ml-1 lg:mr-[2vw] overflow-x-visible">
+            <div
               className={`opacity-0 relative inline-block 
                   ${animate ? "playlistToggle-fade-in opacity-0" : ""} 
                   ${animateOut ? "playlistToggle-fade-out opacity-100" : ""}
                   `}
             >
-              <svg
-                onClick={handleShowPlaylistsToggle}
-                fill="#ffffff"
+              <motion.svg
+                onClick={() => {
+                  setTimeout(() => {
+                    handleShowPlaylistsToggle();
+                  }, 50);
+                }}
+                whileTap={{ rotate: -10, transition: { duration: 0.05 } }}
+                whileHover={{
+                  fill: "#fbbf24",
+                  scale: 1.05,
+                  rotate: 10,
+                  transition: { duration: 0.1 },
+                }}
+                onHoverStart={() => {
+                  setShowToggleToolTip(true);
+                }}
+                onHoverEnd={() => {
+                  setShowToggleToolTip(false);
+                }}
+                fill="#cbd5e1"
                 width="28px"
                 height="28px"
-                className="transition-all hover:fill-custom-brown hover:scale-110 hover:rotate-6"
+                className="cursor-pointer focus:outline-none"
                 viewBox="0 0 22 22"
                 xmlns="http://www.w3.org/2000/svg"
                 id="memory-music-note"
               >
                 <path d="M11 2H18V7H13V18H12V19H11V20H7V19H6V18H5V14H6V13H7V12H11V2M11 15H10V14H8V15H7V17H8V18H10V17H11V15Z" />
-              </svg>
-              <div className="absolute top-1/2 left-[100%] transform -translate-y-1/2 px-2 py-1 text-custom-brown text-xs font-semi-bold opacity-0 pointer-events-none transition-opacity duration-300 tooltip">
-                Unpack Me!
+              </motion.svg>
+              <div
+                className={`absolute top-0 left-0 translate-y-[3vh] py-2 text-amber-400 text-[0.75em] font-bold
+                  ${showToggleToolTip ? "opacity-100" : "opacity-0"} pointer-events-none transition-opacity duration-300 tooltip`}
+              >
+                {showPlaylistRecs ? "Tracks" : "Playlists"}
               </div>
-            </button>
+            </div>
           </div>
         )}
       </div>
