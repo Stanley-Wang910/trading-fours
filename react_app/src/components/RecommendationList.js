@@ -105,36 +105,57 @@ function RecommendationsList({
         setIsShuffling(false);
       }
     }, 500);
-  }, [query, setAnimateOut, setIsLoading, onRecommendations, setIsShuffling]);
+  }, [
+    query,
+    setAnimateOut,
+    setIsLoading,
+    onRecommendations,
+    setIsShuffling,
+    setIsLocalLoading,
+    userPlaylistIds,
+    setLastActionShuffle,
+  ]);
 
   // Handler for clicking like
-  const handleTrackRecommend = async (index) => {
-    setLastActionShuffle(false);
-    const trackID = recommendationsArray[index];
-    console.log("Clicked like", index, trackID);
+  const handleTrackRecommend = useCallback(
+    async (index) => {
+      setLastActionShuffle(false);
+      const trackID = recommendationsArray[index];
+      console.log("Clicked like", index, trackID);
 
-    setAnimateOut(true);
-    setTimeout(async () => {
-      setIsLocalLoading(true);
-      setIsLoading(true);
-      onQueryChange(trackID);
+      setAnimateOut(true);
+      setTimeout(async () => {
+        setIsLocalLoading(true);
+        setIsLoading(true);
+        onQueryChange(trackID);
 
-      try {
-        const response = await axios.post(
-          `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${trackID}`,
-          { userPlaylistIds },
-          { withCredentials: true }
-        );
-        onRecommendations(response.data || []);
-      } catch (error) {
-        console.error("Error fetching search results", error);
-        onRecommendations([]);
-      }
-      setIsLocalLoading(false);
-      setIsLoading(false);
-      setAnimateOut(false);
-    }, 500);
-  };
+        try {
+          const response = await axios.post(
+            `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${trackID}`,
+            { userPlaylistIds },
+            { withCredentials: true }
+          );
+          onRecommendations(response.data || []);
+        } catch (error) {
+          console.error("Error fetching search results", error);
+          onRecommendations([]);
+        }
+        setIsLocalLoading(false);
+        setIsLoading(false);
+        setAnimateOut(false);
+      }, 500);
+    },
+    [
+      setAnimateOut,
+      setIsLoading,
+      onQueryChange,
+      onRecommendations,
+      setIsLocalLoading,
+      setIsShuffling,
+      setLastActionShuffle,
+      userPlaylistIds,
+    ]
+  );
 
   useEffect(() => {
     loaded.forEach((index) => {
@@ -222,7 +243,7 @@ function RecommendationsList({
           demo={demo}
         />
         <div
-          className={`${demo ? "w-[35vw] " : "lg:ml-[0vh] sm:ml-4  w-3/4 flex flex-col h-full "} `}
+          className={`${demo ? "w-[35vw] " : "lg:ml-4 sm:ml-4  w-3/4 flex flex-col h-full "} `}
         >
           {isShuffling ? (
             <div className="">
@@ -376,7 +397,7 @@ function RecommendationsList({
           )}
         </div>
         {!demo && (
-          <div className=" relative top-1/2 -translate-y-[5vh] right-0 lg:ml-4 sm:ml-1 lg:mr-[2vw] overflow-x-visible">
+          <div className=" relative top-1/2 -translate-y-[5vh] right-0 lg:ml-4 sm:ml-1 lg:mr-[1.5vw] overflow-x-visible">
             <div
               className={`opacity-0 relative inline-block 
                   ${animate ? "playlistToggle-fade-in opacity-0" : ""} 

@@ -329,7 +329,7 @@ class RecEngine:
         top_genres_names = list(top_genres.index.str.replace('track_genre_', ''))
         total_genres_sum = final_playlist_vector[genre_columns].iloc[0].sum()
 
-        top_genres_ratios = {genre_name: top_genres[f'track_genre_{genre_name}'] / total_genres_sum for genre_name in top_genres_names}
+        top_genres_ratios = {genre_name: float(top_genres[f'track_genre_{genre_name}'] / total_genres_sum) for genre_name in top_genres_names}
 
         # for genre, ratio in top_genres_ratios.items():
         #     print(f"{genre}: {ratio:.2%}")

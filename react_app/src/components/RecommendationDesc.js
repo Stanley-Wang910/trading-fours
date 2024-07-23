@@ -40,10 +40,10 @@ const RecommendationDesc = ({
   return (
     <div
       className={`
-        w-auto max-w-[40vw] mx-auto mt-10 lg:ml-[3vw] sm:ml-0.5 h-auto 
+        w-auto max-w-[40vw] mx-auto mt-10 lg:ml-[1.5vw] sm:ml-0.5 h-auto 
         `}
     >
-      <div className="flex flex-col md:flex-row sm:items-start lg:items-start sm:space-y-2 lg:space-y-4 md:space-y-0 md:space-x-6 ">
+      <div className="flex flex-col md:flex-row sm:items-start lg:items-start sm:space-y-2 lg:space-y-4 md:space-y-0 md:space-x-4 ">
         <div // Image
           className={`${isShuffling || lastActionShuffle ? "opacity-100" : "opacity-0"} w-full lg:w-[12vw] sm:w-[15vw] max-w-xs
                 ${animate && shouldAnimate ? "recsDesc-fade-in" : ""} 

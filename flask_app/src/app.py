@@ -13,7 +13,6 @@ import spotipy
 from spotipy import Spotify
 from spotify_client import SpotifyClient
 from rec_engine import RecEngine
-from genre_class import GenreClassifier
 from datetime import datetime, timedelta
 import pandas as pd
 import mysql.connector
@@ -21,6 +20,7 @@ from dotenv import load_dotenv
 import os
 from sql_work import SQLWork
 from session_store import SessionStore
+from load_gc import load_model
 import csv
 
 import random
@@ -41,9 +41,10 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
 sql_work = SQLWork()
 session_store = SessionStore()
-# Initialize Genre Class Model
-gc = GenreClassifier()
-class_items = gc.load_model()
+class_items = load_model()
+
+
+
 
 # Generate a random state string
 def generate_random_string(length=16):
@@ -60,7 +61,7 @@ def auth_login():
         'response_type': 'code',
         'client_id': os.getenv('SPOTIFY_CLIENT_ID'),
         'scope': scope,
-        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
         'state': state
     }
     url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
@@ -91,7 +92,7 @@ def auth_callback():
     auth_data = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': 'http://localhost:3000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
     }
     response = requests.post('https://accounts.spotify.com/api/token', data=auth_data, headers=auth_header)
     print(f"Token exchange response: {response.status_code}, {response.text}")
@@ -612,6 +613,6 @@ if __name__ == '__main__':
     global playlist_vectors # Set up how to intermittently update during production runtime e.g. use Celery
     rec_dataset = sql_work.get_dataset()
     playlist_vectors = sql_work.get_playlist_vectors()
-    playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
+    # playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
 
     app.run(debug=True, port=5000)

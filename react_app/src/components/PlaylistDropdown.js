@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import clsx from "clsx";
 
@@ -46,7 +46,6 @@ function PlaylistDropdown({
         );
         setPlaylists(response.data || []);
         console.log(response);
-        setUserPlaylistIds(playlists.map((item) => item[1]));
       } catch (error) {
         console.error("Error fetching playlists", error);
       }
@@ -54,6 +53,10 @@ function PlaylistDropdown({
 
     fetchPlaylists();
   }, []); // dropdownRefunt
+
+  useEffect(() => {
+    setUserPlaylistIds(playlists.map((item) => item[1]));
+  }, [playlists]); // This effect runs whenever playlists changes
 
   // Effect hook to fcus on searchbar when Dropdown Opens
   useEffect(() => {
@@ -108,33 +111,44 @@ function PlaylistDropdown({
     };
   }, [searchQuery, mousePosition]);
 
-  const handlePlaylistSelect = async (id) => {
-    // Why is this not Callback?
-    setLastActionShuffle(false);
-    setSelectedPlaylist(id);
-    setIsOpen(false);
-    setAnimateOut(true);
-    setTimeout(async () => {
-      console.log(userPlaylistIds);
-      setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on searchdropdownRef
-      setIsLoading(true); // Set the global loading state to true : for loading animation
-      onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
-      try {
-        const response = await axios.post(
-          `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${id}`,
-          { userPlaylistIds },
-          { withCredentials: true }
-        );
-        onRecommendations(response.data || []);
-      } catch (error) {
-        console.error("Error fetching search results", error);
-        onRecommendations([]);
-      }
-      setIsLocalLoading(false); // Set the local loading state to false
-      setIsLoading(false);
-      setAnimateOut(false);
-    }, 500); // Change based on the recommendation animation times
-  };
+  const handlePlaylistSelect = useCallback(
+    async (id) => {
+      // Why is this not Callback?
+      setLastActionShuffle(false);
+      setSelectedPlaylist(id);
+      setIsOpen(false);
+      setAnimateOut(true);
+      setTimeout(async () => {
+        console.log("User saved playlists", userPlaylistIds);
+        setIsLocalLoading(true); // Set the local loading state to true : for the playbutton change on searchdropdownRef
+        setIsLoading(true); // Set the global loading state to true : for loading animation
+        onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
+        try {
+          const response = await axios.post(
+            `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${id}`,
+            { userPlaylistIds },
+            { withCredentials: true }
+          );
+          onRecommendations(response.data || []);
+        } catch (error) {
+          console.error("Error fetching search results", error);
+          onRecommendations([]);
+        }
+        setIsLocalLoading(false); // Set the local loading state to false
+        setIsLoading(false);
+        setAnimateOut(false);
+      }, 500); // Change based on the recommendation animation times
+    },
+    [
+      onQueryChange,
+      onRecommendations,
+      setIsLoading,
+      setAnimateOut,
+      setIsLocalLoading,
+      userPlaylistIds,
+      setLastActionShuffle,
+    ]
+  );
 
   const handleKeyDown = (e) => {
     if (!isOpen) return;

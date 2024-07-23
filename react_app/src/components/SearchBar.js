@@ -77,6 +77,9 @@ function SearchBar({
       onRecommendations,
       setIsLoading,
       setAnimateOut,
+      setLastActionShuffle,
+      userPlaylistIds,
+      setUserPlaylistIds,
     ]
   );
 

@@ -2,7 +2,10 @@
 __pycache__/
 .cache-*
 myenv/
+venv/
 .cache
 .flask_session/
 flask_app/src/*.csv
 flask_app/tests/csv_dumps
+.vscode/
+.pytest_cache/
