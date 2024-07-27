@@ -94,7 +94,7 @@ function Greeting() {
     const fetchUser = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/user`,
+          `${process.env.REACT_APP_BACKEND_URL}/t4/user`,
           { withCredentials: true }
         );
         console.log(response.data);

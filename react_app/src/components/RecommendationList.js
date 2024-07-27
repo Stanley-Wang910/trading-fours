@@ -90,7 +90,7 @@ function RecommendationsList({
 
       try {
         const response = await axios.post(
-          `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${query}`,
+          `${process.env.REACT_APP_BACKEND_URL}/t4/recommend?link=${query}`,
           { userPlaylistIds },
           { withCredentials: true }
         );
@@ -131,7 +131,7 @@ function RecommendationsList({
 
         try {
           const response = await axios.post(
-            `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${trackID}`,
+            `${process.env.REACT_APP_BACKEND_URL}/t4/recommend?link=${trackID}`,
             { userPlaylistIds },
             { withCredentials: true }
           );

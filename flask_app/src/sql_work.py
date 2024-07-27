@@ -19,16 +19,19 @@ class SQLWork:
         self.MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD")
         self.MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE")
         print(self.MYSQL_DATABASE)
-        self.pool =  mysql.connector.pooling.MySQLConnectionPool(
-            host=self.MYSQL_HOST,
-            port=self.MYSQL_PORT,
-            user=self.MYSQL_USER,
-            passwd=self.MYSQL_PASSWORD,
-            database=self.MYSQL_DATABASE,
-            pool_name="pool",
-            pool_size=5,
-        )
-
+        try:
+            self.pool =  mysql.connector.pooling.MySQLConnectionPool(
+                host=self.MYSQL_HOST,
+                port=self.MYSQL_PORT,
+                user=self.MYSQL_USER,
+                passwd=self.MYSQL_PASSWORD,
+                database=self.MYSQL_DATABASE,
+                pool_name="pool",
+                pool_size=5,
+            )
+        except mysql.connector.Error as e:
+            print(f"Error connecting to MySQL: {e}")
+        
     @contextmanager
     def get_cursor(self):
         connection = self.pool.get_connection()
@@ -56,9 +59,19 @@ class SQLWork:
             except mysql.connector.Error as e:
                 print(f"Error getting dataset from database: {e}")
                 retries -= 1
+                print(f"Retries left: {retries}")
+                time.sleep(5)
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+                retries -= 1
+                print(f"Retries left: {retries}")
                 time.sleep(5)
             finally:
-                connection.close()
+                if 'connection' in locals() and connection.is_connected():
+                    connection.close()
+                    print("Connection closed.")
+        print("Failed to get dataset after multiple retries.")
+        return None
         
     def get_user_data(self, sp):
 

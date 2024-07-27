@@ -41,7 +41,7 @@ function PlaylistDropdown({
     const fetchPlaylists = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/search`,
+          `${process.env.REACT_APP_BACKEND_URL}/t4/search`,
           { withCredentials: true }
         );
         setPlaylists(response.data || []);
@@ -125,7 +125,7 @@ function PlaylistDropdown({
         onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
         try {
           const response = await axios.post(
-            `${process.env.REACT_APP_BACKEND_URL}/recommend?link=${id}`,
+            `${process.env.REACT_APP_BACKEND_URL}/t4/recommend?link=${id}`,
             { userPlaylistIds },
             { withCredentials: true }
           );

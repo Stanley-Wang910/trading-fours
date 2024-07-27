@@ -27,7 +27,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "t4": "concurrently \"cd ../flask_app/src && flask run\" \"react-scripts start\""
+    "t4": "concurrently \"cd ../flask_app/src && python app.py\" \"react-scripts start\""
   },
   "proxy": "http://localhost:5000",
   "eslintConfig": {

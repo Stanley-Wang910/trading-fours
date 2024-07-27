@@ -1,5 +1,5 @@
 # Use the official Node.js image
-FROM node:20.11.1-alpine
+FROM node:20.11.1-alpine as build
 
 # Set the working directory
 WORKDIR /app
@@ -16,11 +16,11 @@ COPY . .
 # Build the React app
 RUN npm run build
 
-# Install a simple HTTP server to serve the static files
+FROM node:20.11.1-alpine
+WORKDIR /app
+COPY --from=build /app/build ./build
 RUN npm install -g serve
-
-# Make port 3000 available to the world outside this container
 EXPOSE 3000
+CMD ["serve", "-s", "build", "-l", "3000"]
 
-# Serve the React app
-CMD ["serve", "-s", "build"]
+

@@ -166,7 +166,6 @@ class SpotifyClient:
 
 
         audio_features_df = pd.DataFrame(audio_features_list) # Consider filling none with 0
-        audio_features_df.to_csv('../tests/csv_dumps/audio_features.csv', index=False)
 
         # Select specific columns for the audio features DataFrame
         selected_columns = ['id', 'danceability', 'energy', 'key', 'loudness', 'mode', 'speechiness', 'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo', 'duration_ms', 'time_signature']
@@ -327,7 +326,6 @@ class SpotifyClient:
         
         data_df[columns_to_scale] = scaler.transform(data_df[columns_to_scale])
             
-        data_df.to_csv('data.csv', index=False)     
         # Predict the genre labels using the model
         predictions_encoded = model.predict(data_df)
         
@@ -345,7 +343,6 @@ class SpotifyClient:
         # Return the data DataFrame with predicted genre labels
         print('<- sp:predict()')
 
-        data.to_csv('data_Genre.csv', index=False)    
         
         return data
 

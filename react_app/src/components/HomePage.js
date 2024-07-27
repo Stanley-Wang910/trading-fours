@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
-import Lottie from "lottie-react";
-import ScrollPromptAni from "../animations/ScrollPromptAni.json";
 import { TextGenerateEffect } from "./ui/text-generate-effect.tsx";
 import { motion, useMotionValue, useMotionTemplate } from "framer-motion";
 import GlossyContainer from "./GlossyContainer.js";
@@ -12,8 +10,6 @@ import { HoverBorderGradient } from "./ui/hover-border-gradient.tsx";
 import AnimatedCounter from "./AnimatedCounter.js";
 import useScrollAnimation from "./ScrollAnimation.js";
 import useDelayAnimation from "./DelayAnimation.js";
-import SearchBar from "./SearchBar.js";
-import RecommendationsList from "./RecommendationList.js";
 import DemoContainer from "./DemoContainer.js";
 
 import "../styles/Components/HomePage.css";
@@ -30,11 +26,6 @@ export default function HomePage() {
     "1UbwpyozDvufPs6aNPW3ti",
     "6zMQAgnWYRvzNIQGfjmXad",
     "5GUYJTQap5F3RDQiCOJhrS",
-    // "1",
-    // "1",
-    // "1",
-    // "1",
-    // "1",
   ];
   const [trackIds, setTrackIds] = useState(DEFAULT_TRACK_IDS);
   const [totalRecs, setTotalRecs] = useState(0);
@@ -161,7 +152,7 @@ export default function HomePage() {
     const getRandomRecs = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/random-recommendations`,
+          `${process.env.REACT_APP_BACKEND_URL}/t4/random-recommendations`,
           { withCredentials: true }
         );
         if (response.data && response.data.length > 0) {
@@ -206,7 +197,7 @@ export default function HomePage() {
     const getTotalRecs = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/total-recommendations`,
+          `${process.env.REACT_APP_BACKEND_URL}/t4/total-recommendations`,
           { withCredentials: true }
         );
         const [total, hourly] = response.data;
@@ -228,7 +219,7 @@ export default function HomePage() {
     const getTrendingGenres = async () => {
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/trending-genres`,
+          `${process.env.REACT_APP_BACKEND_URL}/t4/trending-genres`,
           { withCredentials: true }
         );
         setTrendingGenres(response.data || []);
@@ -340,30 +331,6 @@ export default function HomePage() {
             </div>
             , solo-dev Spotify recommender, <br />
             meant to inspire your streamlined discovery of good music. <br />
-            {/* <div className="mt-2 pl-4 inline-flex">
-              <ul className="list-decimal list-inside marker:text-amber-400">
-                <li>
-                  Connect your{" "}
-                  <div className="relative inline-block">
-                    <button
-                      href="https://github.com/Stanley-Wang910/spotify-rec-engine"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover-effect-link"
-                      data-replace="Spotify"
-                      onClick={() =>
-                        (window.location.href = `${process.env.REACT_APP_BACKEND_URL}/auth/login`)
-                      }
-                    >
-                      <span>Spotify</span>
-                    </button>
-                  </div>
-                  .
-                </li>
-                <li>Enter a playlist or song.</li>
-                <li>Discover a new sound.</li>
-              </ul>
-            </div> */}
             <div className="absolute mt-6 translate-x-[0vw]">
               <HoverBorderGradient
                 containerClassName="rounded-xl"
@@ -381,8 +348,6 @@ export default function HomePage() {
               </HoverBorderGradient>
             </div>
           </div>
-
-          {/* <ScrollPrompt /> */}
         </div>
 
         <div className="flex flex-col">
@@ -414,10 +379,6 @@ export default function HomePage() {
       <div ref={scrollDemoRef} className="h-1 w-full mt-[80vh] absolute" />
 
       <div className="relative mt-[10vh]">
-        {/* <Lottie
-          animationData={ScrollPromptAni}
-          className="w-[2vw] absolute translate-x-[5vw] translate-y-[-10vh]"
-        /> */}
         <motion.div
           className="mb-6 translate-x-[10vw] montserrat-reg w-full text-lg flex-col flex"
           initial={{ opacity: 0 }}
@@ -479,12 +440,6 @@ export default function HomePage() {
                           : "rgb(203 213 225)",
                     }} // Using Tailwind colors: amber-400 and slate-400
                     transition={{ duration: 0.3 }}
-                    onMouseEnter={() => {
-                      console.log("hovered on new songs");
-                    }}
-                    onMouseLeave={() => {
-                      console.log("hovered off new songs");
-                    }}
                   >
                     This Week's Trending Genres
                   </motion.div>
@@ -547,8 +502,9 @@ export default function HomePage() {
               }}
             >
               <GlossyContainer gradientColor="from-slate-700/50 to-slate-900">
-                <div className="text-sm montserrat-reg text-slate-300  py-3 px-3 ">
+                <div className="w-full flex flex-col justify-center items-start  overflow-hidden">
                   <motion.div
+                    className="text-sm montserrat-reg text-slate-300 pl-3 pt-3 "
                     animate={{
                       opacity: isTotalRecsVisible && !isSwapped ? 1 : 0,
                       color:
@@ -568,13 +524,13 @@ export default function HomePage() {
                   </motion.div>
                 </div>
                 <motion.div
-                  className={`text-5xl pl-4 lato-regular  inline-flex 
+                  className={`text-5xl pl-4 lato-regular inline-flex items-center mt-[0.5em] 
                   }`}
                   animate={{
                     scale: isTotalRecsHovered && !isSwapped ? 1.08 : 1,
                     opacity: isTotalRecsVisible && !isSwapped ? 1 : 0,
                     x: isTotalRecsHovered && !isSwapped ? -10 : 0,
-                    y: isTotalRecsHovered && !isSwapped ? -3 : 0,
+                    y: isTotalRecsHovered && !isSwapped ? "-2vh" : "-1.5vh",
                     color:
                       isTotalRecsHovered && !isSwapped
                         ? "rgb(203,213,225)" //slate-300
@@ -598,7 +554,7 @@ export default function HomePage() {
                     console.log("hovered off Total Recs Counter");
                   }}
                 >
-                  <span className="tracking-tight">
+                  <span className="tracking-tight ">
                     <AnimatedCounter
                       value={Number(totalRecs) || 0}
                       isCountVisible={isTotalRecsVisible}
@@ -606,7 +562,9 @@ export default function HomePage() {
                   </span>
                 </motion.div>
 
-                <div className={`text-sm right-4 lato-regular absolute`}>
+                <div
+                  className={`text-sm right-4 lato-regular absolute  bottom-0`}
+                >
                   <motion.div
                     animate={{
                       opacity: isTotalRecsVisible && !isSwapped ? 1 : 0,

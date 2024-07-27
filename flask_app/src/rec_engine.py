@@ -132,8 +132,8 @@ class RecEngine:
             top_ratios,
             weights
         )
-        print("Top 3 Artists:", top_3_artists)
         if top_3_artists:
+            print("Top 3 Artists:", top_3_artists)
             artist_recs = self.get_artist_recs(
                 rec_dataset,
                 top_3_artists, 
@@ -239,7 +239,7 @@ class RecEngine:
         )
 
         artist_recs_df = artist_recs_df.sort_values(by='similarity', ascending=False)
-        artist_recs_df.to_csv('artist_recs.csv', index=False)
+        # artist_recs_df.to_csv('artist_recs.csv', index=False)
 
         # print("Time taken to get artist recommendations:", time.time() - start_time)
         print("<- re:get_artist_recs()")
@@ -504,7 +504,7 @@ class RecEngine:
                 artist_index += 1 # Move to next unique, unused artist
 
         recommended_ids = recommended_songs['track_id'].tolist()
-        recommended_songs.to_csv('recommended_songs.csv')
+        # recommended_songs.to_csv('recommended_songs.csv')
         
         print("Finalized recommendations... :", time.time() - start_time, "s")
         print('<- re:finalize_update_recommendations()')

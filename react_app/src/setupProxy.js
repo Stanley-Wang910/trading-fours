@@ -8,18 +8,16 @@ module.exports = function (app) {
     createProxyMiddleware({
       target: "http://localhost:5000",
       changeOrigin: true,
-      logLevel: 'debug', // Add logging for troubleshooting
-    }),
+      logLevel: "debug", // Add logging for troubleshooting
+    })
   );
 
   app.use(
-    "/recommend",
+    "/t4",
     createProxyMiddleware({
       target: "http://localhost:5000",
       changeOrigin: true,
-      logLevel: 'debug', // Add logging for troubleshooting
-
-    }),
+      logLevel: "debug", // Add logging for troubleshooting
+    })
   );
 };
-

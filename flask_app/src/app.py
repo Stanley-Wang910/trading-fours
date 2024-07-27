@@ -34,8 +34,15 @@ load_dotenv()
 app = Flask(__name__)
 app.config["JSON_SORT_KEYS"] = False # Prevent jsonify from sorting keys in dict - Fix to top_ratios genre reordering
 
-CORS(app, supports_credentials=True, origins="http://localhost:3000")
+PROD = os.getenv('PROD')
+if PROD == 'True':
+    API_URL = os.getenv('API_URL')
+else: 
+    API_URL = 'localhost:3000'
 
+print(API_URL)
+
+CORS(app, supports_credentials=True, origins=[API_URL, "http://localhost:3000"])
 
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
@@ -43,7 +50,19 @@ sql_work = SQLWork()
 session_store = SessionStore()
 class_items = load_model()
 
+rec_dataset = None
+playlist_vectors = None
 
+def create_app():
+    global rec_dataset
+    global playlist_vectors # Set up how to intermittently update during production runtime e.g. use Celery
+
+    # Check if running in the reloader process
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        rec_dataset = sql_work.get_dataset()
+        playlist_vectors = sql_work.get_playlist_vectors()
+        
+    return app
 
 
 # Generate a random state string
@@ -61,7 +80,7 @@ def auth_login():
         'response_type': 'code',
         'client_id': os.getenv('SPOTIFY_CLIENT_ID'),
         'scope': scope,
-        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': f'http://{API_URL}/auth/callback', #5000 for production, 3000 for dev
         'state': state
     }
     url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
@@ -92,7 +111,7 @@ def auth_callback():
     auth_data = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': 'http://localhost:5000/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': f'http://{API_URL}/auth/callback', #5000 for production, 3000 for dev
     }
     response = requests.post('https://accounts.spotify.com/api/token', data=auth_data, headers=auth_header)
     print(f"Token exchange response: {response.status_code}, {response.text}")
@@ -112,14 +131,13 @@ def auth_callback():
 
         re = RecEngine(sp, unique_id, sql_work)
 
-        # Re-evaluate if this needs to be recalculated each time
         # Check from SQL
         user_top_tracks, user_top_artists = check_user_top_data_session(unique_id, re)
 
         print("Login time:", time.time() - start_time)  
        
         # Redirecting or handling logic here
-        return redirect('http://localhost:3000/')
+        return redirect(f'http://{API_URL}/')
     else:
         return "Error in token exchange", response.status_code
 
@@ -144,8 +162,6 @@ def logout():
     print("Logout route reached")
     session_store.remove_user_data(session.get('unique_id'))
     print("User data removed from session store")
-    # session_store.clear_user_cache(session.get('unique_id'))
-    # print("User cache cleared")
     session.clear()
     response = jsonify({"message": "Logout successful"})
     response.status_code = 200
@@ -269,7 +285,7 @@ def get_track_data_session(unique_id, link):
 
 def save_playlist_data_session(unique_id, playlist, p_features, link, if_public, re, sp):
     p_vector = re.playlist_vector(playlist) # Get playlist vector
-    p_vector.to_csv('p_vector.csv', index=False)
+    # p_vector.to_csv('p_vector.csv', index=False)
     top_genres, top_ratios = re.get_top_genres(p_vector) # Getting from playlist vector returns weighted genre weights based on date added
     display_genres = get_display_genres(playlist)
     p_features.update({
@@ -339,7 +355,7 @@ def get_display_genres(playlist, dominance_threshold=0.6, secondary_threshold=0.
 
     return dict(display_genres) # Return all genres if reached
 
-@app.route('/recommend', methods=['POST'])
+@app.route('/t4/recommend', methods=['POST'])
 def recommend():
 
     start_finish_time = time.time()
@@ -378,8 +394,6 @@ def recommend():
             print("Extracted type_id in %s seconds", (time.time() - start_time))
             session['type_id'] = type_id
 
-        # type_id = 'playlist'
-
     rec_redis_key = f'{unique_id}:{link}:{type_id}'
     # print(rec_redis_key)
     
@@ -410,12 +424,11 @@ def recommend():
                 'total_duration_ms': int(playlist['duration_ms'].sum()),
                 'avg_popularity': playlist['popularity'].mean(),
             })
-            ##
+
             if data['public']:
                 if_public = 'public'
             else:
                 if_public = 'private'
-            ##
 
             # append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
             p_vector, p_features, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, p_features, link, if_public, re, sp) # Save Playlist data to session
@@ -524,43 +537,30 @@ def recommend():
             'id': link
         })
 
-@app.route('/search', methods=['GET'])
+@app.route('/t4/search', methods=['GET'])
 def autocomplete_playlist():
     unique_id = session.get('unique_id')
     playlists = sql_work.get_unique_user_playlist(unique_id)
     return jsonify(playlists)
 
-@app.route('/user', methods=['GET'])
+@app.route('/t4/user', methods=['GET'])
 def get_user_data():
     unique_id = session.get('unique_id')
     display_name = session.get('display_name')
     return jsonify({'unique_id': unique_id, 'display_name': display_name})
 
-@app.route('/favorited', methods=['POST'])
-def save_favorited():
-    data = request.get_json()
-    favorited_tracks = data.get('favoritedTracks', [])
-    recommendation_id = data.get('recommendationID')
-    if favorited_tracks:
-        unique_id = session.get('unique_id')
-        print(unique_id)
-        sql_work.add_liked_tracks(unique_id, recommendation_id, favorited_tracks)
-        return jsonify({'message': 'Favorited tracks saved successfully'})
-    else:
-        return jsonify({'message': 'No favorited tracks provided'})
-
-@app.route('/total-recommendations', methods=['GET'])
+@app.route('/t4/total-recommendations', methods=['GET'])
 def get_total_recommendations():
     total_recommendations, hourly_recs = session_store.get_total_recs()
     print("Total recommendations:", total_recommendations, "Hourly recommendations:", hourly_recs)
     return jsonify([total_recommendations, hourly_recs])
 
-@app.route('/random-recommendations', methods=['GET'])
+@app.route('/t4/random-recommendations', methods=['GET'])
 def get_random_recommendations():
     random_recs = session_store.get_random_recs()
     return jsonify(random_recs)
 
-@app.route('/trending-genres', methods=['GET'])
+@app.route('/t4/trending-genres', methods=['GET'])
 def get_trending_genres():
     trending_genres = session_store.get_trending_genres()
     return jsonify(trending_genres)
@@ -590,29 +590,24 @@ def populate_seed_playlist_recs(sp, re):
 
 @app.route('/test') ### Keep for testing new features
 def test():
-    if is_token_expired():
-        if not refresh_token():
-            return redirect('/auth/login')
-    unique_id: str = session.get('unique_id')
-    access_token: str = session.get('access_token')
+    # if is_token_expired():
+    #     if not refresh_token():
+    #         return redirect('/auth/login')
+    # unique_id: str = session.get('unique_id')
+    # access_token: str = session.get('access_token')
 
-    # # Create Spotify client and RecEngine instance
-    sp = SpotifyClient(Spotify(auth=access_token))
-    re = RecEngine(sp, unique_id, sql_work)
+    # # # Create Spotify client and RecEngine instance
+    # sp = SpotifyClient(Spotify(auth=access_token))
+    # re = RecEngine(sp, unique_id, sql_work)
 
-    # session_store.update_total_recs(-13457)
-    jsonified_top_3 = get_trending_genres()
-
-    return jsonified_top_3
-
-
+    return {"hello": "world"}
 
 
 if __name__ == '__main__':
-    global rec_dataset
-    global playlist_vectors # Set up how to intermittently update during production runtime e.g. use Celery
-    rec_dataset = sql_work.get_dataset()
-    playlist_vectors = sql_work.get_playlist_vectors()
-    # playlist_vectors.to_csv('../tests/csv_dumps/playlist_vectors.csv', index=False)
+    app = create_app()
+    if PROD == 'True':
+        app.run(host='127.0.0.1', port=5000)
+    else:
+        app.run(host='127.0.0.1', port=5000, debug=True)
 
-    app.run(debug=True, port=5000)
+    # host='0.0.0.0', port=5000, debug=True
