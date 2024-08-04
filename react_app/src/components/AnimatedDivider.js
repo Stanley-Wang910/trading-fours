@@ -32,4 +32,4 @@ const AnimatedDivider = ({
   );
 };
 
-export default AnimatedDivider;
+export default React.memo(AnimatedDivider);

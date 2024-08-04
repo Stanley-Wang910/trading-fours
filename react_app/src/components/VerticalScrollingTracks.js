@@ -1,6 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
-import { motion } from "framer-motion";
 import { cn } from "../utils/cn.ts";
 
 export const VerticalScrollingTracks = ({
@@ -95,4 +93,4 @@ export const VerticalScrollingTracks = ({
   );
 };
 
-export default VerticalScrollingTracks;
+export default React.memo(VerticalScrollingTracks);

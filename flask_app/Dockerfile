@@ -17,6 +17,8 @@ EXPOSE 5000
 
 # Define environment variable
 ENV PYTHONPATH=/app
+ENV FLASK_APP=app.py
+
 
 # Run app.py when the container launches
 CMD ["python", "app.py"]

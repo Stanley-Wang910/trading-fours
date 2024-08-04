@@ -6,14 +6,11 @@ services:
     # ports:
     #   - "5000:5000"
     container_name: backend
-    env_file:
-      - ./flask_app/.env
+   
   client:
     build: 
       dockerfile: Dockerfile    
       context: ./react_app
     # ports:
     #   - "3000:3000"
-    env_file:
-      - ./react_app/.env
-
+  

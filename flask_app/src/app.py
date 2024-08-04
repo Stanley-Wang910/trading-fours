@@ -38,7 +38,7 @@ PROD = os.getenv('PROD')
 if PROD == 'True':
     API_URL = os.getenv('API_URL')
 else: 
-    API_URL = 'localhost:3000'
+    API_URL = 'http://localhost:3000'
 
 print(API_URL)
 
@@ -57,13 +57,10 @@ def create_app():
     global rec_dataset
     global playlist_vectors # Set up how to intermittently update during production runtime e.g. use Celery
 
-    # Check if running in the reloader process
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-        rec_dataset = sql_work.get_dataset()
-        playlist_vectors = sql_work.get_playlist_vectors()
+    rec_dataset = sql_work.get_dataset()
+    playlist_vectors = sql_work.get_playlist_vectors()
         
-    return app
-
+    return app, rec_dataset, playlist_vectors
 
 # Generate a random state string
 def generate_random_string(length=16):
@@ -80,7 +77,7 @@ def auth_login():
         'response_type': 'code',
         'client_id': os.getenv('SPOTIFY_CLIENT_ID'),
         'scope': scope,
-        'redirect_uri': f'http://{API_URL}/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': f'{API_URL}/auth/callback', #5000 for production, 3000 for dev
         'state': state
     }
     url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
@@ -111,7 +108,7 @@ def auth_callback():
     auth_data = {
         'grant_type': 'authorization_code',
         'code': code,
-        'redirect_uri': f'http://{API_URL}/auth/callback', #5000 for production, 3000 for dev
+        'redirect_uri': f'{API_URL}/auth/callback', #5000 for production, 3000 for dev
     }
     response = requests.post('https://accounts.spotify.com/api/token', data=auth_data, headers=auth_header)
     print(f"Token exchange response: {response.status_code}, {response.text}")
@@ -137,7 +134,7 @@ def auth_callback():
         print("Login time:", time.time() - start_time)  
        
         # Redirecting or handling logic here
-        return redirect(f'http://{API_URL}/')
+        return redirect(f'{API_URL}/')
     else:
         return "Error in token exchange", response.status_code
 
@@ -604,7 +601,7 @@ def test():
 
 
 if __name__ == '__main__':
-    app = create_app()
+    app, rec_dataset, playlist_vectors = create_app()
     if PROD == 'True':
         app.run(host='127.0.0.1', port=5000)
     else:

@@ -118,4 +118,4 @@ const GlossyContainer = ({
   );
 };
 
-export default GlossyContainer;
+export default React.memo(GlossyContainer);

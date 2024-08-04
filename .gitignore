@@ -12,7 +12,6 @@ flask_app/tests/csv_dumps
 # Elastic Beanstalk Files
 .elasticbeanstalk
 .elasticbeanstalk/*
-!.elasticbeanstalk/*.cfg.yml
-!.elasticbeanstalk/*.global.yml
+.platform/*
 .*ignore
 docker-compose-prod.yml

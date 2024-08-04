@@ -1,0 +1,13 @@
+# Docker Compose Build for Prod
+version: '3'
+services:
+  backend:
+    image: public.ecr.aws/l5q8r9o9/trading-fours:backend-latest
+    network_mode: host
+    env_file:
+    - ./flask_app/.env
+  client:
+    image: public.ecr.aws/l5q8r9o9/trading-fours:frontend-latest
+    network_mode: host
+    env_file:
+      - ./react_app/.env

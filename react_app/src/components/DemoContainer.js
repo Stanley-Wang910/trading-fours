@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import GlossyContainer from "./GlossyContainer";
 import RecommendationsList from "./RecommendationList";
@@ -26,6 +26,23 @@ const DemoContainer = ({
       window.removeEventListener("resize", checkScreenSize);
     };
   }, []);
+
+  const containerAnimationProps = useMemo(
+    () => ({
+      x: isDemoVisible ? "51vw" : "56vw",
+      opacity: isDemoVisible ? 1 : 0,
+    }),
+    [isDemoVisible]
+  );
+
+  const handleHoverStart = useCallback(() => {
+    setIsDemoContainerHovered(true);
+  }, [setIsDemoContainerHovered]);
+
+  const handleHoverEnd = useCallback(() => {
+    setIsDemoContainerHovered(false);
+  }, [setIsDemoContainerHovered]);
+
   const mockRecommendations = {
     playlist: "Demo Playlist",
     top_genres: ["Pop", "Rock", "Electronic"],
@@ -43,17 +60,10 @@ const DemoContainer = ({
         <motion.div
           className={`absolute z-20 inline-flex ${isDemoVisible ? "cursor-events-auto" : "cursor-events-none invisible user-select-none lg:block hidden"}`}
           initial={{ scale: 1.0, x: "54vw", opacity: 0 }}
-          animate={{
-            x: isDemoVisible ? "51vw" : "56vw",
-            opacity: isDemoVisible ? 1 : 0,
-          }}
+          animate={containerAnimationProps}
           transition={{ duration: 1, ease: [0.22, 0.68, 0.31, 1.0] }}
-          onHoverStart={() => {
-            setIsDemoContainerHovered(true);
-          }}
-          onHoverEnd={() => {
-            setIsDemoContainerHovered(false);
-          }}
+          onHoverStart={handleHoverStart}
+          onHoverEnd={handleHoverEnd}
         >
           <GlossyContainer
             className="relative md:w-[40vw] h-[70vh] opacity-[100%]"
@@ -133,4 +143,4 @@ const DemoContainer = ({
   );
 };
 
-export default DemoContainer;
+export default React.memo(DemoContainer);

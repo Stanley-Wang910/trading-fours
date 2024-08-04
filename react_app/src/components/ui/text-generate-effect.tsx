@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from "react";
 import { motion, stagger, useAnimate } from "framer-motion";
 import { cn } from "../../utils/cn.ts";
 
-export const TextGenerateEffect = ({
+const TextGenerateEffect = ({
   words,
   isVisible = true,
   className,
@@ -77,3 +77,5 @@ export const TextGenerateEffect = ({
     </div>
   );
 };
+
+export default React.memo(TextGenerateEffect);

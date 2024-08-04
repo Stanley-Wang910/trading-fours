@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const AnimatedCounter = ({
   value,
@@ -52,4 +52,4 @@ const AnimatedCounter = ({
   );
 };
 
-export default AnimatedCounter;
+export default React.memo(AnimatedCounter);

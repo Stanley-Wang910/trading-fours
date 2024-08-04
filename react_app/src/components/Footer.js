@@ -1,16 +1,24 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { motion } from "framer-motion";
 
 const Footer = () => {
   const [isHovered, setIsHovered] = useState(false);
 
-  const handleScrollToTop = () => {
+  const handleScrollToTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     window.open(
       "https://posidovega.com/jazz-lingo#:~:text=of%20the%20tune.-,Trading%204s,-(or%208s%2C%202s",
       "_blank"
     );
-  };
+  }, []);
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
   return (
     <>
@@ -24,8 +32,8 @@ const Footer = () => {
             <button
               onClick={handleScrollToTop}
               className="svg-short mb-2  justify items-col over"
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
             >
               <svg
                 className="absolute top-0"
@@ -98,7 +106,7 @@ const Footer = () => {
             rel="noopener noreferrer"
             className=" relative inline-block text-gray-400 hover:text-custom-brown transition-all duration-300 hover:translate-x-[-5px] "
           >
-            Github |
+            GitHub |
           </a>
           <a
             href="https://www.linkedin.com/in/stanley910/"

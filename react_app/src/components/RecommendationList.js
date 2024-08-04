@@ -231,7 +231,7 @@ function RecommendationsList({
 
   return (
     <div
-      className={`relative ${demo ? "w-[35vw] z-0" : "h-[75vh] mt-10 overflow-hidden "}`}
+      className={`relative ${demo ? "w-[35vw]  z-0" : "h-[75vh] mt-10 overflow-hidden "}`}
     >
       <div className="flex justify-center h-full">
         <RecommendationDesc
@@ -372,26 +372,28 @@ function RecommendationsList({
                     </div>
                   </motion.button>
                 )}
-                <motion.button
-                  className="rounded-full"
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handleShuffle}
-                >
-                  <div
-                    className={` opacity-0 z-50 px-4 py-2 bg-custom-brown  shadow-xl font-bold rounded-full hover:bg-yellow-700 
+                {!demo && (
+                  <motion.button
+                    className="rounded-full"
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleShuffle}
+                  >
+                    <div
+                      className={` opacity-0 z-50 px-4 py-2 bg-custom-brown  shadow-xl font-bold rounded-full hover:bg-yellow-700 
                     ${animate ? "shuffle-fade-up opacity-0" : ""} 
                     ${animateOut ? "shuffle-fade-out opacity-100" : ""}
                   `}
-                  >
-                    <img
-                      src="/arrow.png"
-                      alt="Arrow"
-                      style={{ transform: "scaleX(0.9)" }}
-                      width={20}
-                      height={20}
-                    />
-                  </div>
-                </motion.button>
+                    >
+                      <img
+                        src="/arrow.png"
+                        alt="Arrow"
+                        style={{ transform: "scaleX(0.9)" }}
+                        width={20}
+                        height={20}
+                      />
+                    </div>
+                  </motion.button>
+                )}
               </div>
             </>
           )}

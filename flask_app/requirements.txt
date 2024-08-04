@@ -28,3 +28,4 @@ tzdata==2024.1
 urllib3==2.2.2
 Werkzeug==3.0.3
 xgboost==2.1.0
+gunicorn==22.0.0
