@@ -66,47 +66,47 @@ function PlaylistDropdown({
   }, [isOpen]); // Runs when isOpen changes
 
   // Effect hook to handle mouse movement and clicks outside the dropdown
+  // const checkMousePosition = useCallback(() => {
+  //   if (listRef.current) {
+  //     const listRect = listRef.current.getBoundingClientRect();
+  //     const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  //     const isOutsideListVertically =
+  //       mousePosition.y < listRect.top + scrollTop ||
+  //       mousePosition.y > listRect.bottom + scrollTop;
+
+  //     if (isOutsideListVertically) {
+  //       // console.log("Mouse is outside the list vertically");
+  //       setShowImagePreview(false);
+  //     }
+  //   }
+  // }, [mousePosition]);
+
+  const handleMouseMove = useCallback((event) => {
+    setMousePosition({ x: event.pageX, y: event.pageY });
+    setHasMouseMoved(true); // Set to true when mouse moves
+  }, []);
+
+  const handleClickOutside = useCallback((event) => {
+    if (
+      dropdownRef.current &&
+      !dropdownRef.current.contains(event.target) &&
+      listRef.current &&
+      !listRef.current.contains(event.target)
+    ) {
+      setIsOpen(false);
+      setShowImagePreview(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const checkMousePosition = () => {
-      if (listRef.current) {
-        const listRect = listRef.current.getBoundingClientRect();
-        const scrollTop = window.scrollY || document.documentElement.scrollTop;
-        const isOutsideListVertically =
-          mousePosition.y < listRect.top + scrollTop ||
-          mousePosition.y > listRect.bottom + scrollTop;
-
-        if (isOutsideListVertically) {
-          // console.log("Mouse is outside the list vertically");
-          setShowImagePreview(false);
-        }
-      }
-    };
-
-    const handleMouseMove = (event) => {
-      setMousePosition({ x: event.pageX, y: event.pageY });
-      setHasMouseMoved(true); // Set to true when mouse moves
-    };
-
-    const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target) &&
-        listRef.current &&
-        !listRef.current.contains(event.target)
-      ) {
-        setIsOpen(false);
-        setShowImagePreview(false);
-      }
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
+    // window.addEventListener("mousemove", handleMouseMove);
     document.addEventListener("mousedown", handleClickOutside);
 
     // Check mouse position when the search query changes
-    checkMousePosition();
+    // checkMousePosition();
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
+      // window.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [searchQuery, mousePosition]);
@@ -271,6 +271,10 @@ function PlaylistDropdown({
           }
         )}
         ref={listRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => {
+          setShowImagePreview(false);
+        }}
       >
         <li className="px-3 py-2">
           <input
@@ -358,4 +362,4 @@ function PlaylistDropdown({
   );
 }
 
-export default PlaylistDropdown;
+export default React.memo(PlaylistDropdown);
