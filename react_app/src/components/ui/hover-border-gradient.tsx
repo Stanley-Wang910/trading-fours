@@ -6,7 +6,7 @@ import { cn } from "../../utils/cn.ts";
 
 type Direction = "TOP" | "LEFT" | "BOTTOM" | "RIGHT";
 
-export function HoverBorderGradient({
+function HoverBorderGradient({
   children,
   containerClassName,
   className,
@@ -97,3 +97,5 @@ export function HoverBorderGradient({
     </Tag>
   );
 }
+
+export default React.memo(HoverBorderGradient);

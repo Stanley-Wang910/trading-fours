@@ -560,6 +560,8 @@ def get_random_recommendations():
 @app.route('/t4/trending-genres', methods=['GET'])
 def get_trending_genres():
     trending_genres = session_store.get_trending_genres()
+    if len(trending_genres) == 0:
+        trending_genres = None
     return jsonify(trending_genres)
 
 

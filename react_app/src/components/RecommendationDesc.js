@@ -198,4 +198,4 @@ const RecommendationDesc = ({
   );
 };
 
-export default RecommendationDesc;
+export default React.memo(RecommendationDesc);

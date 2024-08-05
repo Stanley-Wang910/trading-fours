@@ -1,8 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+
+// This is causing the page to not finish loading
 
 const VideoEmbed = ({ isVisible, id, title, className = "" }) => {
   const [isHovering, setIsHovering] = useState(false);
+  const isMounted = useRef(true);
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+
+      // Delay cleanup for 5 seconds
+      setTimeout(() => {
+        if (!isMounted.current) {
+          // Clean up Youtube related stuff
+          const youtubeIframe = document.querySelector(
+            `iframe[src*="youtube.com/embed/${id}"]`
+          );
+          if (youtubeIframe) {
+            youtubeIframe.remove();
+          }
+        }
+      }, 5000);
+    };
+  }, [id]);
+
   return (
     <motion.div
       className={`aspect-[16/9] ${className}`}
@@ -32,7 +54,7 @@ const VideoEmbed = ({ isVisible, id, title, className = "" }) => {
       />
       <iframe
         className="w-full h-full rounded-lg"
-        src={`https://www.youtube.com/embed/${id}`}
+        // src={`https://www.youtube.com/embed/${id}`}
         title={title}
         // frameBorder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

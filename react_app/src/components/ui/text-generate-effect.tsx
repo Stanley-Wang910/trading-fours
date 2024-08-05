@@ -26,7 +26,7 @@ const TextGenerateEffect = ({
   const wordsArray = linesArray.map(line => line.split(" "));
 
     const animateText = useCallback(async () => {
-      if (isVisible) {
+      if (isVisible && scope.current) {
         for (let i = 0; i < wordsArray.length; i++) {
           await animate(
             `div[data-line="${i}"] span`,

@@ -176,4 +176,4 @@ function Greeting() {
   );
 }
 
-export default Greeting;
+export default React.memo(Greeting);

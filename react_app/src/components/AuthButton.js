@@ -41,4 +41,4 @@ function AuthButton({ token, setToken, setRecommendations }) {
   );
 }
 
-export default AuthButton;
+export default React.memo(AuthButton);

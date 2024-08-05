@@ -3,11 +3,13 @@ import { motion } from "framer-motion";
 import VideoEmbed from "./VideoEmbed.js";
 import AnimatedDivider from "./AnimatedDivider.js";
 
-function Showcase({ isDiv2Visible, isVideoEmbedVisible }) {
+function Showcase({ isDiv2Visible, isVideoEmbedVisible, token }) {
   return (
-    <div className="mt-[8vh] sm:translate-x-[5vw] lg:translate-x-0">
+    <div
+      className={`mt-[8vh] sm:translate-x-[5vw] lg:translate-x-0 ${isDiv2Visible ? "" : "cursor-events-none invisible user-select-none"}`}
+    >
       <motion.div
-        className="mb-6  montserrat-reg w-full text-lg flex-col flex translate-x-[10vw] translate-y-5"
+        className={`mb-6  montserrat-reg w-full text-lg flex-col flex translate-x-[10vw] translate-y-5 `}
         initial={{ opacity: 0 }}
         animate={{ opacity: isDiv2Visible ? 1 : 0 }}
         transition={{ duration: 0.5, ease: "easeInOut" }}

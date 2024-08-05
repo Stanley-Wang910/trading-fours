@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 
 const GlossyContainer = ({
@@ -12,40 +12,62 @@ const GlossyContainer = ({
   shadow = true,
 }) => {
   const containerRef = useRef(null);
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isHovering, setIsHovering] = useState(false);
-  const [opacity, setOpacity] = useState(0);
+  const mousePosition = useRef({ x: 0, y: 0 });
+  const isHovering = useRef(false);
+  const opacity = useRef(0);
+  const gradientRef = useRef(null);
+  const borderRef = useRef(null);
 
-  useEffect(() => {
-    const handleMouseMove = (event) => {
+  const updateGradient = useCallback(() => {
+    if (gradientRef.current) {
+      gradientRef.current.style.background = `radial-gradient(circle ${radius}px at ${mousePosition.current.x}px ${mousePosition.current.y}px, rgba(125,20,205,${brightness}), transparent 80%)`;
+      gradientRef.current.style.opacity = opacity.current;
+    }
+  }, [brightness, radius]);
+
+  const handleMouseMove = useCallback(
+    (event) => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-        setMousePosition({ x, y });
+        mousePosition.current = { x, y };
 
         // Calculate rotation based on mouse position
         const rotateX = ((y - rect.height / 2) / rect.height) * degree; //
         const rotateY = ((x - rect.width / 2) / rect.width) * degree; //
 
         containerRef.current.style.transform = `perspective(1000px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
+
+        updateGradient();
       }
-    };
+    },
+    [degree, updateGradient]
+  );
 
-    const handleMouseEnter = () => {
-      setIsHovering(true);
-      setOpacity(1);
-    };
+  const handleMouseEnter = useCallback(() => {
+    isHovering.current = true;
+    opacity.current = 1;
+    if (borderRef.current) {
+      borderRef.current.style.opacity = 1;
+    }
+    updateGradient();
+  }, [updateGradient]);
 
-    const handleMouseLeave = () => {
-      setIsHovering(false);
-      setOpacity(0);
-      if (containerRef.current) {
-        containerRef.current.style.transform =
-          "perspective(1000px) rotateX(0deg) rotateY(0deg)";
-      }
-    };
+  const handleMouseLeave = useCallback(() => {
+    isHovering.current = false;
+    opacity.current = 0;
+    if (containerRef.current) {
+      containerRef.current.style.transform =
+        "perspective(1000px) rotateX(0deg) rotateY(0deg)";
+    }
+    if (borderRef.current) {
+      borderRef.current.style.opacity = "0.5";
+    }
+    updateGradient();
+  }, [updateGradient]);
 
+  useEffect(() => {
     const container = containerRef.current;
     if (container) {
       container.addEventListener("mousemove", handleMouseMove);
@@ -60,11 +82,11 @@ const GlossyContainer = ({
         container.removeEventListener("mouseleave", handleMouseLeave);
       }
     };
-  }, []);
+  }, [handleMouseEnter, handleMouseLeave, handleMouseMove]);
 
-  const gradientStyle = {
-    background: `radial-gradient(circle ${radius}px at ${mousePosition.x}px ${mousePosition.y}px, rgba(125,20,205,${brightness}), transparent 80%)`,
-  };
+  // const gradientStyle = {
+  //   background: `radial-gradient(circle ${radius}px at ${mousePosition.x}px ${mousePosition.y}px, rgba(125,20,205,${brightness}), transparent 80%)`,
+  // };
 
   return (
     <motion.div
@@ -86,17 +108,19 @@ const GlossyContainer = ({
         }}
       >
         <div
+          ref={borderRef}
           className="absolute inset-0 z-30 rounded-lg pointer-events-none transition-opacity duration-500"
           style={{
             boxShadow: "inset 0 0 0 1.5px rgba(128, 128, 128, 0.2)",
-            opacity: isHovering ? 1 : 0.5,
+            opacity: 0.5,
           }}
         />
         <div
+          ref={gradientRef}
           className="absolute inset-0 pointer-events-none transition-opacity duration-500"
           style={{
-            ...gradientStyle,
-            opacity: opacity,
+            // ...gradientStyle,
+            opacity: 0,
             filter: "blur(40px)",
           }}
         />

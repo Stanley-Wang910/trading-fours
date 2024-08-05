@@ -56,4 +56,4 @@ const PopularityBar = ({
   );
 };
 
-export default PopularityBar;
+export default React.memo(PopularityBar);

@@ -4,14 +4,9 @@ import GlossyContainer from "./GlossyContainer";
 import RecommendationsList from "./RecommendationList";
 import SearchBar from "./SearchBar";
 
-const DemoContainer = ({
-  isDemoVisible,
-  isDemoContainerHovered,
-  setIsDemoContainerHovered,
-  searchAnimate,
-  recAnimate,
-}) => {
+const DemoContainer = ({ isDemoVisible, searchAnimate, recAnimate }) => {
   const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isDemoContainerHovered, setIsDemoContainerHovered] = useState(false);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -43,16 +38,29 @@ const DemoContainer = ({
     setIsDemoContainerHovered(false);
   }, [setIsDemoContainerHovered]);
 
-  const mockRecommendations = {
-    playlist: "Demo Playlist",
-    top_genres: ["Pop", "Rock", "Electronic"],
-    recommended_ids: [
-      "3BdHMOIA9B0bN53jbE5nWe", // Live from kitchen
-      "5WbfFTuIldjL9x7W6y5l7R", // Pol
-      "5DRnssBoVo8e7uAQZkNT8O",
-    ],
-  };
-  const noop = () => {};
+  const mockRecommendations = useMemo(() => {
+    return {
+      playlist: "Demo Playlist",
+      top_genres: ["Pop", "Rock", "Electronic"],
+      recommended_ids: [
+        "3BdHMOIA9B0bN53jbE5nWe", // Live from kitchen
+        "5WbfFTuIldjL9x7W6y5l7R", // Pol
+        "5DRnssBoVo8e7uAQZkNT8O",
+      ],
+    };
+  }, []);
+
+  const noop = useCallback(() => {}, []); // No-op function
+
+  const recommendationListAnimation = useMemo(
+    () => ({
+      x: recAnimate ? (isDemoContainerHovered ? "8%" : "12%") : "-10%",
+      y: recAnimate ? (isDemoContainerHovered ? "2%" : "10%") : "2%",
+      scale: isDemoContainerHovered ? 1 : 1,
+      opacity: searchAnimate ? 1 : 0,
+    }),
+    [isDemoContainerHovered, recAnimate, searchAnimate]
+  );
 
   return (
     <AnimatePresence>
@@ -110,17 +118,7 @@ const DemoContainer = ({
             </motion.div>
             <motion.div
               className="absolute pointer-events-auto mt-6"
-              animate={{
-                x: recAnimate
-                  ? isDemoContainerHovered
-                    ? "8%"
-                    : "12%"
-                  : "-10%",
-                y: recAnimate ? (isDemoContainerHovered ? "2%" : "10%") : "2%",
-
-                scale: isDemoContainerHovered ? 1 : 1,
-                opacity: searchAnimate ? 1 : 0,
-              }}
+              animate={recommendationListAnimation}
               transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
             >
               <RecommendationsList
@@ -135,6 +133,7 @@ const DemoContainer = ({
                 setAnimateOut={noop}
                 demo={true}
               />
+              ;
             </motion.div>
           </GlossyContainer>
         </motion.div>

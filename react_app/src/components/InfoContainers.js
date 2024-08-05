@@ -131,7 +131,7 @@ const InfoContainers = ({
   return (
     <>
       <motion.div // Background Glossy Container
-        className={`absolute z-30 inline-flex ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
+        className={`absolute z-30 inline-flex ${isTotalRecsVisible ? "cursor-pointer" : "cursor-events-none invisible user-select-none"}`}
         initial={{ scale: 1.0, opacity: 0 }}
         animate={{
           ...getBackgroundPosition(),
@@ -194,7 +194,7 @@ const InfoContainers = ({
       </motion.div>
 
       <motion.div
-        className={`relative z-30 inline-flex ${isTotalRecsVisible ? "cursor-pointer" : ""}`}
+        className={`relative z-30 inline-flex ${isTotalRecsVisible ? "cursor-pointer" : "cursor-events-none invisible user-select-none"}`}
         initial={{ scale: 1, opacity: 0 }}
         animate={{
           ...getForegroundPosition(),

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
+import AuthButton from "./AuthButton";
 
-const Navbar = ({ AuthButton }) => {
+const Navbar = ({ token, setToken, setRecommendations }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -171,11 +172,15 @@ const Navbar = ({ AuthButton }) => {
               />
             </svg>
           </a>
-          {AuthButton}
+          <AuthButton
+            token={token}
+            setToken={setToken}
+            setRecommendations={setRecommendations}
+          />
         </div>
       </div>
     </nav>
   );
 };
 
-export default Navbar;
+export default React.memo(Navbar);
