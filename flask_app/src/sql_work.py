@@ -45,17 +45,45 @@ class SQLWork:
         finally:
             cursor.close()
             connection.close()
-           
-    def get_dataset(self):
+
+
+
+    def get_dataset(self, top_genres, user_top_artists=None, track=False, artist_rec=False):
         print("-> get_dataset()")
         retries = 5 
         while retries > 0:
             try: 
-                connection = self.pool.get_connection()
+                with self.get_cursor() as cursor:
+                    if track == False:
+                        if artist_rec == False:
+                            print(top_genres)
+                            print([artist['artist_name'] for artist in user_top_artists])
+                            query = """
+                            SELECT * FROM rec_dataset WHERE artists IN ({}) OR track_genre IN ({})
+                            """.format(
+                                ','.join(['%s'] * len([artist['artist_name'] for artist in user_top_artists])),
+                                ','.join(['%s'] * len(top_genres))
+                            )
+                            # Flatten list of genre and artiist names to use as parameters
+                            params = [artist['artist_name'] for artist in user_top_artists] + top_genres
+                        else:
+                            query = """SELECT * FROM rec_dataset 
+                            WHERE artists IN ({}) AND track_genre NOT IN ({})
+                            """.format(
+                                ','.join(['%s'] * len(user_top_artists)),
+                                ','.join(['%s'] * len(top_genres))
+                            )
+                            params = user_top_artists + top_genres
+                    else:
+                        print("track = False")
+                        query = """SELECT * FROM rec_dataset WHERE track_genre = %s"""
+                        params = [top_genres]
 
-                rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", connection)
-                rec_dataset = rec_dataset.drop('id', axis=1)
-                return rec_dataset
+                    cursor.execute(query, params)
+                    rec_dataset = pd.DataFrame(cursor.fetchall())
+                    if 'id' in rec_dataset.columns:
+                        rec_dataset = rec_dataset.drop('id', axis=1)
+                    return rec_dataset
             except mysql.connector.Error as e:
                 print(f"Error getting dataset from database: {e}")
                 retries -= 1
@@ -72,6 +100,34 @@ class SQLWork:
                     print("Connection closed.")
         print("Failed to get dataset after multiple retries.")
         return None
+
+           
+    # def get_dataset(self):
+    #     print("-> get_dataset()")
+    #     retries = 5 
+    #     while retries > 0:
+    #         try: 
+    #             connection = self.pool.get_connection()
+
+    #             rec_dataset = pd.read_sql("SELECT * FROM rec_dataset", connection)
+    #             rec_dataset = rec_dataset.drop('id', axis=1)
+    #             return rec_dataset
+    #         except mysql.connector.Error as e:
+    #             print(f"Error getting dataset from database: {e}")
+    #             retries -= 1
+    #             print(f"Retries left: {retries}")
+    #             time.sleep(5)
+    #         except Exception as e:
+    #             print(f"Unexpected error: {e}")
+    #             retries -= 1
+    #             print(f"Retries left: {retries}")
+    #             time.sleep(5)
+    #         finally:
+    #             if 'connection' in locals() and connection.is_connected():
+    #                 connection.close()
+    #                 print("Connection closed.")
+    #     print("Failed to get dataset after multiple retries.")
+    #     return None
         
     def get_user_data(self, sp):
 

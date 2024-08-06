@@ -27,6 +27,7 @@ import random
 from sklearn.metrics.pairwise import cosine_similarity
 import time
 
+import utils as utils
 
 # Load environment variables
 load_dotenv()
@@ -46,21 +47,24 @@ CORS(app, supports_credentials=True, origins=[API_URL, "http://localhost:3000"])
 
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
-sql_work = SQLWork()
-session_store = SessionStore()
-class_items = load_model()
 
-
+@utils.log_memory_usage
 def create_app():
-    global rec_dataset
+    # global rec_dataset
     global playlist_vectors # Set up how to intermittently update during production runtime e.g. use Celery
 
-    rec_dataset = sql_work.get_dataset()
-    playlist_vectors = sql_work.get_playlist_vectors()
-        
-    return app
+    sql_work = SQLWork()
 
-app = create_app()
+    session_store = SessionStore()
+    
+    playlist_vectors = sql_work.get_playlist_vectors()
+
+    class_items = load_model()
+
+    return app, sql_work, session_store, class_items
+
+app, sql_work, session_store, class_items = create_app()
+
 
 # Generate a random state string
 def generate_random_string(length=16):
@@ -69,6 +73,7 @@ def generate_random_string(length=16):
 
 
 @app.route('/auth/login')
+@utils.log_memory_usage
 def auth_login():
     print("Login route reached")
     scope = "streaming user-read-email user-read-private user-follow-read playlist-read-private playlist-read-collaborative user-read-recently-played user-library-read user-top-read"
@@ -84,6 +89,7 @@ def auth_login():
     return redirect(url)
 
 @app.route('/auth/callback')
+@utils.log_memory_usage
 def auth_callback():
     print("Callback route reached")
     code = request.args.get('code')
@@ -142,6 +148,7 @@ def is_token_expired():
     return datetime.now().timestamp() > session.get('token_expires', 0)
         
 @app.route('/auth/token')
+@utils.log_memory_usage
 def get_token():
     access_token = session.get('access_token')
     refresh_token = session.get('refresh_token')
@@ -155,6 +162,7 @@ def get_token():
         return jsonify({'error': 'No token available'}), 401
 
 @app.route('/auth/logout')
+@utils.log_memory_usage
 def logout():
     print("Logout route reached")
     session_store.remove_user_data(session.get('unique_id'))
@@ -224,21 +232,25 @@ def check_user_top_data_session(unique_id, re):
     redis_key_top_tracks = f"{unique_id}:top_tracks"
     redis_key_top_artists = f"{unique_id}:top_artists"
     
-    user_top_tracks = session_store.get_data(redis_key_top_tracks)
-    user_top_artists = session_store.get_data(redis_key_top_artists)
+    with utils.track_memory_usage("user_top_tracks memory"):
+        user_top_tracks = session_store.get_data(redis_key_top_tracks)
+    with utils.track_memory_usage("user_top_artists memory"):
+        user_top_artists = session_store.get_data(redis_key_top_artists)
     if user_top_tracks:
         print("User top tracks found")
         ##Add recache function here
     else:
         print("User top tracks not found")
-        user_top_tracks = re.get_user_top_tracks()
+        with utils.track_memory_usage("re.get_user_top_tracks memory"):
+            user_top_tracks = re.get_user_top_tracks()
         session_store.set_user_top_data(redis_key_top_tracks, user_top_tracks)
         print("User top tracks saved")
     if user_top_artists:
         print("User top artists found")
     else:
         print("User top artists not found")
-        user_top_artists = re.get_user_top_artists()
+        with utils.track_memory_usage("re.get_user_top_artists memory"):
+            user_top_artists = re.get_user_top_artists()
         session_store.set_user_top_data(redis_key_top_artists, user_top_artists)
         print("User top artists saved")
     return user_top_tracks, user_top_artists
@@ -352,9 +364,10 @@ def get_display_genres(playlist, dominance_threshold=0.6, secondary_threshold=0.
 
     return dict(display_genres) # Return all genres if reached
 
-@app.route('/t4/recommend', methods=['POST'])
-def recommend():
 
+@app.route('/t4/recommend', methods=['POST'])
+@utils.log_memory_usage
+def recommend():
     start_finish_time = time.time()
     # Check if the access token is expired and refresh if necessary
     if is_token_expired():
@@ -363,12 +376,12 @@ def recommend():
 
     sp = SpotifyClient(Spotify(auth=session.get('access_token'))) # Initialize SpotifyClient
     unique_id = session.get('unique_id')
-    re = RecEngine(sp, unique_id, sql_work)
 
-    
+    re = RecEngine(sp, unique_id, sql_work)
+  
+
     saved_playlists_ids = request.json.get('userPlaylistIds')
     print(f"Length of user saved playlists: {len(saved_playlists_ids)}")
-
 
     link = request.args.get('link')
     # saved_playlists = request.json.get('playlists')
@@ -386,9 +399,7 @@ def recommend():
             print("Type ID exists in session", session.get('type_id'))
             type_id = session.get('type_id')
         else:
-            start_time = time.time()
             type_id, data = sp.get_id_type(link)
-            print("Extracted type_id in %s seconds", (time.time() - start_time))
             session['type_id'] = type_id
 
     rec_redis_key = f'{unique_id}:{link}:{type_id}'
@@ -413,9 +424,8 @@ def recommend():
             prev_p_rec_ids = []
             p_features = sp.playlist_base_features(playlist)
             playlist = sp.predict(playlist, type_id, class_items)
-            # playlist.to_csv('playlist.csv', index=False)
             track_ids = set(playlist['id'])
-            
+
             p_features.update({
                 'num_tracks': len(track_ids),
                 'total_duration_ms': int(playlist['duration_ms'].sum()),
@@ -429,19 +439,17 @@ def recommend():
 
             # append_to_dataset(playlist, type_id) # Append Playlist songs to dataset
             p_vector, p_features, top_genres, top_ratios = save_playlist_data_session(unique_id, playlist, p_features, link, if_public, re, sp) # Save Playlist data to session
+           
             print("Line 422, top ratios:", top_ratios)
             if len(track_ids) > 30: 
                 session_store.update_trending_genres(top_ratios)
-                trending_genres = session_store.get_trending_genres()
-                print(trending_genres)
+                # trending_genres = session_store.get_trending_genres()
+                # print(trending_genres)
 
-        
-        recommended_ids = re.recommend_by_playlist(rec_dataset, p_vector, track_ids, user_top_tracks, user_top_artists, class_items, top_genres, top_ratios, previously_recommended)
-        
-        start_time =  time.time()
+        recommended_ids = re.recommend_by_playlist(p_vector, track_ids, user_top_tracks, user_top_artists, class_items, top_genres, top_ratios, previously_recommended)
+            
         print("Length of user saved playlist ids:", len(saved_playlists_ids)) # Why is nothing here? 
         playlist_rec_ids = re.recommend_playist_to_playlist(link, p_vector, playlist_vectors, saved_playlists_ids, prev_p_rec_ids)
-        print("Time taken to get playlist recommendations:", time.time() - start_time)
 
 
     elif type_id == 'track':
@@ -475,7 +483,7 @@ def recommend():
             t_vector, t_features = save_track_data_session(unique_id, track, t_features, link, re, sp) # Save Track data to session
                
         # Get recommendations
-        recommended_ids = re.recommend_by_track(rec_dataset, t_vector, track_ids, user_top_tracks, class_items, previously_recommended)
+        recommended_ids = re.recommend_by_track(t_vector, track_ids, user_top_tracks, class_items, previously_recommended)
         
         start_time =  time.time()
         playlist_rec_ids = re.recommend_playist_to_playlist(link, t_vector, playlist_vectors, saved_playlists_ids, prev_p_rec_ids)
@@ -495,22 +503,22 @@ def recommend():
     session_store.set_prev_rec(rec_redis_key, prev_rec) # Update prev rec for user
 
     session_store.set_random_recs(list(updated_recommendations)) # Update random recs app wide
-    memory_usage = session_store.get_memory_usage(rec_redis_key)
-    print("Memory usage:", memory_usage, "bytes") 
-    stored_recommendations = session_store.get_data(rec_redis_key)
-    if stored_recommendations:
-        track_ids = stored_recommendations['track_ids']
-        prev_rec = stored_recommendations['recommended_ids']
-        duplicate_strings = len(set(prev_rec)) != len(prev_rec)
-        prev_rec_df = pd.DataFrame(prev_rec, columns=['prev_recommended_ids'])
-        print("Duplicate strings in recommended_ids:", duplicate_strings)
-        print("Length of track_ids:", len(track_ids))
-        print("Length of recommended_ids:", len(prev_rec))
-        print("Length of playlist rec ids:", len(updated_playlist_recommendations))
-    else:
-        print("Stored recommendations not found")
+    # memory_usage = session_store.get_memory_usage(rec_redis_key)
+    # print("Memory usage:", memory_usage, "bytes") 
+    # stored_recommendations = session_store.get_data(rec_redis_key)
+    # if stored_recommendations:
+    #     track_ids = stored_recommendations['track_ids']
+    #     prev_rec = stored_recommendations['recommended_ids']
+    #     duplicate_strings = len(set(prev_rec)) != len(prev_rec)
+    #     prev_rec_df = pd.DataFrame(prev_rec, columns=['prev_recommended_ids'])
+    #     print("Duplicate strings in recommended_ids:", duplicate_strings)
+    #     print("Length of track_ids:", len(track_ids))
+    #     print("Length of recommended_ids:", len(prev_rec))
+    #     print("Length of playlist rec ids:", len(updated_playlist_recommendations))
+    # else:
+    #     print("Stored recommendations not found")
         
-    start_time = time.time()    
+    start_time = time.time()
     session_store.update_total_recs(len(recommended_ids))
 
 
@@ -606,6 +614,6 @@ if __name__ == '__main__':
     if PROD == 'True':
         app.run(host='127.0.0.1', port=5000)
     else:
-        app.run(host='0.0.0.0', port=5000, debug=True)
+        app.run(host='0.0.0.0', port=5000)
 
     # host='0.0.0.0', port=5000, debug=True

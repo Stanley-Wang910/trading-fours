@@ -4,7 +4,10 @@ import time
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import datetime, timedelta
 from spotify_client import SpotifyClient
+# import gc
+# from memory_profiler import profile
 
+import utils as utils
 # ## for testing
 # import os
 # import sys
@@ -87,6 +90,7 @@ class RecEngine:
         # Return the top 10 results playlist_id
 
         print('<- re:recommend_playist_to_playlist()')
+        playlist_vectors.to_csv('playlist_vectors.csv')
         # Introduce a random element
         return playlist_vectors['playlist_id'].head(9).tolist()   # .sample(5).tolist()
 
@@ -94,7 +98,7 @@ class RecEngine:
 
     def recommend_by_playlist(
         self,
-        rec_dataset,
+        # rec_dataset,
         playlist_vector,
         p_track_ids,
         user_top_tracks,
@@ -109,82 +113,104 @@ class RecEngine:
         """
         print('-> re:recommend_by_playlist()')
 
-        # Prepare data for recommendation
-        playlist_vector, rec_dataset, ohe_rec_dataset, top_artists_tracks, ohe_top_artist_tracks = self.prepare_data(
-            self.sp,
-            rec_dataset,
-            playlist_vector,
-            p_track_ids,
-            recommended_ids,
-            [artist['artist_name'] for artist in user_top_artists] # user_top_artists names
-        )
+        with utils.track_memory_usage("get_dataset"):
+            rec_dataset = self.sql_cnx.get_dataset(top_genres, user_top_artists)
+            print(f"Memory usage of rec_dataset: {utils.mem_usage(rec_dataset)}")
+            print(len(rec_dataset))
+
+        # rec_dataset = rec_dataset[
+        #     rec_dataset['track_genre'].isin(top_genres) |
+        #     rec_dataset['artists'].isin([artist['artist_name'] for artist in user_top_artists])
+        # ].reset_index(drop=True)
+
+        with utils.track_memory_usage("prepare_data"):
+            # Prepare data for recommendation
+            playlist_vector, rec_dataset, ohe_rec_dataset, top_artists_tracks, ohe_top_artist_tracks = self.prepare_data(
+                self.sp,
+                rec_dataset,
+                playlist_vector,
+                p_track_ids,
+                recommended_ids,
+                [artist['artist_name'] for artist in user_top_artists] # user_top_artists names
+            )
+
 
         # Apply weights to the top genres
         weights = self.create_weights(top_genres, top_ratios)
-        ohe_rec_dataset = self.apply_weights(ohe_rec_dataset, weights)
+        with utils.track_memory_usage("ohe_rec_dataset"):
+            ohe_rec_dataset = self.apply_weights(ohe_rec_dataset, weights)
 
+        with utils.track_memory_usage("find_similar_artists"):
         # Find similar artists
-        top_3_artists = self.find_similar_artists(
-            top_artists_tracks,
-            ohe_top_artist_tracks,
-            playlist_vector,
-            top_genres,
-            top_ratios,
-            weights
-        )
-        if top_3_artists:
-            print("Top 3 Artists:", top_3_artists)
-            artist_recs = self.get_artist_recs(
-                rec_dataset,
-                top_3_artists, 
-                user_top_artists, 
-                playlist_vector, 
-                p_track_ids, 
-                recommended_ids, 
+            top_3_artists = self.find_similar_artists(
+                top_artists_tracks,
+                ohe_top_artist_tracks,
+                playlist_vector,
+                top_genres,
+                top_ratios,
                 weights
             )
 
-        # Get personalized vector
-        personalized_vector = self.get_personalized_vector(
-            playlist_vector,
-            weights,
-            user_top_tracks,
-            class_items
-        )
+        if top_3_artists:
+            print("Top 3 Artists:", top_3_artists)
+            with utils.track_memory_usage("get_artist_recs"):
+                artist_recs = self.get_artist_recs(
+                    rec_dataset,
+                    top_3_artists, 
+                    user_top_artists, 
+                    playlist_vector, 
+                    p_track_ids, 
+                    recommended_ids, 
+                    top_genres,
+                    weights
+                )
+        with utils.track_memory_usage("get_personalized_vector"):
+            # Get personalized vector
+            personalized_vector = self.get_personalized_vector(
+                playlist_vector,
+                weights,
+                user_top_tracks,
+                class_items
+            )
 
-        # Combine vectors
-        combined_vector = 0.7 * playlist_vector + 0.3 * personalized_vector
+        with utils.track_memory_usage("combined_vector"):
+            # Combine vectors
+            combined_vector = 0.7 * playlist_vector + 0.3 * personalized_vector
 
-        # Calculate similarity between combined and rec_dataset, return with ranked similarity
-        rec_dataset = self.calc_cosine_similarity(
-            rec_dataset,
-            ohe_rec_dataset,
-            combined_vector,
-            weights
-        )
+        with utils.track_memory_usage("calc_cosine_similarity"):
+            # Calculate similarity between combined and rec_dataset, return with ranked similarity
+            rec_dataset = self.calc_cosine_similarity(
+                rec_dataset,
+                ohe_rec_dataset,
+                combined_vector,
+                weights
+            )
 
         # Initialize an empty DataFrame to store top songs
         top_songs = pd.DataFrame()
 
         print("Selecting top songs...")
         # Select top songs from each genre based on similarity and add them to the top_songs DataFrame
-        for genre in top_genres:
-            genre_songs = rec_dataset[rec_dataset['track_genre'] == genre]
-            top_songs = pd.concat(
-                [top_songs, genre_songs.nlargest(90 // len(top_genres), 'similarity')]
-            )
+        
+        with utils.track_memory_usage("top_songs"):
+            for genre in top_genres:
+                genre_songs = rec_dataset[rec_dataset['track_genre'] == genre]
+                top_songs = pd.concat(
+                    [top_songs, genre_songs.nlargest(90 // len(top_genres), 'similarity')]
+                )
 
         # If no songs are found, return an empty list
         if top_songs.empty:
             return []
 
-        # Finalize and update the recommended songs
-        recommendations = self.finalize_update_recommendations(
-            top_songs,
-            'playlist',
-            artist_recs,
-            top_ratios
-        )
+        with utils.track_memory_usage("finalize_update_recommendations"):
+            # Finalize and update the recommended songs
+            recommendations = self.finalize_update_recommendations(
+                top_songs,
+                'playlist',
+                artist_recs,
+                top_ratios
+            )
 
         return recommendations
 
@@ -196,6 +222,7 @@ class RecEngine:
         playlist_vector, 
         p_track_ids, 
         recommended_ids, 
+        top_genres,
         weights
     ):
         """
@@ -210,6 +237,7 @@ class RecEngine:
             for artist in user_top_artists
             if artist['artist_name'] in top_3_artists
         ]
+        print(f"top_artist_ids: {top_artist_ids}")
         # Get artists related to the top 3 artists
         related_artists = self.get_related_artists(
             top_artist_ids,
@@ -221,6 +249,9 @@ class RecEngine:
 
         # Get related artist tracks
         related_artists_tracks = rec_dataset[rec_dataset['artists'].isin(related_artists)]
+        with utils.track_memory_usage("get_dataset artist_rec"):
+            add_rel_art_tracks = self.sql_cnx.get_dataset(top_genres, related_artists, artist_rec=True)
+        related_artists_tracks =  pd.concat([related_artists_tracks, add_rel_art_tracks], ignore_index=True)
         _, related_artists_tracks, related_artists_tracks_ohe = self.prepare_data(
             self.sp,
             related_artists_tracks,
@@ -239,7 +270,7 @@ class RecEngine:
         )
 
         artist_recs_df = artist_recs_df.sort_values(by='similarity', ascending=False)
-        # artist_recs_df.to_csv('artist_recs.csv', index=False)
+        artist_recs_df.to_csv('artist_recs.csv', index=False)
 
         # print("Time taken to get artist recommendations:", time.time() - start_time)
         print("<- re:get_artist_recs()")
@@ -253,7 +284,7 @@ class RecEngine:
         print('<- re:track_vector()')
         return track_vector
 
-    def recommend_by_track(self, rec_dataset, track_vector, track_id, user_top_tracks, class_items, recommended_ids=[]):
+    def recommend_by_track(self, track_vector, track_id, user_top_tracks, class_items, recommended_ids=[]):
         print('-> re:recommend_by_track()')
         
         # Get track genre and drop release date
@@ -263,6 +294,11 @@ class RecEngine:
             print(track_genre)
         if 'release_date' in track_vector.columns:
             track_vector = track_vector.drop(columns=['release_date'])
+
+        # Get dataset for track
+        with utils.track_memory_usage("get_dataset track_rec"):
+            rec_dataset = self.sql_cnx.get_dataset(track_genre, track=True)
+            print(len(rec_dataset))
 
         # Prepare data for recommendation
         track_vector, rec_dataset, ohe_rec_dataset  = self.prepare_data(self.sp, rec_dataset, track_vector, track_id, recommended_ids)
@@ -291,7 +327,7 @@ class RecEngine:
     def ohe_features(self, df):
         print('-> re:ohe_features()')
         # start_time = time.time() 
-        print(f"input df shape: {df.shape}, columns: {df.columns}") 
+        # print(f"input df shape: {df.shape}, columns: {df.columns}") 
         all_genres = pd.read_csv('../data/datasets/genre_counts.csv')
         df = pd.get_dummies(df, columns=['track_genre', 'mode', 'key'])  # One-hot encode the genre column
     
@@ -331,6 +367,8 @@ class RecEngine:
 
         top_genres_ratios = {genre_name: float(top_genres[f'track_genre_{genre_name}'] / total_genres_sum) for genre_name in top_genres_names}
 
+        print(top_genres_ratios)
+        print(top_genres_names)
         # for genre, ratio in top_genres_ratios.items():
         #     print(f"{genre}: {ratio:.2%}")
         # print(top_genres_ratios)
@@ -342,22 +380,38 @@ class RecEngine:
         print('-> re:prepare_data()')
         start_time = time.time()
         if rec_dataset is None:
-            print("rec_dataset is None")   
-        print(f"input rec_dataset shape: {rec_dataset.shape}, columns: {rec_dataset.columns}")
-        ohe_rec_dataset = self.ohe_features(rec_dataset)  # Save instance in SQL
+            print("rec_dataset is None") 
+        else:
+            print(f"memory usage of rec_dataset: {utils.mem_usage(rec_dataset)}")
+            
+        # print(f"input rec_dataset shape: {rec_dataset.shape}, columns: {rec_dataset.columns}")
+        with utils.track_memory_usage("ohe_features in prepare_data"):
+            ohe_rec_dataset = self.ohe_features(rec_dataset)  # Save instance in SQL
+            print(f"memory usage of ohe_rec_dataset: {utils.mem_usage(ohe_rec_dataset)}")
 
         if top_artist_names is not None:
             top_artist_tracks = rec_dataset[rec_dataset['artists'].isin(top_artist_names)]
             ohe_top_artist_tracks = ohe_rec_dataset[ohe_rec_dataset['track_id'].isin(top_artist_tracks['track_id'])]
 
-        # Exclude tracks from the ohe_rec_dataset that are already in the playlist track ids
-        ohe_rec_dataset = ohe_rec_dataset[~ohe_rec_dataset['track_id'].apply(lambda x: x in ids or x in recommended_ids)]
 
-        # Match ohe_rec_dataset and rec_dataset track ids
-        rec_dataset = rec_dataset.merge(ohe_rec_dataset[['track_id']], on='track_id')
+        # Exclude tracks from the ohe_rec_dataset that are already in the playlist track ids
+        # ohe_rec_dataset = ohe_rec_dataset[~ohe_rec_dataset['track_id'].apply(lambda x: x in ids or x in recommended_ids)]
         
+        with utils.track_memory_usage("filter ids"):
+            ids_set = set(list(ids) + recommended_ids)
+            ohe_rec_dataset = ohe_rec_dataset[~ohe_rec_dataset['track_id'].isin(ids_set)]
+            print(f"memory usage of ohe_rec_dataset after filter: {utils.mem_usage(ohe_rec_dataset)}")
+       
+        # Match ohe_rec_dataset and rec_dataset track ids
+        # rec_dataset = rec_dataset.merge(ohe_rec_dataset[['track_id']], on='track_id')
+        rec_dataset = rec_dataset[rec_dataset['track_id'].isin(ohe_rec_dataset['track_id'])]
+
+
         # Sort the columns of the final vector and final recommendation dataframe to have the same order
-        vector, ohe_rec_dataset = self.sort_columns(vector, ohe_rec_dataset)
+        with utils.track_memory_usage("sort columns"):
+            vector, ohe_rec_dataset = self.sort_columns(vector, ohe_rec_dataset)
+            print(f"memory usage of vector: {utils.mem_usage(vector)}")
+            print(f"memory usage of ohe_rec_dataset: {utils.mem_usage(ohe_rec_dataset)}")
 
         if top_artist_names is not None:
             ohe_top_artist_tracks = ohe_top_artist_tracks.reindex(columns=ohe_rec_dataset.columns)
@@ -516,8 +570,12 @@ class RecEngine:
         # Print none columns:
         print(vector.columns[vector.isnull().any()])
         common_cols = vector.columns.intersection(ohe_dataset.columns)
+        # vector.drop(columns=vector.columns.difference(common_cols), inplace=True)
+        # ohe_dataset.drop(columns=ohe_dataset.columns.difference(common_cols), inplace=True)
         vector = vector[common_cols]
         ohe_dataset = ohe_dataset[common_cols]
+
+
         return vector, ohe_dataset
 
     def clean_recommendations(self, df):

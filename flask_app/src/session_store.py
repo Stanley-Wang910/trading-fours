@@ -35,7 +35,6 @@ class SessionStore:
     def _get_sample_taken_key(self):
         return f'sample_taken:{self._get_date_key()}'
 
-
     def set_prev_rec(self, key, prev_rec):
         start_time = time.time()
         # data = {'track_ids': track_ids, 'recommended_ids': recommended_songs}
