@@ -15,10 +15,10 @@ WORKDIR /app/src
 # Make port 5000 available to the world outside this container
 EXPOSE 5000
 
-# Define environment variable
+
 ENV PYTHONPATH=/app
 ENV FLASK_APP=app.py
 
 
 # Run app.py when the container launches
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--config", "gunicorn.conf.py", "app:app"]

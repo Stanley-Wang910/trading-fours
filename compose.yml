@@ -5,8 +5,7 @@ services:
       context: ./flask_app
     # ports:
     #   - "5000:5000"
-    container_name: backend
-   
+    container_name: backend    
   client:
     build: 
       dockerfile: Dockerfile    
