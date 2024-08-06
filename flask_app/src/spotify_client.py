@@ -248,7 +248,7 @@ class SpotifyClient:
         except:
             pass  # Playlist not found or an error occurred
 
-        return 'unknown'
+        return 'unknown', None
 
     def rearrange_columns(self, df):
         """

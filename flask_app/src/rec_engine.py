@@ -291,7 +291,7 @@ class RecEngine:
     def ohe_features(self, df):
         print('-> re:ohe_features()')
         # start_time = time.time() 
-
+        print(f"input df shape: {df.shape}, columns: {df.columns}") 
         all_genres = pd.read_csv('../data/datasets/genre_counts.csv')
         df = pd.get_dummies(df, columns=['track_genre', 'mode', 'key'])  # One-hot encode the genre column
     
@@ -341,7 +341,9 @@ class RecEngine:
     def prepare_data(self, sp, rec_dataset, vector, ids, recommended_ids, top_artist_names=None):
         print('-> re:prepare_data()')
         start_time = time.time()
-
+        if rec_dataset is None:
+            print("rec_dataset is None")   
+        print(f"input rec_dataset shape: {rec_dataset.shape}, columns: {rec_dataset.columns}")
         ohe_rec_dataset = self.ohe_features(rec_dataset)  # Save instance in SQL
 
         if top_artist_names is not None:

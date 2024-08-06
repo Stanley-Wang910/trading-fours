@@ -50,8 +50,6 @@ sql_work = SQLWork()
 session_store = SessionStore()
 class_items = load_model()
 
-rec_dataset = None
-playlist_vectors = None
 
 def create_app():
     global rec_dataset
@@ -60,7 +58,9 @@ def create_app():
     rec_dataset = sql_work.get_dataset()
     playlist_vectors = sql_work.get_playlist_vectors()
         
-    return app, rec_dataset, playlist_vectors
+    return app
+
+app = create_app()
 
 # Generate a random state string
 def generate_random_string(length=16):
@@ -603,10 +603,9 @@ def test():
 
 
 if __name__ == '__main__':
-    app, rec_dataset, playlist_vectors = create_app()
     if PROD == 'True':
         app.run(host='127.0.0.1', port=5000)
     else:
-        app.run(host='127.0.0.1', port=5000, debug=True)
+        app.run(host='0.0.0.0', port=5000, debug=True)
 
     # host='0.0.0.0', port=5000, debug=True
