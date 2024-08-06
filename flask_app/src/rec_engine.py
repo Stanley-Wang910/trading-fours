@@ -90,7 +90,7 @@ class RecEngine:
         # Return the top 10 results playlist_id
 
         print('<- re:recommend_playist_to_playlist()')
-        playlist_vectors.to_csv('playlist_vectors.csv')
+        # playlist_vectors.to_csv('playlist_vectors.csv')
         # Introduce a random element
         return playlist_vectors['playlist_id'].head(9).tolist()   # .sample(5).tolist()
 
@@ -270,7 +270,7 @@ class RecEngine:
         )
 
         artist_recs_df = artist_recs_df.sort_values(by='similarity', ascending=False)
-        artist_recs_df.to_csv('artist_recs.csv', index=False)
+        # artist_recs_df.to_csv('artist_recs.csv', index=False)
 
         # print("Time taken to get artist recommendations:", time.time() - start_time)
         print("<- re:get_artist_recs()")

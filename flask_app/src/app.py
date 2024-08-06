@@ -47,7 +47,6 @@ CORS(app, supports_credentials=True, origins=[API_URL, "http://localhost:3000"])
 
 app.secret_key = os.getenv('FLASK_SECRET_KEY')
 
-
 @utils.log_memory_usage
 def create_app():
     # global rec_dataset
