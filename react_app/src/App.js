@@ -12,7 +12,26 @@ import axios from "axios";
 
 import "./App.css";
 
+const useMediaQuery = (query) => {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    window.addEventListener("resize", listener);
+    return () => window.removeEventListener("resize", listener);
+  }, [matches, query]);
+
+  return matches;
+};
+
 function App() {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const noop = () => {};
+
   // State variables
   const [token, setToken] = useState("");
   const [recommendations, setRecommendations] = useState([]);
@@ -71,6 +90,28 @@ function App() {
       });
     }
   }, [isLoading]); // Dependency on isLoading
+
+  if (isMobile) {
+    return (
+      <div className="App z-1 bg-gray-900 flex flex-col min-h-screen">
+        <Navbar
+          token={noop}
+          setToken={noop}
+          setRecommendations={noop}
+          isMobile={true}
+        />
+        <div className="phone-message">
+          <h1 className="text-xl text-tbold  text-amber-500">
+            Trading Fours is optimized for desktop and tablet.
+          </h1>
+          <br />
+          <p className="text-md  text-gray-300">
+            Please come back on a larger screen to enjoy the full experience.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="App z-1 bg-gray-900 flex flex-col min-h-screen">

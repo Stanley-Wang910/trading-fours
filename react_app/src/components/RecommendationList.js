@@ -146,13 +146,13 @@ function RecommendationsList({
                 // style={{ "--container-height": `${containerHeight}px` }}
                 // onScroll={(e) => setScrollPosition(e.target.scrollTop)}
               >
-                {showMeteors && !demo && (
+                {/* {showMeteors && !demo && (
                   <Meteors
                     number={25}
                     className="absolute inset-0 -translate-y-[4px]"
                     style={{ zIndex: -1 }}
                   />
-                )}
+                )} */}
                 <IFrames
                   recommendationsArray={recommendationsArray}
                   visibleEmbeds={visibleEmbeds}
