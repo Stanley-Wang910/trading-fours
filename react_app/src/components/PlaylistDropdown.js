@@ -11,6 +11,8 @@ function PlaylistDropdown({
   setLastActionShuffle,
   userPlaylistIds,
   setUserPlaylistIds,
+  lyds = false,
+  ily = false,
 }) {
   // State variables
   const [playlists, setPlaylists] = useState([]); // Holds list of playlists
@@ -64,6 +66,8 @@ function PlaylistDropdown({
       searchInputRef.current.focus({ preventScroll: true });
     }
   }, [isOpen]); // Runs when isOpen changes
+
+  console.log(lyds);
 
   // Effect hook to handle mouse movement and clicks outside the dropdown
   // const checkMousePosition = useCallback(() => {
@@ -225,7 +229,7 @@ function PlaylistDropdown({
   }, [isOpen, handleKeyDown, filteredPlaylists.length]);
 
   return (
-    <div ref={dropdownRef} className="relative w-full max-w-md">
+    <div ref={dropdownRef} className="relative w-full max-w-md ">
       <div className="dropdownButton relative inline-block">
         <button
           className={clsx(
@@ -257,8 +261,8 @@ function PlaylistDropdown({
             ></path>
           </svg>
         </button>
-        <div className="w-[115px] absolute top-1/2 left-full transform -translate-y-1/2 translate-x-2 ml-2 px-2 py-1 bg-gray-800 text-white text-xs font-semi-bold rounded opacity-0 pointer-events-none transition-opacity duration-300 tooltip">
-          My Saved Playlists
+        <div className=" whitespace-normal break-words w-[7em] absolute top-1/2 left-full transform -translate-y-1/2 translate-x-2 ml-2 px-2 py-1 bg-gray-800 text-white text-xs font-semibold rounded pointer-events-none  tooltip">
+          Your Library
         </div>
       </div>
 
@@ -279,7 +283,7 @@ function PlaylistDropdown({
         <li className="px-3 py-2">
           <input
             type="text"
-            placeholder="Search Playlists..."
+            placeholder={ily ? "<3" : lyds ? ";)" : "Search Playlists..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="px-3 py-2 w-full bg-gray-800 text-gray-300 rounded-md focus:outline-none text-sm"
@@ -293,7 +297,7 @@ function PlaylistDropdown({
             <li
               key={id}
               className={clsx(
-                "px-3 py-2 cursor-pointer text-gray-300 text-sm  border-b border-gray-500",
+                "px-3 py-2 cursor-pointer text-gray-300 text-sm font-semibold  border-b border-gray-500",
                 { "bg-gray-600": focusedIndex === index }
               )}
               onClick={() => handlePlaylistSelect(id)}

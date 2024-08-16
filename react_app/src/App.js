@@ -33,6 +33,8 @@ function App() {
   const noop = () => {};
 
   // State variables
+  const [ily, setIly] = useState(false);
+  const [lyds, setLyds] = useState(false);
   const [token, setToken] = useState("");
   const [recommendations, setRecommendations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -78,7 +80,15 @@ function App() {
   // Update Recommendations State
   const handleRecommendations = (data) => {
     console.log("Setting recommendations", data);
-    setRecommendations(data);
+    if (typeof data === "string" && (data === "ily" || data === "10/29")) {
+      setLyds(true);
+      if (data === "ily") {
+        setIly(true);
+      }
+      setRecommendations([]);
+    } else {
+      setRecommendations(data);
+    }
   };
 
   // Scroll to top when loading
@@ -129,7 +139,7 @@ function App() {
           <HomePage />
         ) : (
           <>
-            <Greeting />
+            <Greeting lyds={lyds} />
             <div className="main-container flex flex-col w-full mx-auto p-4 px-10">
               <div className="flex flex-col items-center">
                 <div className="search-container mt-16 mb-4 w-full max-w-lg z-20">
@@ -143,6 +153,8 @@ function App() {
                     setLastActionShuffle={setLastActionShuffle}
                     userPlaylistIds={userPlaylistIds}
                     setUserPlaylistIds={setUserPlaylistIds}
+                    lyds={lyds}
+                    ily={ily}
                   />
                 </div>
                 <div className="recommendations-container w-full justify-center items-center z-10">
@@ -165,6 +177,7 @@ function App() {
                         lastActionShuffle={lastActionShuffle}
                         setLastActionShuffle={setLastActionShuffle}
                         userPlaylistIds={userPlaylistIds}
+                        lyds={lyds}
                       />
                     </div>
                   )}

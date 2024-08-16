@@ -252,16 +252,30 @@ class SQLWork:
                     print(f"Updated {cursor.rowcount} playlists in the database")
 
                 # Batch insert new playlists
-                if insert_data:
-                    insert_query = """
-                    INSERT INTO playlists (playlist_id, name, image_url, owner_id, unique_id)
-                    VALUES (%s, %s, %s, %s, %s)
-                    """
+                      # Insert new playlists
+            if insert_data:
+                insert_query = """
+                INSERT INTO playlists (playlist_id, name, image_url, owner_id, unique_id)
+                VALUES (%s, %s, %s, %s, %s)
+                """
+                try:
                     cursor.executemany(insert_query, insert_data)
-                    print(f"Inserted {cursor.rowcount} playlists into the database")
+                    print(f"Inserted {cursor.rowcount} new playlists into the database")
+                except mysql.connector.IntegrityError as e:
+                    if e.errno == 1062:  # Duplicate entry error
+                        print("Duplicate playlist entry encountered. Inserting playlists one by one.")
+                        for playlist_data in insert_data:
+                            try:
+                                cursor.execute(insert_query, playlist_data)
+                            except mysql.connector.IntegrityError as inner_e:
+                                if inner_e.errno == 1062:
+                                    print(f"Skipping duplicate playlist: {playlist_data[0]}")
+                                else:
+                                    raise
+                    else:
+                        raise
 
-                print('Playlists added to database')
-
+            print('Playlists synchronized with database')
         except mysql.connector.Error as e:
             print(f"Error adding playlists to database: {e}")
             raise
@@ -751,3 +765,11 @@ class SQLWork:
     def close_sql(self):
         self.pool.closeall()
         print('All connections in pool closed')
+
+    def assert_hers(self, unique_id):
+        with self.get_cursor() as cursor:
+            cursor.execute("SELECT unique_id FROM users where display_name = 'lydialepki'")
+            hid = cursor.fetchone()
+            hid = hid['unique_id']
+            if hid is not None:
+                return unique_id == hid

@@ -28,7 +28,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import time
 
 import utils as utils
-
+import re
 # Load environment variables
 load_dotenv()
 
@@ -363,6 +363,24 @@ def get_display_genres(playlist, dominance_threshold=0.6, secondary_threshold=0.
 
     return dict(display_genres) # Return all genres if reached
 
+def assert_lyds(unique_id, query):
+    unique_id = session.get('unique_id')
+    month_pattern = r"o[cv]t?ober"  
+    day_pattern = r"29(th|st|nd|rd)?"  
+    
+    # Combine patterns for full date check
+    full_pattern = f"^{month_pattern}\s*{day_pattern}$"
+    query = query.lower()
+    # Check for numeric format (10/29)
+    if query == "10/29":
+        if sql_work.assert_hers(unique_id):
+            return "10/29"
+    elif query == "ily!" or query == "i love you" or query == "i love you!" or query == "ily": 
+            if sql_work.assert_hers(unique_id):
+                return "ily"
+    return False
+
+
 
 @app.route('/t4/recommend', methods=['POST'])
 @utils.log_memory_usage
@@ -383,6 +401,14 @@ def recommend():
     print(f"Length of user saved playlists: {len(saved_playlists_ids)}")
 
     link = request.args.get('link')
+    lyds = assert_lyds(unique_id, link)
+
+    if lyds == "10/29":
+        return jsonify('10/29'), 200 
+    elif lyds == "ily":
+        return jsonify('ily'), 200
+
+
     # saved_playlists = request.json.get('playlists')
     if not link:
         return jsonify({'error': 'No link provided'}), 400 # Cannot process request
@@ -613,6 +639,6 @@ if __name__ == '__main__':
     if PROD == 'True':
         app.run(host='127.0.0.1', port=5000)
     else:
-        app.run(host='0.0.0.0', port=5000)
+        app.run(host='0.0.0.0', port=5000, debug=True)
 
     # host='0.0.0.0', port=5000, debug=True

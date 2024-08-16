@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import PopularityBar from "./PopularityBar.js";
 // import GlossyContainer from "./GlossyContainer.js";
@@ -13,7 +13,6 @@ const RecommendationDesc = ({
   demo = false,
 }) => {
   if (demo) return null;
-
   const shouldAnimate = !lastActionShuffle && !isShuffling;
   const isPlaylist = recommendations.top_genres && recommendations.p_features;
   console.log(recommendations);

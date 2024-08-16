@@ -282,3 +282,16 @@
   .recommendations-container::-webkit-scrollbar-track {
     background-color: transparent;
   }
+
+
+  .playlistToggle-tooltip {  
+   opacity: 1;
+   color: #cbd5e1;
+   transition: color 0.2s ease-in-out;
+ }
+ 
+ .playlistToggle:hover .playlistToggle-tooltip {
+   opacity: 1;
+   color: #fbbf24;
+ }
+ 

@@ -122,6 +122,8 @@ function IFrames({
   const [loaded, setLoaded] = useState([]);
   const [visibleButtons, setVisibleButtons] = useState({});
 
+  console.log(recommendationsArray);
+
   const handleLoad = useCallback(
     (index) => {
       // Mark the embed as active

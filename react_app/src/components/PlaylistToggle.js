@@ -44,7 +44,7 @@ function PlaylistToggle({
   return (
     <div className=" relative top-1/2 -translate-y-[5vh] right-0 lg:ml-4 sm:ml-1 lg:mr-[1.5vw] overflow-x-visible">
       <div
-        className={`opacity-0 relative inline-block 
+        className={`playlistToggle opacity-0 relative inline-block 
       ${animate ? "playlistToggle-fade-in opacity-0" : ""} 
       ${animateOut ? "playlistToggle-fade-out opacity-100" : ""}
       `}
@@ -75,8 +75,8 @@ function PlaylistToggle({
           <path d="M11 2H18V7H13V18H12V19H11V20H7V19H6V18H5V14H6V13H7V12H11V2M11 15H10V14H8V15H7V17H8V18H10V17H11V15Z" />
         </motion.svg>
         <div
-          className={`absolute top-0 left-0 translate-y-[3vh] py-2 text-amber-400 text-[0.75em] font-bold
-      ${showToggleToolTip ? "opacity-100" : "opacity-0"} pointer-events-none transition-opacity duration-300 tooltip`}
+          className={`absolute top-0 left-0 translate-y-[3vh] py-2 text-[0.75em] font-bold
+      pointer-events-none  playlistToggle-tooltip`}
         >
           {showPlaylistRecs ? "Tracks" : "Playlists"}
         </div>
