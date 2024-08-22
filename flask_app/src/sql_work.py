@@ -253,27 +253,27 @@ class SQLWork:
 
                 # Batch insert new playlists
                       # Insert new playlists
-            if insert_data:
-                insert_query = """
-                INSERT INTO playlists (playlist_id, name, image_url, owner_id, unique_id)
-                VALUES (%s, %s, %s, %s, %s)
-                """
-                try:
-                    cursor.executemany(insert_query, insert_data)
-                    print(f"Inserted {cursor.rowcount} new playlists into the database")
-                except mysql.connector.IntegrityError as e:
-                    if e.errno == 1062:  # Duplicate entry error
-                        print("Duplicate playlist entry encountered. Inserting playlists one by one.")
-                        for playlist_data in insert_data:
-                            try:
-                                cursor.execute(insert_query, playlist_data)
-                            except mysql.connector.IntegrityError as inner_e:
-                                if inner_e.errno == 1062:
-                                    print(f"Skipping duplicate playlist: {playlist_data[0]}")
-                                else:
-                                    raise
-                    else:
-                        raise
+                if insert_data:
+                    insert_query = """
+                    INSERT INTO playlists (playlist_id, name, image_url, owner_id, unique_id)
+                    VALUES (%s, %s, %s, %s, %s)
+                    """
+                    try:
+                        cursor.executemany(insert_query, insert_data)
+                        print(f"Inserted {cursor.rowcount} new playlists into the database")
+                    except mysql.connector.IntegrityError as e:
+                        if e.errno == 1062:  # Duplicate entry error
+                            print("Duplicate playlist entry encountered. Inserting playlists one by one.")
+                            for playlist_data in insert_data:
+                                try:
+                                    cursor.execute(insert_query, playlist_data)
+                                except mysql.connector.IntegrityError as inner_e:
+                                    if inner_e.errno == 1062:
+                                        print(f"Skipping duplicate playlist: {playlist_data[0]}")
+                                    else:
+                                        raise
+                        else:
+                            raise
 
             print('Playlists synchronized with database')
         except mysql.connector.Error as e:
