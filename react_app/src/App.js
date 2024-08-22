@@ -12,8 +12,29 @@ import axios from "axios";
 
 import "./App.css";
 
+const useMediaQuery = (query) => {
+  const [matches, setMatches] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    const listener = () => setMatches(media.matches);
+    window.addEventListener("resize", listener);
+    return () => window.removeEventListener("resize", listener);
+  }, [matches, query]);
+
+  return matches;
+};
+
 function App() {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const noop = () => {};
+
   // State variables
+  const [ily, setIly] = useState(false);
+  const [lyds, setLyds] = useState(false);
   const [token, setToken] = useState("");
   const [recommendations, setRecommendations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -59,7 +80,15 @@ function App() {
   // Update Recommendations State
   const handleRecommendations = (data) => {
     console.log("Setting recommendations", data);
-    setRecommendations(data);
+    if (typeof data === "string" && (data === "ily" || data === "10/29")) {
+      setLyds(true);
+      if (data === "ily") {
+        setIly(true);
+      }
+      setRecommendations([]);
+    } else {
+      setRecommendations(data);
+    }
   };
 
   // Scroll to top when loading
@@ -71,6 +100,28 @@ function App() {
       });
     }
   }, [isLoading]); // Dependency on isLoading
+
+  if (isMobile) {
+    return (
+      <div className="App z-1 bg-gray-900 flex flex-col min-h-screen">
+        <Navbar
+          token={noop}
+          setToken={noop}
+          setRecommendations={noop}
+          isMobile={true}
+        />
+        <div className="phone-message">
+          <h1 className="text-xl text-tbold  text-amber-500">
+            Trading Fours is optimized for desktop and tablet.
+          </h1>
+          <br />
+          <p className="text-md  text-gray-300">
+            Please come back on a larger screen to enjoy the full experience.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="App z-1 bg-gray-900 flex flex-col min-h-screen">
@@ -88,7 +139,7 @@ function App() {
           <HomePage />
         ) : (
           <>
-            <Greeting />
+            <Greeting lyds={lyds} />
             <div className="main-container flex flex-col w-full mx-auto p-4 px-10">
               <div className="flex flex-col items-center">
                 <div className="search-container mt-16 mb-4 w-full max-w-lg z-20">
@@ -102,6 +153,8 @@ function App() {
                     setLastActionShuffle={setLastActionShuffle}
                     userPlaylistIds={userPlaylistIds}
                     setUserPlaylistIds={setUserPlaylistIds}
+                    lyds={lyds}
+                    ily={ily}
                   />
                 </div>
                 <div className="recommendations-container w-full justify-center items-center z-10">
@@ -124,6 +177,7 @@ function App() {
                         lastActionShuffle={lastActionShuffle}
                         setLastActionShuffle={setLastActionShuffle}
                         userPlaylistIds={userPlaylistIds}
+                        lyds={lyds}
                       />
                     </div>
                   )}

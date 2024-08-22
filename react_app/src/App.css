@@ -28,3 +28,14 @@ font-optical-sizing: auto;
 font-weight: 600;
 font-style: normal;
 }
+
+.phone-message {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  text-align: center;
+  padding: 20px;
+}
+

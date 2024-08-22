@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import AuthButton from "./AuthButton";
 
-const Navbar = ({ token, setToken, setRecommendations }) => {
+const Navbar = ({ token, setToken, setRecommendations, isMobile }) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -172,11 +172,13 @@ const Navbar = ({ token, setToken, setRecommendations }) => {
               />
             </svg>
           </a>
-          <AuthButton
-            token={token}
-            setToken={setToken}
-            setRecommendations={setRecommendations}
-          />
+          {!isMobile && (
+            <AuthButton
+              token={token}
+              setToken={setToken}
+              setRecommendations={setRecommendations}
+            />
+          )}
         </div>
       </div>
     </nav>

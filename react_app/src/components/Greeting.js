@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/Components/Greeting.css";
 
-function Greeting() {
+function Greeting({ lyds = false }) {
   const [user, setUser] = useState(null);
   const [greeting, setGreetings] = useState("");
   const [displayName, setDisplayName] = useState("");
+  console.log(lyds);
 
   const words = [
     "song",
@@ -153,7 +154,7 @@ function Greeting() {
           <div className="text-gray-300 animate-slide-in opacity-0">
             {greeting},{" "}
             <span className="text-custom-brown italic font-bold">
-              {displayName}
+              {lyds ? "lyds <3" : displayName}
             </span>
           </div>
           <div className="animate-slide-in-words opacity-0">

@@ -3,9 +3,15 @@
 .dropdownButton:hover .tooltip {
     opacity: 1;
     pointer-events: auto;
+    
   }
   
-  
+.tooltip {
+    opacity: 0.5;
+    pointer-events: none;
+    transition: opacity 0.2s ease-in-out; 
+  }
+
   @keyframes drop-down {
   
     0% {
