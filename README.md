@@ -10,7 +10,7 @@ trading fours is your own personalized Spotify recommendation engine.
 
 [![YouTube Video Demo](https://github.com/Stanley-Wang910/spotify-rec-engine/assets/117041405/78ccde6e-b337-481d-92a2-ca0e2c796504)](https://youtu.be/vhLH-nkAxKA?si=VowvksWtWva9jXmC)
 
-## Recent Additions!!!
+## Recent Additions!!!!
 
 1. Personalized Recommendations by Artist & User
 2. Engine Optimization for Faster Recommendation Turnaround
