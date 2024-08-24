@@ -57,8 +57,13 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
+      - name: Debug - List repository contents
+        run: |
+          ls -R
+
       - name: Generate deployment package
         run: |
+          ls -l
           mkdir -p deploy/flask_app deploy/react_app
           cp docker-compose.yml deploy/
           cp flask_app/.env deploy/flask_app/
