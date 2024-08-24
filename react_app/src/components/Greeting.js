@@ -94,10 +94,7 @@ function Greeting({ lyds = false }) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/t4/user`,
-          { withCredentials: true }
-        );
+        const response = await axios.get(`/t4/user`, { withCredentials: true });
         console.log(response.data);
         setUser(response.data || []);
       } catch (error) {

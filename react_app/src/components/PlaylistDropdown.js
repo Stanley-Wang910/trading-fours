@@ -42,10 +42,9 @@ function PlaylistDropdown({
   useEffect(() => {
     const fetchPlaylists = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/t4/search`,
-          { withCredentials: true }
-        );
+        const response = await axios.get(`/t4/search`, {
+          withCredentials: true,
+        });
         setPlaylists(response.data || []);
         console.log(response);
       } catch (error) {
@@ -129,7 +128,7 @@ function PlaylistDropdown({
         onQueryChange(id); // Set Query Change to ensure playlist data stored in session : recognized by RecommendationList Comp. for Shuffle
         try {
           const response = await axios.post(
-            `${process.env.REACT_APP_BACKEND_URL}/t4/recommend?link=${id}`,
+            `/t4/recommend?link=${id}`,
             { userPlaylistIds },
             { withCredentials: true }
           );

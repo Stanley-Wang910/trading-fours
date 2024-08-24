@@ -47,6 +47,8 @@ function App() {
 
   const [animateOut, setAnimateOut] = useState(false); // For animating out the recommendation containter
 
+  // ${process.env.REACT_APP_BACKEND_URL}
+
   // Fetch the token
   useEffect(() => {
     if (token === "") {
@@ -54,7 +56,9 @@ function App() {
         try {
           console.log("Fetching token...");
           const response = await axios.get(
-            `${process.env.REACT_APP_BACKEND_URL}/auth/token`,
+            `
+            /auth/token
+            `,
             { withCredentials: true }
           );
           if (response.status === 200) {

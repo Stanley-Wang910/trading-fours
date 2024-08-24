@@ -4,13 +4,10 @@ function AuthButton({ token, setToken, setRecommendations }) {
   const handleLogout = async () => {
     console.log("Logout button clicked");
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_BACKEND_URL}/auth/logout`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`/auth/logout`, {
+        method: "GET",
+        credentials: "include",
+      });
 
       console.log("Response received:", response);
       if (response.ok) {
@@ -30,10 +27,7 @@ function AuthButton({ token, setToken, setRecommendations }) {
     <button
       className="authButton absolute top-4 right-2 px-1 py-[4px] font-bold text-[14px] text-gray-400"
       onClick={
-        token
-          ? handleLogout
-          : () =>
-              (window.location.href = `${process.env.REACT_APP_BACKEND_URL}/auth/login`)
+        token ? handleLogout : () => (window.location.href = `/auth/login`)
       }
     >
       {token ? "Logout" : "Login"}

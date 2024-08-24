@@ -65,7 +65,7 @@ function RecommendationsList({
 
         try {
           const response = await axios.post(
-            `${process.env.REACT_APP_BACKEND_URL}/t4/recommend?link=${trackID}`,
+            `/t4/recommend?link=${trackID}`,
             { userPlaylistIds },
             { withCredentials: true }
           );

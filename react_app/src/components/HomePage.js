@@ -65,10 +65,9 @@ function HomePage() {
   useEffect(() => {
     const getRandomRecs = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/t4/random-recommendations`,
-          { withCredentials: true }
-        );
+        const response = await axios.get(`/t4/random-recommendations`, {
+          withCredentials: true,
+        });
         if (response.data && response.data.length > 0) {
           setTrackIds(response.data);
           console.log("Random recommendations fetched:", response.data);
@@ -110,10 +109,9 @@ function HomePage() {
   useEffect(() => {
     const getTotalRecs = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/t4/total-recommendations`,
-          { withCredentials: true }
-        );
+        const response = await axios.get(`/t4/total-recommendations`, {
+          withCredentials: true,
+        });
         const [total, hourly] = response.data;
         setTotalRecs(total);
         setHourlyIncrease(hourly);
@@ -132,10 +130,9 @@ function HomePage() {
   useEffect(() => {
     const getTrendingGenres = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_BACKEND_URL}/t4/trending-genres`,
-          { withCredentials: true }
-        );
+        const response = await axios.get(`/t4/trending-genres`, {
+          withCredentials: true,
+        });
         setTrendingGenres(response.data || []);
         console.log("Trending genres fetched:", response.data);
       } catch (error) {
@@ -240,9 +237,7 @@ function HomePage() {
                 as="button"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() =>
-                  (window.location.href = `${process.env.REACT_APP_BACKEND_URL}/auth/login`)
-                }
+                onClick={() => (window.location.href = `/auth/login`)}
                 className="bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-800/70 via-gray-900/70 to-slate-900/80 text-sm text-gray-300 flex items-center space-x-2"
               >
                 <span className="montserrat-reg">
