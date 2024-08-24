@@ -106,4 +106,4 @@ jobs:
       - name: Debug - Print recent Elastic Beanstalk events
         if: failure()
         run: |
-          aws elasticbeanstalk describe-events --environment-name ${{ env.EB_ENVIRONMENT_NAME }} --max-items 15
+          aws elasticbeanstalk describe-events --environment-name ${{ env.EB_ENVIRONMENT_NAME }} --max-items 10
