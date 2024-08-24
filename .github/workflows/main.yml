@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: us-east-2
   ECR_REGISTRY: public.ecr.aws/l5q8r9o9
-  ECR_REPORSITORY: trading-fours
+  ECR_REPOSITORY: trading-fours
   EB_APPLICATION_NAME: t4-app
   EB_ENVIRONMENT_NAME: T4-app-env
 
@@ -23,7 +23,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v1
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Login to Amazon ECR
