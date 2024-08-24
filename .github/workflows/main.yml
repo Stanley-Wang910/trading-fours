@@ -2,7 +2,7 @@ name: Build, Push, Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [master]
   workflow_dispatch:
 
 env:
@@ -16,54 +16,54 @@ jobs:
   build-push:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Configure AWS Creds
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ env.AWS_REGION }}
+      - name: Configure AWS Creds
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: Login to Amazon ECR
-      run: |
-        aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/l5q8r9o9
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/l5q8r9o9
 
-    - name: Build Docker Images
-      run: |
-        docker compose build backend
-        docker compose build client
+      - name: Build Docker Images
+        run: |
+          docker compose build backend
+          docker compose build client
 
-    - name: Tag Docker Images
-      run: |
-        docker tag recengine-client:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:frontend-latest
-        docker tag recengine-backend:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:backend-latest
-    - name: Push images to ECR
-      run: |
-        docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:frontend-latest
-        docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:backend-latest
+      - name: Tag Docker Images
+        run: |
+          docker tag recengine-client:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:frontend-latest
+          docker tag recengine-backend:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:backend-latest
+      - name: Push images to ECR
+        run: |
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:frontend-latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:backend-latest
 
   deploy:
     needs: build-push
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Generate deployment package
-      run: |
-        zip -r deploy.zip docker-compose.yml .platform flask_app/.env react_app/.env
+      - name: Generate deployment package
+        run: |
+          zip -r deploy.zip docker-compose.yml .platform flask_app/.env react_app/.env
 
-    - name: Deploy to EB
-      uses: einaregilsson/beanstalk-deploy@v21
-      with:
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        application_name: ${{ env.EB_APPLICATION_NAME }}
-        environment_name: ${{ env.EB_ENVIRONMENT_NAME }}
-        version_label: ${{ github.sha }}
-        region: ${{ env.AWS_REGION }}
-        deployment_package: deploy.zip
-        use_existing_version_if_available: false
-        wait_for_environment_recovery: 300
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ env.EB_APPLICATION_NAME }}
+          environment_name: ${{ env.EB_ENVIRONMENT_NAME }}
+          version_label: ${{ github.sha }}
+          region: ${{ env.AWS_REGION }}
+          deployment_package: deploy.zip
+          use_existing_version_if_available: false
+          wait_for_environment_recovery: 300
