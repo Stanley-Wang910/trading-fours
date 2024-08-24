@@ -61,6 +61,11 @@ jobs:
         run: |
           ls -R
 
+      - name: Generate .env files
+        run: |
+          echo "${{ secrets.FLASK_ENV_CONTENT }}" > flask_app/.env
+          echo "${{ secrets.REACT_ENV_CONTENT }}" > react_app/.env
+
       - name: Generate deployment package
         run: |
           ls -l
