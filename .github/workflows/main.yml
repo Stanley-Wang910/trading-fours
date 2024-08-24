@@ -65,6 +65,7 @@ jobs:
         run: |
           echo "${{ secrets.FLASK_ENV_CONTENT }}" > flask_app/.env
           echo "${{ secrets.REACT_ENV_CONTENT }}" > react_app/.env
+          echo "${{ secrets.PLATFORM_CONF }}" > .platform/nginx/conf.d/elasticbeanstalk/location.conf
 
       - name: Generate deployment package
         run: |
