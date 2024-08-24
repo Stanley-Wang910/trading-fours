@@ -41,7 +41,7 @@ if PROD == 'True':
 else: 
     API_URL = 'http://localhost:3000'
 
-print(API_URL)
+print(API_URL, "latest")
 
 CORS(app, supports_credentials=True, origins=[API_URL, "http://localhost:3000"])
 
