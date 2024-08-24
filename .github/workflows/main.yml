@@ -36,8 +36,8 @@ jobs:
 
       - name: Tag Docker Images
         run: |
-          docker tag recengine-client:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:frontend-latest
-          docker tag recengine-backend:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:backend-latest
+          docker tag trading-fours-client:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:frontend-latest
+          docker tag trading-fours-backend:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:backend-latest
       - name: Push images to ECR
         run: |
           docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:frontend-latest
