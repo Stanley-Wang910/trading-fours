@@ -75,7 +75,7 @@ class SQLWork:
                             )
                             params = user_top_artists + top_genres
                     else:
-                        print("track = False")
+                        print("track = True")
                         query = """SELECT * FROM rec_dataset WHERE track_genre = %s"""
                         params = [top_genres]
 
@@ -130,10 +130,10 @@ class SQLWork:
     #     return None
         
     def get_user_data(self, sp):
-
+        
         start_time = time.time()
 
-        user_profile, user_playlists, recently_played, top_artists, top_tracks = sp.get_user_saved_info()
+        user_profile, user_playlists, top_artists, top_tracks = sp.get_user_saved_info()
         
         print("Getting user data from sp... :", time.time() - start_time, "s")
         
@@ -141,7 +141,10 @@ class SQLWork:
         
         display_name = user_profile['display_name']
         
-        email = user_profile['email']   
+        email = user_profile['email']  
+
+        if unique_id == "31bv2bralifp3lgy4p5zvikjghki" :
+            return unique_id, display_name
 
         start_time = time.time()
         self.user_profile_db(unique_id, display_name, email)
@@ -310,14 +313,14 @@ class SQLWork:
             print(f"Error adding recently played to database: {e}")
         finally:
             cursor.close()
-            connection.close()
+            connection.close() 
             
     def user_top_artists_db(self, unique_id, top_artists):
         try:
             with self.get_cursor() as cursor:
                 # Fetch existing artists for logging purposes
                 cursor.execute("""
-                    SELECT artist_id, artist_name, short_term_rank, medium_term_rank, long_term_rank 
+                    SELECT artist_id, artist_name, short_term_rank 
                     FROM user_top_artists 
                     WHERE unique_id = %s
                 """, (unique_id,))
@@ -337,8 +340,8 @@ class SQLWork:
                         upsert_data.append((
                             unique_id, artist_id, artist_name,
                             rank if time_range == 'short_term' else None,
-                            rank if time_range == 'medium_term' else None,
-                            rank if time_range == 'long_term' else None
+                            # rank if time_range == 'medium_term' else None,
+                            # rank if time_range == 'long_term' else None
                         ))
 
                         # Log changes
@@ -352,34 +355,33 @@ class SQLWork:
                 # Perform upsert operation
                 upsert_query = """
                     INSERT INTO user_top_artists 
-                        (unique_id, artist_id, artist_name, short_term_rank, medium_term_rank, long_term_rank)
-                    VALUES (%s, %s, %s, %s, %s, %s)
+                        (unique_id, artist_id, artist_name, short_term_rank)
+                    VALUES (%s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE
                         artist_name = VALUES(artist_name),
-                        short_term_rank = COALESCE(VALUES(short_term_rank), short_term_rank),
-                        medium_term_rank = COALESCE(VALUES(medium_term_rank), medium_term_rank),
-                        long_term_rank = COALESCE(VALUES(long_term_rank), long_term_rank)
+                        short_term_rank = VALUES(short_term_rank)
                 """
                 cursor.executemany(upsert_query, upsert_data)
                 
                 print(f'Artists upserted: {len(upsert_data)}')
 
                 # Update ranks to NULL for artists no longer in any top list
+                print(existing_artists.keys())
                 artists_to_update = set(existing_artists.keys()) - all_artist_ids
                 if artists_to_update:
                     placeholders = ','.join(['%s'] * len(artists_to_update))
                     null_update_query = f"""
-                        UPDATE user_top_artists
-                        SET short_term_rank = NULL, medium_term_rank = NULL, long_term_rank = NULL
+                        DELETE FROM user_top_artists
                         WHERE unique_id = %s AND artist_id IN ({placeholders})
                     """
-                    cursor.execute(null_update_query, (unique_id, *artists_to_update))
+                    params = [unique_id] + list(artists_to_update)
+                    cursor.execute(null_update_query, params)
                     
                     for artist_id in artists_to_update:
                         artist = existing_artists[artist_id]
-                        print(f"Removing artist {artist['artist_name']} from top lists")
+                        print(f"Removing artist {artist['artist_name']} from table")
 
-                print(f'Top artists updated: {len(upsert_data)} upserted, {len(artists_to_update)} removed from lists')
+                print(f'Top artists updated: {len(upsert_data)} upserted, {len(artists_to_update)} removed from table')
 
         except mysql.connector.Error as e:
             print(f"Error updating top artists in database: {e}")
@@ -391,7 +393,7 @@ class SQLWork:
             with self.get_cursor() as cursor:
 
                 cursor.execute("""
-                    SELECT track_id, track_name, artist_name, short_term_rank, medium_term_rank, long_term_rank
+                    SELECT track_id, track_name, artist_name, short_term_rank
                     FROM user_top_tracks
                     WHERE unique_id = %s
                 """, (unique_id,))
@@ -413,8 +415,8 @@ class SQLWork:
                         upsert_data.append((
                             unique_id, track_id, track_name, artist_name,
                             rank if time_range == 'short_term' else None,
-                            rank if time_range == 'medium_term' else None,
-                            rank if time_range == 'long_term' else None
+                            # rank if time_range == 'medium_term' else None,
+                            # rank if time_range == 'long_term' else None
                         ))
 
                         # Log changes
@@ -428,14 +430,12 @@ class SQLWork:
                 # Perform upsert operation
                 upsert_query = """
                     INSERT INTO user_top_tracks
-                        (unique_id, track_id, track_name, artist_name, short_term_rank, medium_term_rank, long_term_rank)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        (unique_id, track_id, track_name, artist_name, short_term_rank)
+                    VALUES (%s, %s, %s, %s, %s)
                     ON DUPLICATE KEY UPDATE
                         track_name = VALUES(track_name),
                         artist_name = VALUES(artist_name),
-                        short_term_rank = COALESCE(VALUES(short_term_rank), short_term_rank),
-                        medium_term_rank = COALESCE(VALUES(medium_term_rank), medium_term_rank),
-                        long_term_rank = COALESCE(VALUES(long_term_rank), long_term_rank)
+                        short_term_rank = VALUES(short_term_rank)
                     """
                 cursor.executemany(upsert_query, upsert_data)
 
@@ -446,17 +446,18 @@ class SQLWork:
                 if tracks_to_update:
                     placeholders = ','.join(['%s'] * len(tracks_to_update))
                     null_update_query = f"""
-                        UPDATE user_top_tracks
-                        SET short_term_rank = NULL, medium_term_rank = NULL, long_term_rank = NULL
+                        DELETE FROM user_top_tracks
                         WHERE unique_id = %s AND track_id IN ({placeholders})
                     """
-                    cursor.execute(null_update_query, (unique_id, *tracks_to_update))
+                    
+                    params = [unique_id] + list(tracks_to_update)
+                    cursor.execute(null_update_query, params)
                     
                     for track_id in tracks_to_update:
-                        track = existing_tracks[track_id]
+                        track = existing_tracks[track_id] 
                         print(f"Removing track {track['track_name']} from top lists")
 
-                print(f'Top tracks updated: {len(upsert_data)} upserted, {len(tracks_to_update)} removed from lists')
+                print(f'Top tracks updated: {len(upsert_data)} upserted, {len(tracks_to_update)} removed from table')
         
         except mysql.connector.Error as e:
             print(f"Error updating top tracks in database: {e}")

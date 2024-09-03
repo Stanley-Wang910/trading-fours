@@ -622,17 +622,19 @@ def populate_seed_playlist_recs(sp, re):
 
 @app.route('/test') ### Keep for testing new features
 def test():
-    # if is_token_expired():
-    #     if not refresh_token():
-    #         return redirect('/auth/login')
-    # unique_id: str = session.get('unique_id')
-    # access_token: str = session.get('access_token')
+    if is_token_expired():
+        if not refresh_token():
+            return redirect('/auth/login')
+    unique_id: str = session.get('unique_id')
+    access_token: str = session.get('access_token')
 
     # # # Create Spotify client and RecEngine instance
-    # sp = SpotifyClient(Spotify(auth=access_token))
-    # re = RecEngine(sp, unique_id, sql_work)
+    sp = SpotifyClient(Spotify(auth=access_token))
+    re = RecEngine(sp, unique_id, sql_work)
 
-    return {"hello": "world"}
+    
+    return {"hello":"world"}
+    
 
 
 if __name__ == '__main__':

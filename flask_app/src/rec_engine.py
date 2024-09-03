@@ -593,20 +593,20 @@ class RecEngine:
         user_top_tracks = self.sql_cnx.get_user_top_tracks(self.unique_id)
        
         short_term_track_ids = [None] * 20
-        medium_term_track_ids = [None] * 20
-        long_term_track_ids = [None] * 20
+        # medium_term_track_ids = [None] * 20
+        # long_term_track_ids = [None] * 20
 
         # Insert track IDs at their rank index
         for track in user_top_tracks:
             if track['short_term_rank'] is not None:
                 short_term_track_ids[track['short_term_rank'] - 1] = track['track_id']
-            if track['medium_term_rank'] is not None:
-                medium_term_track_ids[track['medium_term_rank'] - 1] = track['track_id']
-            if track['long_term_rank'] is not None:
-                long_term_track_ids[track['long_term_rank'] - 1] = track['track_id']
+            # if track['medium_term_rank'] is not None:
+            #     medium_term_track_ids[track['medium_term_rank'] - 1] = track['track_id']
+            # if track['long_term_rank'] is not None:
+            #     long_term_track_ids[track['long_term_rank'] - 1] = track['track_id']
 
         print("Getting user top tracks... :", time.time() - start_time, "s")
-        print('<- re:get_user_top_tracks()')
+        print('<- re:get_user_top_tracks()') 
         return short_term_track_ids
 
     def get_user_top_artists(self): 

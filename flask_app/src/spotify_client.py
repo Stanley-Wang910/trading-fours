@@ -36,6 +36,7 @@ class SpotifyClient:
     def get_user_saved_info(self):
         user_profile = self.sp.current_user()
 
+
         all_playlists = []
 
         user_playlists = self.sp.current_user_playlists() 
@@ -47,24 +48,28 @@ class SpotifyClient:
             else:
                 user_playlists = None
 
-        recently_played = self.sp.current_user_recently_played()
+        unique_id = user_profile['id']
+        if unique_id == "31bv2bralifp3lgy4p5zvikjghki":
+            return user_profile, all_playlists, None, None
+
+        # recently_played = self.sp.current_user_recently_played()
         top_artists_short = self.sp.current_user_top_artists(20,0, 'short_term')
-        top_artists_med = self.sp.current_user_top_artists(20,0, 'medium_term')
-        top_artists_long = self.sp.current_user_top_artists(20,0, 'long_term')
+        # top_artists_med = self.sp.current_user_top_artists(20,0, 'medium_term')
+        # top_artists_long = self.sp.current_user_top_artists(20,0, 'long_term')
         top_artists = {
             'short_term': top_artists_short,
-            'medium_term': top_artists_med,
-            'long_term': top_artists_long
+            # 'medium_term': top_artists_med,
+            # 'long_term': top_artists_long
         }
         top_tracks_short = self.sp.current_user_top_tracks(20,0, 'short_term')
-        top_tracks_med = self.sp.current_user_top_tracks(20,0, 'medium_term')
-        top_tracks_long = self.sp.current_user_top_tracks(20,0, 'long_term')
+        # top_tracks_med = self.sp.current_user_top_tracks(20,0, 'medium_term')
+        # top_tracks_long = self.sp.current_user_top_tracks(20,0, 'long_term')
         top_tracks = {
             'short_term': top_tracks_short,
-            'medium_term': top_tracks_med,
-            'long_term': top_tracks_long
+            # 'medium_term': top_tracks_med,
+            # 'long_term': top_tracks_long
         }
-        return user_profile, all_playlists, recently_played, top_artists, top_tracks
+        return user_profile, all_playlists, top_artists, top_tracks
     
     
     def analyze_my_playlist(self, playlist_name, id_dic, sp):
