@@ -55,7 +55,7 @@ const DemoContainer = ({ isDemoVisible, searchAnimate, recAnimate }) => {
   const recommendationListAnimation = useMemo(
     () => ({
       x: recAnimate ? (isDemoContainerHovered ? "8%" : "12%") : "-10%",
-      y: recAnimate ? (isDemoContainerHovered ? "2%" : "10%") : "2%",
+      y: recAnimate ? (isDemoContainerHovered ? "6%" : "10%") : "2%",
       scale: isDemoContainerHovered ? 1 : 1,
       opacity: searchAnimate ? 1 : 0,
     }),
@@ -82,25 +82,29 @@ const DemoContainer = ({ isDemoVisible, searchAnimate, recAnimate }) => {
             gradientColor="from-slate-800/60 via-slate-900/60 to-slate-800/20"
             shadow={false}
           >
-            <div className="text-[1.4em] lato-regular font-bold  mt-12 px-12  ">
-              <span className=" bg-gradient-to-b from-gray-200 to-gray-400 bg-clip-text text-transparent ">
+            <div className="text-[1.23em] lato-regular font-bold mt-8 px-12  ">
+              <span className=" bg-gradient-to-b from-gray-200 to-gray-300 bg-clip-text text-transparent ">
+                Learning to improvize jazz, I fell in love with &nbsp;
                 <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent">
-                  Infinite
-                </span>{" "}
-                possibilities for where the music takes{" "}
-                <span className="bg-gradient-to-r from-custom-brown to-amber-400 bg-clip-text text-transparent">
-                  you
+                  "trading fours"{/* you */}
                 </span>
-                .
+                {/* . */}
               </span>
-              <span className="  mt-4 text-sm text-gray-400 leading-snug block">
-                Enter any playlist or track — a unique improvisation of a sound
-                or vibe you want to capture — and receive a brand new take on
-                it.
+              <span className="  mt-2 text-sm text-gray-400 leading-5 block">
+                it became so thrilling to make a musical idea your own, and have
+                someone else take inspiration from it and play off of you.{" "}
+              </span>
+              <span className=" mt-1 text-sm text-gray-400 leading-5 block">
+                I created this website so that you can use any playlist — your
+                own unique improvisation on a sound or vibe and receive a
+                brand-new take on it.
+                {/* <br /> <br /> */}
+                {/* Public playlists can then be recommended to others, the same way
+                two musicians might improvise off each other. */}
               </span>
             </div>
             <motion.div
-              className="mt-10 pointer-events-auto w-[33vw]  "
+              className="mt-6 pointer-events-auto w-[33vw]  "
               initial={{ opacity: 0 }}
               animate={{
                 scale: isDemoContainerHovered ? 1 : 0.95,
@@ -117,7 +121,7 @@ const DemoContainer = ({ isDemoVisible, searchAnimate, recAnimate }) => {
               <SearchBar demo={true} />
             </motion.div>
             <motion.div
-              className="absolute pointer-events-auto mt-6"
+              className="absolute pointer-events-auto mt-2"
               animate={recommendationListAnimation}
               transition={{ duration: 0.75, ease: [0.22, 0.68, 0.31, 1.0] }}
             >

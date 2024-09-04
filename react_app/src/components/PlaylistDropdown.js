@@ -229,12 +229,12 @@ function PlaylistDropdown({
 
   return (
     <div ref={dropdownRef} className="relative w-full max-w-md ">
-      <div className="dropdownButton relative inline-block">
+      <div className="group dropdownButton relative inline-block">
         <button
           className={clsx(
             "py-2 rounded-full text-gray-200 placeholder-gray-400 flex items-center justify-between transition-transform-opacity duration-300 ",
             {
-              "hover:translate-x-[5px]": !isOpen,
+              "group-hover:translate-x-[5px]": !isOpen,
               "translate-x-[5px]": isOpen,
             }
           )}
@@ -260,7 +260,12 @@ function PlaylistDropdown({
             ></path>
           </svg>
         </button>
-        <div className=" whitespace-normal break-words w-[7em] absolute top-1/2 left-full transform -translate-y-1/2 translate-x-2 ml-2 px-2 py-1 bg-gray-800 text-white text-xs font-semibold rounded pointer-events-none  tooltip">
+        <div
+          className={clsx(
+            `whitespace-normal group-hover cursor-pointer break-words w-[7em] absolute top-1/2 left-full transform -translate-y-1/2 translate-x-2 ml-2 px-2 py-1 bg-gray-800 text-white text-xs font-semibold rounded  tooltip`
+          )}
+          onClick={() => setIsOpen(!isOpen)}
+        >
           Your Library
         </div>
       </div>

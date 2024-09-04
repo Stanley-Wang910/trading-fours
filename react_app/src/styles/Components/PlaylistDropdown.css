@@ -8,7 +8,7 @@
   
 .tooltip {
     opacity: 0.5;
-    pointer-events: none;
+    /* pointer-events: none; */
     transition: opacity 0.2s ease-in-out; 
   }
 

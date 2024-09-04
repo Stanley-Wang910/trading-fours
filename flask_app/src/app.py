@@ -87,6 +87,56 @@ def auth_login():
     url = f"https://accounts.spotify.com/authorize?{urlencode(params)}"
     return redirect(url)
 
+@app.route('/auth/demo')
+def auth_demo():
+    print("Demo route reached")
+    
+    client_id = os.getenv("SPOTIFY_CLIENT_ID")
+    client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+    client_creds = f"{client_id}:{client_secret}"
+    client_creds_b64 = base64.b64encode(client_creds.encode()).decode()
+
+    auth_opts = {
+        'url' :  'https://accounts.spotify.com/api/token',
+        "headers" : {
+        'Authorization': f"Basic {client_creds_b64}",
+        },
+        'form': {
+            'grant_type': 'client_credentials'
+        },
+        # "json" : true
+
+    }
+    response = requests.post(
+        auth_opts['url'],
+        headers=auth_opts['headers'],
+        data=auth_opts['form']
+    )
+    
+    print(f"Token exchange response: {response.status_code}, {response.text}")
+    if response.status_code == 200:
+        token_info = response.json()
+        
+        session['access_token'] = token_info.get('access_token')
+        session['refresh_token'] = token_info.get('refresh_token')
+        session['token_expires'] = datetime.now().timestamp() + token_info.get('expires_in')
+
+        sp = SpotifyClient(Spotify(auth=session.get('access_token')))
+        session['unique_id'], session['display_name'] = "31bv2bralifp3lgy4p5zvikjghki", "Demo User"
+        unique_id = session.get('unique_id')    
+
+        re = RecEngine(sp, unique_id, sql_work)
+
+        user_top_tracks, user_top_artists = check_user_top_data_session(unique_id, re)
+
+        return redirect(f'{API_URL}/')
+    else:   
+        return "Error in token exchange", response.status_code
+        # unique_id, display_name = sql_work.get_user_data(sp)
+        # start_time = time.time()
+        # return jsonify({"access_token": access_token, "refresh_token": refresh, "expires": expires})
+        
+
 @app.route('/auth/callback')
 @utils.log_memory_usage
 def auth_callback():
@@ -126,7 +176,7 @@ def auth_callback():
         start_time = time.time()
         
         sp = SpotifyClient(Spotify(auth=session.get('access_token')))
-        unique_id, display_name = sql_work.get_user_data(sp)
+        unique_id, display_name = sql_work.get_user_data(sp)    
         session['unique_id'] = unique_id
         print(unique_id, "stored in session")
         session['display_name'] = display_name
@@ -622,18 +672,65 @@ def populate_seed_playlist_recs(sp, re):
 
 @app.route('/test') ### Keep for testing new features
 def test():
-    if is_token_expired():
-        if not refresh_token():
-            return redirect('/auth/login')
-    unique_id: str = session.get('unique_id')
-    access_token: str = session.get('access_token')
+    # if is_token_expired():
+    #     if not refresh_token():
+    #         return redirect('/auth/login')
+    # unique_id: str = session.get('unique_id')
+    # access_token: str = session.get('access_token')
 
     # # # Create Spotify client and RecEngine instance
-    sp = SpotifyClient(Spotify(auth=access_token))
-    re = RecEngine(sp, unique_id, sql_work)
+    client_id = os.getenv("SPOTIFY_CLIENT_ID")
+    client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+    client_creds = f"{client_id}:{client_secret}"
+    client_creds_b64 = base64.b64encode(client_creds.encode()).decode()
 
+    auth_opts = {
+        'url' :  'https://accounts.spotify.com/api/token',
+        "headers" : {
+        'Authorization': f"Basic {client_creds_b64}",
+        },
+        'form': {
+            'grant_type': 'client_credentials'
+        },
+        # "json" : true
+
+    }
+    response = requests.post(
+        auth_opts['url'],
+        headers=auth_opts['headers'],
+        data=auth_opts['form']
+    )
     
-    return {"hello":"world"}
+    print(f"Token exchange response: {response.status_code}, {response.text}")
+    if response.status_code == 200:
+        token_info = response.json()
+        
+        # session['access_token'] = token_info.get('access_token')
+        # session['refresh_token'] = token_info.get('refresh_token')
+        # session['token_expires'] = datetime.now().timestamp() + token_info.get('expires_in')
+
+        access_token = token_info.get('access_token')
+        refresh = token_info.get('refresh_token')
+        expires = datetime.now().timestamp() + token_info.get('expires_in')
+        start_time = time.time()
+        return jsonify({"access_token": access_token, "refresh_token": refresh, "expires": expires})
+        
+    # redirect_uri = os.getenv("SPOTIFY_REDIRECT_URI")
+    # user_id = os.getenv("SPOTIFY_USER_ID")
+    # scope = "streaming user-read-email user-read-private user-follow-read playlist-read-private playlist-read-collaborative user-read-recently-played user-library-read user-top-read"
+
+    # auth_manager = SpotifyOAuth(client_id=client_id,
+    #                             client_secret=client_secret,
+    #                             redirect_uri=redirect_uri,
+    #                             scope=scope,
+    #                             username=user_id)
+    # sp = spotipy.Spotify(auth_manager=auth_manager)
+    # sp = SpotifyClient(Spotify(auth_manager=auth_manager)) # Initialize SpotifyClient
+    # playlists = sp.user_playlists('spotify')
+    # re = RecEngine(sp, unique_id, sql_work)
+
+    # playlists=playlists[:5]
+    return {"test":"failed"}
     
 
 

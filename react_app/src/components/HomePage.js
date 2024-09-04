@@ -182,6 +182,7 @@ function HomePage() {
             bg-gradient-to-br from-gray-400 to-gray-200 
             bg-clip-text text-transparent 
             transition-opacity duration-1000 
+            font-semibold
             ${isDescVisible && isTextGenComplete ? "opacity-100" : "opacity-0"}
             `}
           >
@@ -229,19 +230,24 @@ function HomePage() {
                 GitHub
               </div>
             </div>
-            , solo-dev Spotify recommender, <br />
+            &nbsp;Spotify recommender, <br />
             meant to inspire your streamlined discovery of good music. <br />
+            <br />
+            Personal accounts currently need to be manually whitelisted for
+            access, but you can still explore the demo below!
+            <br />
             <div className="absolute mt-6 translate-x-[0vw]">
               <HoverBorderGradient
                 containerClassName="rounded-xl"
                 as="button"
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={() => (window.location.href = `/auth/login`)}
+                // onClick={() => (window.location.href = `/auth/login`)}
+                onClick={() => (window.location.href = `/auth/demo`)}
                 className="bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-800/70 via-gray-900/70 to-slate-900/80 text-sm text-gray-300 flex items-center space-x-2"
               >
                 <span className="montserrat-reg">
-                  <div className="font-semibold">Sign Up!</div>
+                  <div className="font-semibold">Start Demo!</div>
                 </span>
               </HoverBorderGradient>
             </div>
