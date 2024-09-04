@@ -101,9 +101,4 @@ jobs:
           region: us-east-2
           deployment_package: deploy.zip
           use_existing_version_if_available: false
-          wait_for_environment_recovery: 300
-
-      - name: Debug - Print recent Elastic Beanstalk events
-        if: failure()
-        run: |
-          aws elasticbeanstalk describe-events --environment-name ${{ env.EB_ENVIRONMENT_NAME }} --max-items 10
+          wait_for_deployment: false
