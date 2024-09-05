@@ -91,13 +91,14 @@ const DemoContainer = ({ isDemoVisible, searchAnimate, recAnimate }) => {
                 {/* . */}
               </span>
               <span className="  mt-2 text-sm text-gray-400 leading-5 block">
-                it became so thrilling to make a musical idea your own, and have
-                someone else take inspiration from it and play off of you.{" "}
+                It became so thrilling to make a musical idea my own, and have
+                someone else take inspiration from and play off of it. I wanted
+                to embody that feeling with this site.
               </span>
-              <span className=" mt-1 text-sm text-gray-400 leading-5 block">
-                I created this website so that you can use any playlist — your
-                own unique improvisation on a sound or vibe and receive a
-                brand-new take on it.
+              <span className=" mt-2 text-sm text-gray-400 leading-5 block">
+                You can use any playlist — your own unique improvisation on a
+                sound or vibe and and in turn, recieve brand-new takes on those
+                musical ideas. Have fun!
                 {/* <br /> <br /> */}
                 {/* Public playlists can then be recommended to others, the same way
                 two musicians might improvise off each other. */}
