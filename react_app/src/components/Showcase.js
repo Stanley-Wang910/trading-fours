@@ -32,7 +32,7 @@ function Showcase({ isDiv2Visible, isVideoEmbedVisible, token }) {
 
       <VideoEmbed
         isVisible={isVideoEmbedVisible}
-        id="tzjeOJVYI7o"
+        id="sx5btkY24hQ"
         title="Demo"
         className="rounded-lg mt-4 w-full lg:max-w-[35vw] sm:max-w-[45vw] mx-auto inline-flex my-auto "
       />
