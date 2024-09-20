@@ -75,7 +75,7 @@ def generate_random_string(length=16):
 @utils.log_memory_usage
 def auth_login():
     print("Login route reached")
-    scope = "streaming user-read-email user-read-private user-follow-read playlist-read-private playlist-read-collaborative user-read-recently-played user-library-read user-top-read"
+    scope = "streaming user-read-email user-read-private playlist-read-private playlist-read-collaborative user-top-read"
     state = generate_random_string()
     params = {
         'response_type': 'code',
